@@ -1,3 +1,65 @@
+
+
+
+
+let appData = [];
+
+function addButton() {
+
+  const newButton = {
+    id: Date.now(),
+    type: "button",
+    text: "Click Me"
+  };
+
+  appData.push(newButton);
+
+  renderPreview();
+
+}
+
+function renderPreview() {
+
+  const preview = document.getElementById("mobile-preview");
+
+  preview.innerHTML = "";
+
+  appData.forEach(component => {
+
+    // BUTTON
+    if(component.type === "button") {
+
+      const button = document.createElement("button");
+
+      button.innerText = component.text;
+
+      preview.appendChild(button);
+
+    }
+
+  });
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function changeDevice() {
 
   const preview = document.getElementById("mobile-preview");
