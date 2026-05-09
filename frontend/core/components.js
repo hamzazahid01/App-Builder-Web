@@ -7,7 +7,8 @@ window.ComponentCatalog = [
   { type: "card", label: "Card" },
   { type: "row", label: "Row" },
   { type: "column", label: "Column" },
-  { type: "navbar", label: "Navbar" },
+  { type: "stack", label: "Stack" },
+  { type: "center", label: "Center" },
   { type: "icon", label: "Icon" },
   { type: "spacer", label: "Spacer" }
 ];
@@ -39,7 +40,16 @@ window.ComponentFactory = {
           fontWeight: "600",
           opacity: 1
         },
-        props: { text: "Button", onClick: "none" }
+        props: {
+          text: "Button",
+          onClick: {
+            type: "navigate",
+            targetPageId: "",
+            url: "",
+            dialogText: "Hello from dialog",
+            customCode: ""
+          }
+        }
       };
     }
 
@@ -65,7 +75,9 @@ window.ComponentFactory = {
           borderRadius: 10,
           flexDirection: "column",
           gap: 8,
-          opacity: 1
+          opacity: 1,
+          alignItems: "start",
+          justifyContent: "start"
         }
       };
     }
@@ -109,14 +121,6 @@ window.ComponentFactory = {
       return col;
     }
 
-    if (type === "navbar") {
-      return {
-        ...common,
-        styles: { backgroundColor: "#0f172a", padding: boxSpacing(12, 14, 12, 14), margin: boxSpacing(0, 0, 10, 0) },
-        props: { title: "App Title", textColor: "#ffffff" }
-      };
-    }
-
     if (type === "icon") {
       return {
         ...common,
@@ -132,10 +136,38 @@ window.ComponentFactory = {
       };
     }
 
+    if (type === "stack") {
+      return {
+        ...common,
+        styles: {
+          width: "100%",
+          height: 180,
+          backgroundColor: "#f1f5f9",
+          margin: boxSpacing(8, 0, 8, 0),
+          borderRadius: 10
+        }
+      };
+    }
+
+    if (type === "center") {
+      return {
+        ...common,
+        styles: {
+          width: "100%",
+          minHeight: 120,
+          backgroundColor: "#ffffff",
+          margin: boxSpacing(8, 0, 8, 0),
+          borderColor: "#d1d5db",
+          borderWidth: 1,
+          borderRadius: 10
+        }
+      };
+    }
+
     return common;
   },
 
   supportsChildren(type) {
-    return ["container", "card", "row", "column", "navbar"].includes(type);
+    return ["container", "card", "row", "column", "stack", "center"].includes(type);
   }
 };

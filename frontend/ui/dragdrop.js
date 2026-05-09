@@ -27,23 +27,29 @@ window.DragDrop = {
     preview.addEventListener("drop", (e) => {
       e.preventDefault();
       preview.classList.remove("dropzone-active");
+      if (AppState.runtimeMode) return;
       this.handleDrop(null, e.dataTransfer.getData("text/plain"));
     });
 
     preview.addEventListener("click", () => {
+      if (AppState.runtimeMode) return;
       AppState.selectedId = null;
+      AppState.selectedType = "page";
       Inspector.render();
       renderPreview();
     });
   },
 
   handleDrop(targetContainerId, payloadString) {
+    if (AppState.runtimeMode) return;
     if (!payloadString) return;
     const payload = JSON.parse(payloadString);
+    const page = StateUtils.getCurrentPage();
+    if (!page) return;
 
-    let targetList = AppState.appData;
+    let targetList = page.components;
     if (targetContainerId) {
-      const targetNode = StateUtils.findById(AppState.appData, targetContainerId);
+      const targetNode = StateUtils.findById(page.components, targetContainerId);
       if (!targetNode || !ComponentFactory.supportsChildren(targetNode.type)) return;
       targetList = targetNode.children;
     }
@@ -56,7 +62,7 @@ window.DragDrop = {
 
     if (payload.source === "node") {
       if (payload.id === targetContainerId) return;
-      const moved = StateUtils.removeById(AppState.appData, payload.id);
+      const moved = StateUtils.removeById(page.components, payload.id);
       if (!moved) return;
       targetList.push(moved);
       renderPreview();
