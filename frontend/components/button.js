@@ -172,6 +172,12 @@ function showButtonProperties(component) {
     renderPreview();
   }));
 
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "prop-btn prop-btn-danger";
+  deleteBtn.innerText = "Delete Component";
+  deleteBtn.onclick = () => deleteSelectedComponent(component);
+  panel.appendChild(deleteBtn);
+
 
 }
 

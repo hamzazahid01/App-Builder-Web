@@ -223,6 +223,19 @@ body {
   box-shadow: 0 8px 16px rgba(37, 99, 235, 0.12);
 }
 
+.prop-btn-danger {
+  margin-top: 8px;
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.prop-btn-danger:hover {
+  border-color: #ef4444;
+  color: #991b1b;
+  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.2);
+}
+
 @media (max-width: 1200px) {
   .sidebar {
     width: 230px;
