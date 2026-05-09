@@ -1,0 +1,93 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f3f4f6;
+  height: 100vh;
+}
+
+/* MAIN LAYOUT */
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+
+/* LEFT SIDEBAR */
+.sidebar {
+  width: 250px;
+  background: white;
+  padding: 20px;
+  border-right: 1px solid #ddd;
+}
+
+.sidebar h2 {
+  margin-bottom: 20px;
+}
+
+.sidebar button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: black;
+  color: white;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+
+/* CENTER PREVIEW */
+.preview-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+}
+
+.preview-section h2 {
+  margin-bottom: 20px;
+}
+
+
+/* MOBILE PREVIEW */
+#mobile-preview {
+  width: 375px;
+  height: 667px;
+  background: white;
+  border: 12px solid black;
+  border-radius: 35px;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+
+/* COMPONENTS INSIDE PREVIEW */
+#mobile-preview button {
+  padding: 12px 20px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+
+/* RIGHT PANEL */
+.properties {
+  width: 250px;
+  background: white;
+  padding: 20px;
+  border-left: 1px solid #ddd;
+}
+
+.properties h2 {
+  margin-bottom: 20px;
+}
