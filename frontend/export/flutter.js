@@ -26,6 +26,7 @@ function renderAction(onClick) {
   if (onClick.type === "navigate" && onClick.targetPageId) return `() => Navigator.pushNamed(context, '/${onClick.targetPageId}')`;
   if (onClick.type === "openUrl" && onClick.url) return `() => _openUrl('${onClick.url}')`;
   if (onClick.type === "showDialog") return `() => _showDialog(context, '${(onClick.dialogText || "Dialog").replace(/'/g, "\\'")}')`;
+  if (onClick.type === "back") return "() => Navigator.maybePop(context)";
   return "() {}";
 }
 
@@ -257,6 +258,32 @@ ${pageClasses}
 `;
   },
 
+  generatePubspecYaml() {
+    const app = AppState.app;
+    return `name: ${app.appName.toLowerCase().replace(/[^a-z0-9]+/g, "_")}
+description: Generated from no-code app builder
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+`;
+  },
+
   downloadProject() {
     const mainDart = this.generateMainDart();
     const blob = new Blob([mainDart], { type: "text/plain" });
@@ -264,6 +291,23 @@ ${pageClasses}
     const a = document.createElement("a");
     a.href = url;
     a.download = "main.dart";
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  downloadProjectManifest() {
+    const payload = {
+      project: "flutter_generated_app",
+      files: {
+        "pubspec.yaml": this.generatePubspecYaml(),
+        "lib/main.dart": this.generateMainDart()
+      }
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "flutter_project_manifest.json";
     a.click();
     URL.revokeObjectURL(url);
   }

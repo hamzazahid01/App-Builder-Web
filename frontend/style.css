@@ -96,7 +96,7 @@ body {
 
 .page-item {
   display: grid;
-  grid-template-columns: 1fr 26px;
+  grid-template-columns: 1fr auto;
   gap: 6px;
 }
 
@@ -117,6 +117,25 @@ body {
 .page-delete-btn {
   color: var(--danger);
   font-size: 16px;
+}
+
+.page-controls {
+  display: grid;
+  grid-template-columns: repeat(4, 22px);
+  gap: 4px;
+}
+
+.page-mini-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  height: 22px;
+}
+
+.page-mini-btn.danger {
+  color: var(--danger);
 }
 
 .page-item.active .page-switch-btn {

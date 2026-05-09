@@ -47,7 +47,8 @@ window.ComponentFactory = {
             targetPageId: "",
             url: "",
             dialogText: "Hello from dialog",
-            customCode: ""
+            customCode: "",
+            back: false
           }
         }
       };

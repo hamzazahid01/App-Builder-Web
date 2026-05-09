@@ -195,6 +195,7 @@ function buildComponentAccordions(panel, node) {
         { value: "navigate", label: "navigate" },
         { value: "openUrl", label: "openUrl" },
         { value: "showDialog", label: "showDialog" },
+        { value: "back", label: "back" },
         { value: "custom", label: "custom" }
       ], node.props.onClick.type, (v) => { node.props.onClick.type = v; Inspector.render(); })));
       if (node.props.onClick.type === "navigate") {
@@ -207,6 +208,10 @@ function buildComponentAccordions(panel, node) {
         content.appendChild(createField("URL", createTextInput(node.props.onClick.url, (v) => { node.props.onClick.url = v; })));
       } else if (node.props.onClick.type === "showDialog") {
         content.appendChild(createField("Dialog Text", createTextInput(node.props.onClick.dialogText, (v) => { node.props.onClick.dialogText = v; })));
+      } else if (node.props.onClick.type === "back") {
+        const info = createTextInput("Pop previous page", () => {});
+        info.disabled = true;
+        content.appendChild(createField("Behavior", info));
       } else {
         content.appendChild(createField("Custom Code", createTextInput(node.props.onClick.customCode, (v) => { node.props.onClick.customCode = v; })));
       }

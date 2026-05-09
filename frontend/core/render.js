@@ -46,6 +46,17 @@ function executeAction(onClickAction) {
   }
   if (onClickAction.type === "showDialog") {
     window.alert(onClickAction.dialogText || "Dialog");
+    return;
+  }
+  if (onClickAction.type === "back") {
+    if (AppState.app.navigationStack.length > 1) {
+      AppState.app.navigationStack.pop();
+      const previous = AppState.app.navigationStack[AppState.app.navigationStack.length - 1];
+      if (previous) {
+        StateUtils.setCurrentPage(previous, false);
+        renderPreview();
+      }
+    }
   }
 }
 
@@ -338,6 +349,7 @@ window.RuntimeEngine = {
   start() {
     AppState.runtimeMode = true;
     AppState.runtimeScreen = AppState.app.splashScreen.enabled ? "splash" : "page";
+    AppState.app.navigationStack = [];
     AppState.selectedId = null;
     AppState.selectedType = "none";
     Inspector.render();
@@ -348,9 +360,12 @@ window.RuntimeEngine = {
       const duration = Number(AppState.app.splashScreen.duration || 2) * 1000;
       AppState.runtimeSplashTimer = setTimeout(() => {
         AppState.runtimeScreen = "page";
-        StateUtils.setCurrentPage(AppState.app.splashScreen.nextScreenId || AppState.app.initialPageId, false);
+        StateUtils.setCurrentPage(AppState.app.splashScreen.nextScreenId || AppState.app.initialPageId, true);
         renderPreview();
       }, duration);
+    } else {
+      StateUtils.setCurrentPage(AppState.app.initialPageId, true);
+      renderPreview();
     }
   },
 

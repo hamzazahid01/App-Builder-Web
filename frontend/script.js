@@ -1,5 +1,7 @@
 window.addEventListener("DOMContentLoaded", () => {
-  StateUtils.ensureBootstrap();
+  const restored = StateUtils.restoreFromLocal();
+  if (!restored) StateUtils.ensureBootstrap();
+  else StateUtils.ensureBootstrap();
   AppState.selectedType = "page";
 
   DragDrop.initLibrary();
@@ -11,6 +13,20 @@ window.addEventListener("DOMContentLoaded", () => {
   deviceSelect.addEventListener("change", (e) => applyDeviceFrame(e.target.value));
 
   document.getElementById("add-page-btn").addEventListener("click", () => PageManager.addPage());
+
+  document.getElementById("undo-btn").addEventListener("click", () => {
+    StateUtils.undo();
+    PageManager.render();
+    Inspector.render();
+    renderPreview();
+  });
+
+  document.getElementById("redo-btn").addEventListener("click", () => {
+    StateUtils.redo();
+    PageManager.render();
+    Inspector.render();
+    renderPreview();
+  });
 
   const runBtn = document.getElementById("run-app-btn");
   runBtn.addEventListener("click", () => {
@@ -26,7 +42,11 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("export-flutter-btn").addEventListener("click", () => {
     FlutterExport.downloadProject();
   });
+  document.getElementById("export-project-btn").addEventListener("click", () => {
+    FlutterExport.downloadProjectManifest();
+  });
 
   Inspector.render();
   renderPreview();
+  StateUtils.startWatcher();
 });
