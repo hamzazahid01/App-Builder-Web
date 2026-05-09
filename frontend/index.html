@@ -19,7 +19,7 @@
 
       <h2>Components</h2>
 
-      <button onclick="addButton()">
+      <button onclick="addButtonComponent()">
         Add Button
       </button>
 
@@ -33,33 +33,25 @@
 
       <select id="device-select" onchange="changeDevice()">
 
-            <option value="iphone-se">
-                iPhone SE
-            </option>
+        <option value="iphone-se">
+          iPhone SE
+        </option>
 
-            <option value="iphone-14">
-                iPhone 14
-            </option>
+        <option value="iphone-14">
+          iPhone 14
+        </option>
 
-            <option value="android-small">
-                Android Small
-            </option>
+        <option value="android-small">
+          Android Small
+        </option>
 
-            <option value="android-large">
-                Android Large
-            </option>
+        <option value="android-large">
+          Android Large
+        </option>
 
-            <option value="tablet">
-                Tablet
-            </option>
+      </select>
 
-        </select>
-
-      <div id="mobile-preview">
-
-        <!-- Dynamic Components Will Render Here -->
-
-      </div>
+      <div id="mobile-preview"></div>
 
     </div>
 
@@ -69,12 +61,20 @@
 
       <h2>Properties</h2>
 
-      <p>Select a component</p>
+      <div id="properties-panel">
+
+        Select a component
+
+      </div>
 
     </div>
 
   </div>
 
+
+  <script src="components/button.js"></script>
+
+  <script src="preview/preview.js"></script>
 
   <script src="script.js"></script>
 
