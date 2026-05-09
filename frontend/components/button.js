@@ -1,3 +1,8 @@
+
+/* ==============================
+   CREATE BUTTON MODEL
+============================== */
+
 function createButton() {
 
   return {
@@ -9,13 +14,33 @@ function createButton() {
     text: "Click Me",
 
     styles: {
+
+      // Layout
+      width: "auto",
+      height: "auto",
+      margin: "10px",
+      padding: "12px 20px",
+
+      // Colors
       backgroundColor: "#2563eb",
       color: "#ffffff",
-      padding: "12px 20px",
-      margin: "10px",
+
+      // Border
       borderRadius: "10px",
-      width: "auto",
-      textAlign: "center"
+      borderWidth: "0px",
+      borderColor: "#000000",
+
+      // Typography
+      fontSize: "16px",
+      fontWeight: "bold",
+      textAlign: "center",
+
+      // Effects
+      opacity: 1,
+      boxShadow: "none",
+
+      // Flex
+      alignSelf: "center"
     }
 
   };
@@ -23,6 +48,9 @@ function createButton() {
 }
 
 
+/* ==============================
+   RENDER BUTTON
+============================== */
 
 function renderButton(component) {
 
@@ -30,42 +58,14 @@ function renderButton(component) {
 
   button.innerText = component.text;
 
-  button.style.backgroundColor =
-    component.styles.backgroundColor;
-
-  button.style.color =
-    component.styles.color;
-
-  button.style.padding =
-    component.styles.padding;
-
-  button.style.margin =
-    component.styles.margin;
-
-  button.style.borderRadius =
-    component.styles.borderRadius;
-
-  button.style.width =
-    component.styles.width;
-
-  button.style.textAlign =
-    component.styles.textAlign;
-
-  button.style.border = "none";
-
-  button.style.cursor = "pointer";
+  applyStyles(button, component.styles);
 
 
-
-  // SELECT COMPONENT
+  // select component on click
   button.onclick = () => {
-
     selectedComponent = component;
-
     showButtonProperties(component);
-
   };
-
 
 
   return button;
@@ -73,74 +73,138 @@ function renderButton(component) {
 }
 
 
+/* ==============================
+   APPLY STYLES (CORE ENGINE)
+============================== */
+
+function applyStyles(el, styles) {
+
+  el.style.width = styles.width;
+  el.style.height = styles.height;
+
+  el.style.margin = styles.margin;
+  el.style.padding = styles.padding;
+
+  el.style.backgroundColor = styles.backgroundColor;
+  el.style.color = styles.color;
+
+  el.style.borderRadius = styles.borderRadius;
+
+  el.style.borderWidth = styles.borderWidth;
+  el.style.borderColor = styles.borderColor;
+  el.style.borderStyle = "solid";
+
+  el.style.fontSize = styles.fontSize;
+  el.style.fontWeight = styles.fontWeight;
+  el.style.textAlign = styles.textAlign;
+
+  el.style.opacity = styles.opacity;
+
+  el.style.boxShadow = styles.boxShadow;
+
+  el.style.cursor = "pointer";
+
+}
+
+
+/* ==============================
+   PROPERTIES PANEL
+============================== */
 
 function showButtonProperties(component) {
 
-  const panel =
-    document.getElementById("properties-panel");
+  const panel = document.getElementById("properties-panel");
 
-  panel.innerHTML = `
+  panel.innerHTML = "";
 
-    <label>Button Text</label>
-    <input
-      type="text"
-      value="${component.text}"
-      oninput="updateButtonText('${component.id}', this.value)"
-    >
 
-    <label>Background Color</label>
-    <input
-      type="color"
-      value="${component.styles.backgroundColor}"
-      onchange="updateButtonBackground('${component.id}', this.value)"
-    >
+  // TEXT
+  panel.appendChild(label("Text"));
+  panel.appendChild(textInput(component.text, (val) => {
+    component.text = val;
+    renderPreview();
+  }));
 
-    <label>Text Color</label>
-    <input
-      type="color"
-      value="${component.styles.color}"
-      onchange="updateButtonColor('${component.id}', this.value)"
-    >
 
-  `;
+  // BACKGROUND
+  panel.appendChild(label("Background Color"));
+  panel.appendChild(colorInput(component.styles.backgroundColor, (val) => {
+    component.styles.backgroundColor = val;
+    renderPreview();
+  }));
+
+
+  // TEXT COLOR
+  panel.appendChild(label("Text Color"));
+  panel.appendChild(colorInput(component.styles.color, (val) => {
+    component.styles.color = val;
+    renderPreview();
+  }));
+
+
+  // PADDING
+  panel.appendChild(label("Padding"));
+  panel.appendChild(textInput(component.styles.padding, (val) => {
+    component.styles.padding = val;
+    renderPreview();
+  }));
+
+
+  // MARGIN
+  panel.appendChild(label("Margin"));
+  panel.appendChild(textInput(component.styles.margin, (val) => {
+    component.styles.margin = val;
+    renderPreview();
+  }));
+
+
+  // BORDER RADIUS
+  panel.appendChild(label("Border Radius"));
+  panel.appendChild(textInput(component.styles.borderRadius, (val) => {
+    component.styles.borderRadius = val;
+    renderPreview();
+  }));
+
+
+  // FONT SIZE
+  panel.appendChild(label("Font Size"));
+  panel.appendChild(textInput(component.styles.fontSize, (val) => {
+    component.styles.fontSize = val;
+    renderPreview();
+  }));
+
 
 }
 
 
+/* ==============================
+   HELPERS
+============================== */
 
-function updateButtonText(id, value) {
-
-  const component =
-    appData.find(item => item.id == id);
-
-  component.text = value;
-
-  renderPreview();
-
+function label(text) {
+  const el = document.createElement("label");
+  el.innerText = text;
+  el.style.display = "block";
+  el.style.marginTop = "10px";
+  return el;
 }
 
+function textInput(value, onChange) {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = value;
 
+  input.oninput = (e) => onChange(e.target.value);
 
-function updateButtonBackground(id, value) {
-
-  const component =
-    appData.find(item => item.id == id);
-
-  component.styles.backgroundColor = value;
-
-  renderPreview();
-
+  return input;
 }
 
+function colorInput(value, onChange) {
+  const input = document.createElement("input");
+  input.type = "color";
+  input.value = value;
 
+  input.onchange = (e) => onChange(e.target.value);
 
-function updateButtonColor(id, value) {
-
-  const component =
-    appData.find(item => item.id == id);
-
-  component.styles.color = value;
-
-  renderPreview();
-
+  return input;
 }
