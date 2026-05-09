@@ -1,7 +1,4 @@
 
-/* ==============================
-   CREATE BUTTON MODEL
-============================== */
 
 function createButton() {
 
@@ -55,6 +52,7 @@ function createButton() {
 function renderButton(component) {
 
   const button = document.createElement("button");
+  button.className = "app-node app-node-button";
 
   button.innerText = component.text;
 
@@ -62,7 +60,8 @@ function renderButton(component) {
 
 
   // select component on click
-  button.onclick = () => {
+  button.onclick = (e) => {
+    e.stopPropagation();
     selectedComponent = component;
     showButtonProperties(component);
   };
@@ -183,14 +182,14 @@ function showButtonProperties(component) {
 
 function label(text) {
   const el = document.createElement("label");
+  el.className = "prop-label";
   el.innerText = text;
-  el.style.display = "block";
-  el.style.marginTop = "10px";
   return el;
 }
 
 function textInput(value, onChange) {
   const input = document.createElement("input");
+  input.className = "prop-input";
   input.type = "text";
   input.value = value;
 
@@ -201,6 +200,7 @@ function textInput(value, onChange) {
 
 function colorInput(value, onChange) {
   const input = document.createElement("input");
+  input.className = "prop-color-input";
   input.type = "color";
   input.value = value;
 

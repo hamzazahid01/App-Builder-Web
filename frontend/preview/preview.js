@@ -1,26 +1,26 @@
 function renderPreview() {
 
-  const preview =
-    document.getElementById("mobile-preview");
+  const preview = document.getElementById("mobile-preview");
 
   preview.innerHTML = "";
 
-
-
   appData.forEach(component => {
 
-    // BUTTON
-    if(component.type === "button") {
+    if (component.type === "button") {
+      preview.appendChild(renderButton(component));
+    }
 
-      const button =
-        renderButton(component);
-
-      preview.appendChild(button);
-
+    if (component.type === "div") {
+      preview.appendChild(renderDiv(component));
     }
 
   });
 
+}
+
+function clearSelectedComponent() {
+  selectedComponent = null;
+  showDefaultProperties();
 }
 
 
