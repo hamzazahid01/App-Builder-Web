@@ -91,3 +91,10 @@ body {
 .properties h2 {
   margin-bottom: 20px;
 }
+
+#device-select {
+  margin-bottom: 20px;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+}
