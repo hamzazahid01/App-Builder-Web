@@ -1,31 +1,15 @@
-let appData = [];
-
-let selectedComponent = null;
-
-
-function addButtonComponent() {
-
-  const button = createButton();
-
-  appData.push(button);
-
-  renderPreview();
-
-}
-
-function addDivComponent() {
-
-  const div = createDiv();
-
-  appData.push(div);
-
-  renderPreview();
-
-}
-
 window.addEventListener("DOMContentLoaded", () => {
-  const preview = document.getElementById("mobile-preview");
-  preview.addEventListener("click", clearSelectedComponent);
-  showDefaultProperties();
+  DragDrop.initLibrary();
+  DragDrop.initCanvasDropzone();
+
+  const deviceSelect = document.getElementById("device-select");
+  applyDeviceFrame(deviceSelect.value);
+  deviceSelect.addEventListener("change", (e) => applyDeviceFrame(e.target.value));
+
+  document.getElementById("export-flutter-btn").addEventListener("click", () => {
+    FlutterExport.downloadProject();
+  });
+
+  Inspector.render();
   renderPreview();
 });

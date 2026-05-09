@@ -1,87 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>App Builder</title>
-
+  <title>No-Code App Builder</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-  <div class="container">
-
-    <!-- LEFT SIDEBAR -->
-    <div class="sidebar">
-
-      <h2>Components</h2>
-
-      <button onclick="addButtonComponent()">
-        Add Button
-      </button>
-
-      <button onclick="addDivComponent()">
-            Add Div
-        </button>
-
-    </div>
-
-
-    <!-- CENTER PREVIEW -->
-    <div class="preview-section">
-
-      <h2>Mobile Preview</h2>
-
-      <select id="device-select" onchange="changeDevice()">
-
-        <option value="iphone-se">
-          iPhone SE
-        </option>
-
-        <option value="iphone-14">
-          iPhone 14
-        </option>
-
-        <option value="android-small">
-          Android Small
-        </option>
-
-        <option value="android-large">
-          Android Large
-        </option>
-
-      </select>
-
-      <div id="mobile-preview"></div>
-
-    </div>
-
-
-    <!-- RIGHT PANEL -->
-    <div class="properties">
-
-      <h2>Properties</h2>
-
-      <div id="properties-panel">
-
-        Select a component
-
+  <div class="app-shell">
+    <aside class="left-panel">
+      <div class="panel-header">
+        <h2>Component Library</h2>
+        <p>Drag components to canvas or containers</p>
       </div>
+      <div id="component-library" class="component-library"></div>
+      <div class="left-panel-actions">
+        <button id="export-flutter-btn" class="primary-btn">Export Flutter</button>
+      </div>
+    </aside>
 
-    </div>
+    <main class="center-panel">
+      <div class="center-toolbar">
+        <h2>Mobile Preview</h2>
+        <select id="device-select">
+          <option value="iphone-se">iPhone SE</option>
+          <option value="iphone-14" selected>iPhone 14</option>
+          <option value="android-small">Android Small</option>
+          <option value="android-large">Android Large</option>
+        </select>
+      </div>
+      <div class="preview-viewport">
+        <div id="mobile-preview" class="mobile-preview"></div>
+      </div>
+    </main>
 
+    <aside class="right-panel">
+      <div class="panel-header">
+        <h2>Properties</h2>
+        <p>Inspector updates by selected component</p>
+      </div>
+      <div id="properties-panel" class="properties-panel"></div>
+    </aside>
   </div>
 
+  <template id="accordion-template">
+    <section class="accordion">
+      <button class="accordion-trigger" type="button">
+        <span class="accordion-title"></span>
+        <span class="accordion-icon">+</span>
+      </button>
+      <div class="accordion-content"></div>
+    </section>
+  </template>
 
-<script src="components/button.js"></script>
-<script src="components/div.js"></script>
-<script src="preview/preview.js"></script>
-<script src="ui/properties.js"></script> 
-<script src="script.js"></script>
-
+  <script src="core/state.js"></script>
+  <script src="core/components.js"></script>
+  <script src="core/render.js"></script>
+  <script src="ui/inspector.js"></script>
+  <script src="ui/dragdrop.js"></script>
+  <script src="export/flutter.js"></script>
+  <script src="script.js"></script>
 </body>
-
 </html>
