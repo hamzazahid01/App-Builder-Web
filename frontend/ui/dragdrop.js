@@ -24,7 +24,7 @@ window.DragDrop = {
     });
 
     preview.addEventListener("dragleave", () => preview.classList.remove("dropzone-active"));
-    preview.addEventListener("drop", (e) => {
+    preview.addEventListener("drop",  (e) => {
       e.preventDefault();
       preview.classList.remove("dropzone-active");
       if (AppState.runtimeMode) return;
