@@ -133,7 +133,7 @@ function renderDiv(component) {
 
 /* =========================
    PROPERTIES PANEL
-========================= */
+======================= */
 
 function showDivProperties(component) {
 
