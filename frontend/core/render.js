@@ -17,11 +17,7 @@ function selectNode(component, e) {
 
 function applyCanvasLayout(wrapper, layout) {
   wrapper.style.position = "absolute";
-  wrapper.style.left = `${layout.x}px`;
-  wrapper.style.top = `${layout.y}px`;
-  wrapper.style.width = `${layout.width}px`;
-  wrapper.style.height = `${layout.height}px`;
-  wrapper.style.zIndex = `${layout.zIndex ?? 1}`;
+  CanvasUtils.applyLayoutToWrapper(wrapper, layout);
 }
 
 function wrapCanvasNode(innerEl, component) {
@@ -40,28 +36,31 @@ function wrapCanvasNode(innerEl, component) {
   return wrapper;
 }
 
-function getCurrentComponentTree() {
-  const page = StateUtils.getCurrentPage();
-  return page ? page.components : [];
+function renderComponentsOnCanvas(components, canvasEl) {
+  const fragment = document.createDocumentFragment();
+  components.forEach((component, index) => {
+    StateUtils.ensureComponentLayout(component, index);
+    const inner = renderComponent(component);
+    fragment.appendChild(wrapCanvasNode(inner, component));
+  });
+  canvasEl.appendChild(fragment);
 }
 
-function getAlignItemsValue(value) {
-  if (value === "center") return "center";
-  if (value === "end") return "flex-end";
-  if (value === "stretch") return "stretch";
-  return "flex-start";
-}
-
-function getJustifyContentValue(value) {
-  if (value === "center") return "center";
-  if (value === "space-between") return "space-between";
-  if (value === "space-around") return "space-around";
-  return "flex-start";
+function bindEditSelect(el, component, runtimeHandler) {
+  el.addEventListener("click", (e) => {
+    if (AppState.runtimeMode) {
+      if (runtimeHandler) runtimeHandler(e);
+      return;
+    }
+    if (AppState.suppressCanvasClickUntil && Date.now() < AppState.suppressCanvasClickUntil) return;
+    e.stopPropagation();
+    selectNode(component, e);
+  });
 }
 
 function executeAction(onClickAction) {
   if (!onClickAction || !AppState.runtimeMode) return;
-  if (onClickAction.type === "navigate" &&  onClickAction.targetPageId) {
+  if (onClickAction.type === "navigate" && onClickAction.targetPageId) {
     StateUtils.setCurrentPage(onClickAction.targetPageId, true);
     renderPreview();
     return;
@@ -86,28 +85,14 @@ function executeAction(onClickAction) {
   }
 }
 
-function bindEditSelect(el, component, runtimeHandler) {
-  el.addEventListener("click", (e) => {
-    if (AppState.runtimeMode) {
-      if (runtimeHandler) runtimeHandler(e);
-      return;
-    }
-    if (AppState.suppressCanvasClickUntil && Date.now() < AppState.suppressCanvasClickUntil) return;
-    e.stopPropagation();
-    selectNode(component, e);
-  });
-}
-
 function renderComponent(component) {
   if (component.type === "button") return renderButton(component);
   if (component.type === "text") return renderTextNode(component);
   if (component.type === "image") return renderImageNode(component);
   if (component.type === "input") return renderInputNode(component);
   if (component.type === "icon") return renderIconNode(component);
-  if (component.type === "spacer") return renderSpacerNode(component);
-  if (component.type === "stack") return renderStackNode(component);
-  if (component.type === "center") return renderCenterNode(component);
-  return renderFlexContainerNode(component);
+  if (component.type === "container") return renderContainerNode(component);
+  return renderContainerNode(component);
 }
 
 function renderButton(component) {
@@ -120,7 +105,7 @@ function renderButton(component) {
   el.style.fontSize = `${component.styles.fontSize}px`;
   el.style.fontWeight = component.styles.fontWeight;
   el.style.opacity = `${component.styles.opacity}`;
-  el.style.cursor = "pointer";
+  el.style.cursor = AppState.runtimeMode ? "pointer" : "default";
   applySpacing(el, "padding", component.styles.padding);
   el.style.width = "100%";
   el.style.height = "100%";
@@ -139,6 +124,7 @@ function renderTextNode(component) {
   el.style.fontWeight = component.styles.fontWeight;
   el.style.textAlign = component.styles.textAlign;
   el.style.margin = "0";
+  el.style.overflow = "hidden";
   bindEditSelect(el, component);
   return el;
 }
@@ -152,6 +138,7 @@ function renderImageNode(component) {
   el.style.borderRadius = `${component.styles.borderRadius}px`;
   el.style.objectFit = component.styles.fit;
   el.style.margin = "0";
+  el.draggable = false;
   bindEditSelect(el, component);
   return el;
 }
@@ -184,73 +171,60 @@ function renderIconNode(component) {
   return el;
 }
 
-function renderSpacerNode(component) {
-  const el = document.createElement("div");
-  el.style.height = "100%";
-  el.style.width = "100%";
-  el.style.backgroundColor = "rgba(148, 163, 184, 0.25)";
-  bindEditSelect(el, component);
-  return el;
+function getAlignItemsValue(value) {
+  if (value === "center") return "center";
+  if (value === "end") return "flex-end";
+  if (value === "stretch") return "stretch";
+  return "flex-start";
 }
 
-function renderFlexContainerNode(component) {
+function getJustifyContentValue(value) {
+  if (value === "center") return "center";
+  if (value === "space-between") return "space-between";
+  if (value === "space-around") return "space-around";
+  return "flex-start";
+}
+
+function renderContainerNode(component) {
+  ComponentFactory.syncContainerFlexDirection(component);
+
   const el = document.createElement("div");
+  el.className = "container-shell";
   el.style.width = "100%";
   el.style.height = "100%";
-  el.style.minHeight = "0";
-  el.style.backgroundColor = component.styles.backgroundColor ?? "transparent";
-  el.style.border = `${component.styles.borderWidth ?? 0}px solid ${component.styles.borderColor ?? "transparent"}`;
-  el.style.borderRadius = `${component.styles.borderRadius ?? 0}px`;
+  el.style.boxSizing = "border-box";
+  el.style.backgroundColor = component.styles.backgroundColor ?? "#f8fafc";
+  el.style.border = `${component.styles.borderWidth ?? 0}px solid ${component.styles.borderColor ?? "#d1d5db"}`;
+  el.style.borderRadius = `${component.styles.borderRadius ?? 10}px`;
   el.style.opacity = `${component.styles.opacity ?? 1}`;
   el.style.display = "flex";
-  el.style.flexDirection = component.styles.flexDirection ?? "column";
-  el.style.alignItems = getAlignItemsValue(component.styles.alignItems);
-  el.style.justifyContent = getJustifyContentValue(component.styles.justifyContent);
-  el.style.gap = `${component.styles.gap ?? 0}px`;
-  if (component.styles.boxShadow) el.style.boxShadow = component.styles.boxShadow;
-  applySpacing(el, "padding", component.styles.padding);
-  el.style.overflow = "auto";
+  el.style.flexDirection = "column";
+  el.style.overflow = "hidden";
 
-  for (const child of component.children) {
-    el.appendChild(renderComponent(child));
+  const label = document.createElement("div");
+  label.className = "container-layout-badge";
+  label.textContent = component.styles.flexDirection === "row" ? "Row" : "Column";
+  el.appendChild(label);
+
+  const innerCanvas = document.createElement("div");
+  innerCanvas.className = "container-canvas";
+  innerCanvas.dataset.containerId = component.id;
+  innerCanvas.style.position = "relative";
+  innerCanvas.style.flex = "1";
+  innerCanvas.style.width = "100%";
+  innerCanvas.style.minHeight = "0";
+  applySpacing(innerCanvas, "padding", component.styles.padding);
+
+  if (!AppState.runtimeMode && (!component.children || component.children.length === 0)) {
+    const hint = document.createElement("div");
+    hint.className = "container-hint";
+    hint.textContent = "Yahan components drop karein";
+    innerCanvas.appendChild(hint);
+  } else if (component.children?.length) {
+    renderComponentsOnCanvas(component.children, innerCanvas);
   }
 
-  bindEditSelect(el, component);
-  return el;
-}
-
-function renderStackNode(component) {
-  const el = document.createElement("div");
-  el.style.position = "relative";
-  el.style.width = "100%";
-  el.style.height = "100%";
-  el.style.backgroundColor = component.styles.backgroundColor ?? "#f1f5f9";
-  el.style.borderRadius = `${component.styles.borderRadius ?? 10}px`;
-  for (const child of component.children) {
-    const childEl = renderComponent(child);
-    childEl.style.position = "absolute";
-    childEl.style.left = "0";
-    childEl.style.top = "0";
-    el.appendChild(childEl);
-  }
-  bindEditSelect(el, component);
-  return el;
-}
-
-function renderCenterNode(component) {
-  const el = document.createElement("div");
-  el.style.width = "100%";
-  el.style.height = "100%";
-  el.style.minHeight = "0";
-  el.style.backgroundColor = component.styles.backgroundColor ?? "#ffffff";
-  el.style.border = `${component.styles.borderWidth ?? 0}px solid ${component.styles.borderColor ?? "transparent"}`;
-  el.style.borderRadius = `${component.styles.borderRadius ?? 0}px`;
-  el.style.display = "flex";
-  el.style.alignItems = "center";
-  el.style.justifyContent = "center";
-  for (const child of component.children) {
-    el.appendChild(renderComponent(child));
-  }
+  el.appendChild(innerCanvas);
   bindEditSelect(el, component);
   return el;
 }
@@ -290,9 +264,7 @@ function renderPage(preview, page) {
   }
   root.style.display = "flex";
   root.style.flexDirection = "column";
-  root.style.alignItems = page.layout.alignment === "center" ? "center" : page.layout.alignment === "stretch" ? "stretch" : "flex-start";
-  root.style.justifyContent = page.layout.alignment === "bottom" ? "flex-end" : "flex-start";
-  root.style.overflowY = page.layout.scrollBehavior === "fixed" ? "hidden" : "auto";
+  root.style.overflow = "hidden";
 
   if (page.appBar.enabled) {
     const appBar = document.createElement("div");
@@ -310,19 +282,17 @@ function renderPage(preview, page) {
   body.style.position = "relative";
   body.style.flex = "1";
   body.style.width = "100%";
-  body.style.minHeight = "480px";
+  body.style.minHeight = "0";
 
   if (!AppState.runtimeMode && page.components.length === 0) {
     const hint = document.createElement("div");
     hint.className = "canvas-hint";
     hint.textContent = "Library se component chunein aur screen par kahin bhi rakhein";
     body.appendChild(hint);
+  } else {
+    renderComponentsOnCanvas(page.components, body);
   }
 
-  for (const component of page.components) {
-    const inner = renderComponent(component);
-    body.appendChild(wrapCanvasNode(inner, component));
-  }
   root.appendChild(body);
   preview.appendChild(root);
 }
@@ -331,7 +301,7 @@ window.renderPreview = function renderPreview() {
   const preview = document.getElementById("mobile-preview");
   const page = StateUtils.getCurrentPage();
   if (!page) {
-    preview.innerHTML = "<div class='empty-state'>No pages available.</div>";
+    preview.innerHTML = "<motion class='empty-state'>No pages available.</div>";
     return;
   }
 

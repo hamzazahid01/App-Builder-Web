@@ -146,7 +146,7 @@ window.DragDrop = {
 
   updateGhost(x, y, w, h, label, canvasEl) {
     if (!this.ghostEl) {
-      this.ghostEl = document.createElement("motion");
+      this.ghostEl = document.createElement("div");
       this.ghostEl.className = "drag-ghost";
       document.body.appendChild(this.ghostEl);
     }
