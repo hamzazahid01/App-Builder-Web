@@ -86,10 +86,10 @@ window.TextStyles = {
         enabled: false,
         type: "solid",
         color: "#ffffff",
+        opacity: 1,
         gradientAngle: 90,
         gradientStart: "#ffffff",
         gradientEnd: "#f8fafc",
-        opacity: 1,
         padding: { top: 4, right: 8, bottom: 4, left: 8 },
         borderRadius: 0
       };
@@ -154,7 +154,7 @@ window.TextStyles = {
     if (typeof value !== "string") return `rgba(0,0,0,${alpha})`;
     if (value.startsWith("#")) {
       const hex = value.slice(1).trim();
-      let r = 0; let g = 0; let b = 0;
+      let r = 0, g = 0, b = 0;
       if (hex.length === 3) {
         r = parseInt(hex[0] + hex[0], 16);
         g = parseInt(hex[1] + hex[1], 16);
@@ -173,14 +173,38 @@ window.TextStyles = {
     if (!styles?.responsive?.enabled) return 1;
     const key = AppState.currentDeviceKey || "";
     const lower = key.toLowerCase();
-    if (lower.includes("ipad") || lower.includes("tablet") || lower.includes("large") || lower.includes("pro")) {
+    if (lower.includes("ipad") || lower.includes("tablet") || lower.includes("pro") || lower.includes("large")) {
       return styles.responsive.tabletScale ?? 0.95;
     }
     return styles.responsive.mobileScale ?? 0.85;
   },
 
+  buildTextShadowString(shadow) {
+    if (!shadow?.enabled) return "none";
+    const shadows = [];
+    const main = `${shadow.offsetX ?? 0}px ${shadow.offsetY ?? 0}px ${shadow.blur ?? 0}px ${shadow.spread ?? 0}px rgba(0,0,0,${(shadow.opacity ?? 0.25).toFixed(2)})`;
+    shadows.push(main);
+    if (shadow.multiShadows?.length) {
+      shadow.multiShadows.forEach((layer) => {
+        if (layer.enabled) {
+          shadows.push(`${layer.offsetX ?? 0}px ${layer.offsetY ?? 0}px ${layer.blur ?? 0}px ${layer.spread ?? 0}px rgba(0,0,0,${(layer.opacity ?? 0.25).toFixed(2)})`);
+        }
+      });
+    }
+    if (shadow.glowEnabled) {
+      shadows.push(`0 0 ${shadow.glowBlur ?? 10}px ${shadow.glowSpread ?? 0}px ${shadow.glowColor ?? "#ffffff"}`);
+    }
+    return shadows.join(", ");
+  },
+
   applyTextBackground(el, background) {
-    if (!background?.enabled) return;
+    if (!background?.enabled) {
+      el.style.backgroundImage = "none";
+      el.style.backgroundColor = "transparent";
+      el.style.borderRadius = "0px";
+      el.style.padding = "0px";
+      return;
+    }
     if (background.type === "gradient") {
       el.style.backgroundImage = `linear-gradient(${background.gradientAngle ?? 90}deg, ${background.gradientStart}, ${background.gradientEnd})`;
       el.style.backgroundColor = "transparent";
@@ -189,11 +213,66 @@ window.TextStyles = {
       el.style.backgroundColor = this.parseHexColorToRgba(background.color || "#ffffff", background.opacity ?? 1);
     }
     el.style.borderRadius = `${background.borderRadius ?? 0}px`;
-    if (background.padding) {
-      el.style.paddingTop = `${background.padding.top}px`;
-      el.style.paddingRight = `${background.padding.right}px`;
-      el.style.paddingBottom = `${background.padding.bottom}px`;
-      el.style.paddingLeft = `${background.padding.left}px`;
+    el.style.paddingTop = `${background.padding?.top ?? 0}px`;
+    el.style.paddingRight = `${background.padding?.right ?? 0}px`;
+    el.style.paddingBottom = `${background.padding?.bottom ?? 0}px`;
+    el.style.paddingLeft = `${background.padding?.left ?? 0}px`;
+  },
+
+  applyAnimation(el, animation) {
+    if (!animation?.enabled || animation.type === "none") return;
+    const duration = Math.max(100, animation.duration ?? 1000);
+    const delay = Math.max(0, animation.delay ?? 0);
+    const loop = animation.loop ? "infinite" : "1";
+    el.style.transition = "none";
+
+    if (animation.type === "fade") {
+      el.style.opacity = "0";
+      requestAnimationFrame(() => {
+        el.style.transition = `opacity ${duration}ms ease ${delay}ms`;
+        el.style.opacity = "1";
+      });
+    }
+
+    if (animation.type === "slide") {
+      el.style.transform = "translateY(20px)";
+      requestAnimationFrame(() => {
+        el.style.transition = `transform ${duration}ms ease ${delay}ms`;
+        el.style.transform = "translateY(0)";
+      });
+    }
+
+    if (animation.type === "bounce") {
+      el.style.transform = "scale(0.9)";
+      requestAnimationFrame(() => {
+        el.style.transition = `transform ${duration}ms cubic-bezier(.34,1.56,.64,1) ${delay}ms`;
+        el.style.transform = "scale(1)";
+      });
+    }
+
+    if (animation.type === "glow") {
+      const glow = animation.glowColor || "#ffffff";
+      el.style.filter = `drop-shadow(0 0 ${Math.max(10, duration / 100)}px ${glow})`;
+      requestAnimationFrame(() => {
+        el.style.transition = `filter ${duration}ms ease ${delay}ms`;
+        el.style.filter = "none";
+      });
+    }
+
+    if (animation.type === "typing") {
+      const fullText = el.innerText || "Text";
+      el.innerText = "";
+      let index = 0;
+      const interval = Math.max(20, duration / Math.max(fullText.length, 1));
+      setTimeout(() => {
+        const timer = setInterval(() => {
+          if (index >= fullText.length) {
+            clearInterval(timer);
+            return;
+          }
+          el.innerText += fullText[index++] || "";
+        }, interval);
+      }, delay);
     }
   },
 
@@ -219,23 +298,28 @@ window.TextStyles = {
     const s = component.styles;
     const p = component.props;
 
-    // Set text content
-    el.textContent = p.value || "Text";
+    // Set text content using innerText to preserve multiline strings
+    el.innerText = p.value || "Text";
 
-    // Font and text styling
-    el.style.fontFamily = `"${s.fontFamily}", sans-serif`;
+    // Responsive font sizing
     const responsiveScale = this.getResponsiveScale(s);
+    el.style.fontFamily = `"${s.fontFamily}", sans-serif`;
     el.style.fontSize = `${Math.max(8, Math.round((s.fontSize ?? 16) * responsiveScale))}px`;
     el.style.fontWeight = s.fontWeight || "400";
     el.style.fontStyle = s.fontStyle === "italic" ? "italic" : "normal";
     el.style.opacity = s.textOpacity ?? 1;
 
-    // Text fill type
+    // Fill type
     if (s.textFillType === "gradient") {
       el.style.color = "transparent";
       el.style.backgroundImage = `linear-gradient(${s.textGradient.angle ?? 90}deg, ${s.textGradient.start}, ${s.textGradient.end})`;
       el.style.webkitBackgroundClip = "text";
       el.style.backgroundClip = "text";
+    } else if (s.textFillType === "transparent") {
+      el.style.color = "transparent";
+      el.style.backgroundImage = "none";
+      el.style.webkitBackgroundClip = "";
+      el.style.backgroundClip = "";
     } else {
       el.style.color = s.color || "#111827";
       el.style.backgroundImage = "none";
@@ -250,47 +334,48 @@ window.TextStyles = {
     el.style.letterSpacing = `${s.letterSpacing ?? 0}px`;
     el.style.lineHeight = s.lineHeight ?? 1.5;
     el.style.wordSpacing = `${s.wordSpacing ?? 0}px`;
-
-    // Alignment
     el.style.textAlign = s.textAlign || "left";
-    el.style.verticalAlign = s.verticalAlign || "top";
+    el.style.whiteSpace = s.overflow === "clip" || s.overflow === "ellipsis" ? "nowrap" : "pre-wrap";
+    el.style.wordBreak = "break-word";
 
     // Text shadow
-    el.style.textShadow = this.shadowCss(s.textShadow);
+    el.style.textShadow = this.buildTextShadowString(s.textShadow);
 
-    // Text stroke (webkit)
+    // Text stroke
     if (s.textStroke?.enabled) {
       const strokeColor = this.parseHexColorToRgba(s.textStroke.color || "#000000", s.textStroke.opacity ?? 1);
       el.style.webkitTextStroke = `${s.textStroke.width ?? 1}px ${strokeColor}`;
+    } else {
+      el.style.webkitTextStroke = "";
     }
 
-    // Padding & Margin
+    // Core layout
+    el.style.width = "100%";
+    el.style.height = "100%";
+    el.style.boxSizing = "border-box";
+    el.style.display = "flex";
+    el.style.alignItems = "flex-start";
+    el.style.justifyContent = "flex-start";
     el.style.paddingTop = `${s.padding?.top ?? 0}px`;
     el.style.paddingRight = `${s.padding?.right ?? 0}px`;
     el.style.paddingBottom = `${s.padding?.bottom ?? 0}px`;
     el.style.paddingLeft = `${s.padding?.left ?? 0}px`;
 
-    el.style.marginTop = `${s.margin?.top ?? 0}px`;
-    el.style.marginRight = `${s.margin?.right ?? 0}px`;
-    el.style.marginBottom = `${s.margin?.bottom ?? 0}px`;
-    el.style.marginLeft = `${s.margin?.left ?? 0}px`;
+    el.style.margin = "0";
 
     // Overflow control
     if (s.overflow === "clip") {
       el.style.overflow = "hidden";
-      el.style.whiteSpace = "nowrap";
+      el.style.textOverflow = "clip";
     } else if (s.overflow === "ellipsis") {
       el.style.overflow = "hidden";
       el.style.textOverflow = "ellipsis";
-      el.style.whiteSpace = "nowrap";
-    } else if (s.overflow === "wrap") {
-      el.style.whiteSpace = "normal";
-      el.style.wordWrap = "break-word";
     } else if (s.overflow === "scroll") {
       el.style.overflow = "auto";
+    } else {
+      el.style.overflow = "visible";
     }
 
-    // Max lines
     if (s.maxLines) {
       el.style.display = "-webkit-box";
       el.style.webkitLineClamp = s.maxLines;
@@ -298,19 +383,6 @@ window.TextStyles = {
       el.style.overflow = "hidden";
     }
 
-    // Rotation
-    if (s.rotation) {
-      el.style.transform = `rotate(${s.rotation}deg)`;
-    }
-
-    // Base styles
-    el.style.margin = "0";
-    el.style.width = "100%";
-    el.style.height = "100%";
-    el.style.boxSizing = "border-box";
-    el.style.display = "flex";
-    el.style.alignItems = s.verticalAlign === "center" ? "center" : s.verticalAlign === "bottom" ? "flex-end" : "flex-start";
-    el.style.justifyContent = s.textAlign === "center" ? "center" : s.textAlign === "right" ? "flex-end" : s.textAlign === "justify" ? "space-between" : "flex-start";
-    el.style.overflow = "visible";
+    // Rotation is applied at wrapper level to avoid affecting text flow.
   }
 };

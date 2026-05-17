@@ -83,8 +83,32 @@ function createRangeInput(value, min, max, step, onChange) {
   input.max = `${max}`;
   input.step = `${step}`;
   input.value = Number(value ?? min);
-  input.addEventListener("input", (e) => onChange(Number(e.target.value)));
+  input.addEventListener("input", (e) => onChange(parseFloat(e.target.value)));
   return input;
+}
+
+function createFontPicker(current, onChange) {
+  const grid = document.createElement("div");
+  grid.className = "font-picker-grid";
+  grid.style.display = "grid";
+  grid.style.gridTemplateColumns = "repeat(2, minmax(0, 1fr))";
+  grid.style.gap = "8px";
+  grid.style.marginTop = "8px";
+  for (const font of TextStyles.FONT_OPTIONS) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = font;
+    button.style.fontFamily = font;
+    button.style.padding = "10px 12px";
+    button.style.borderRadius = "8px";
+    button.style.border = font === current ? "2px solid #2563eb" : "1px solid #d1d5db";
+    button.style.background = font === current ? "#eff6ff" : "#ffffff";
+    button.style.cursor = "pointer";
+    button.style.textAlign = "left";
+    button.addEventListener("click", () => onChange(font));
+    grid.appendChild(button);
+  }
+  return grid;
 }
 
 function createSpacingEditor(title, spacingObj, onChange) {
@@ -236,19 +260,28 @@ function buildComponentAccordions(panel, node) {
   if (node.type === "text") {
     // Typography section
     panel.appendChild(createAccordion("Typography", (content) => {
-      content.appendChild(createField("Font", createSelect(
-        TextStyles.FONT_OPTIONS.map(f => ({ value: f, label: f })),
-        node.styles.fontFamily || "Inter",
-        (v) => {
-          node.styles.fontFamily = v;
-          renderPreview();
-        }
-      )));
-
-      content.appendChild(createField("Size", createStepper(node.styles.fontSize || 16, (v) => {
-        node.styles.fontSize = Math.max(8, v);
+      content.appendChild(createField("Font", createFontPicker(node.styles.fontFamily || "Inter", (v) => {
+        node.styles.fontFamily = v;
         renderPreview();
-      }, 1)));
+      })));
+
+      const fontSizeWrapper = document.createElement("div");
+      fontSizeWrapper.style.display = "flex";
+      fontSizeWrapper.style.alignItems = "center";
+      fontSizeWrapper.style.gap = "8px";
+      const fontSizeSlider = createRangeInput(node.styles.fontSize || 16, 8, 72, 1, (v) => {
+        node.styles.fontSize = Math.max(8, Math.round(v));
+        fontSizeStepper.querySelector("input").value = node.styles.fontSize;
+        renderPreview();
+      });
+      const fontSizeStepper = createStepper(node.styles.fontSize || 16, (v) => {
+        node.styles.fontSize = Math.max(8, v);
+        fontSizeSlider.value = node.styles.fontSize;
+        renderPreview();
+      }, 1);
+      fontSizeWrapper.appendChild(fontSizeSlider);
+      fontSizeWrapper.appendChild(fontSizeStepper);
+      content.appendChild(createField("Size", fontSizeWrapper));
 
       content.appendChild(createField("Weight", createSelect(
         TextStyles.FONT_WEIGHTS,
@@ -287,13 +320,14 @@ function buildComponentAccordions(panel, node) {
     panel.appendChild(createAccordion("Colors & Effects", (content) => {
       content.appendChild(createField("Text Fill", createSelect([
         { value: "solid", label: "Solid" },
-        { value: "gradient", label: "Gradient" }
+        { value: "gradient", label: "Gradient" },
+        { value: "transparent", label: "Transparent" }
       ], node.styles.textFillType || "solid", (v) => {
         node.styles.textFillType = v;
         renderPreview();
       })));
 
-      if (node.styles.textFillType !== "gradient") {
+      if (node.styles.textFillType === "solid") {
         content.appendChild(createField("Text Color", createColorInput(node.styles.color || "#111827", (v) => {
           node.styles.color = v;
           renderPreview();
@@ -418,6 +452,60 @@ function buildComponentAccordions(panel, node) {
           node.styles.textShadow.intensity = v;
           renderPreview();
         })));
+
+        node.styles.textShadow.multiShadows = node.styles.textShadow.multiShadows || [];
+        const addLayer = document.createElement("button");
+        addLayer.type = "button";
+        addLayer.textContent = "Add Shadow Layer";
+        addLayer.addEventListener("click", () => {
+          node.styles.textShadow.multiShadows.push({ enabled: true, offsetX: 0, offsetY: 0, blur: 4, spread: 0, opacity: 0.15 });
+          renderPreview();
+        });
+        content.appendChild(addLayer);
+
+        node.styles.textShadow.multiShadows.forEach((layer, index) => {
+          const layerField = document.createElement("div");
+          layerField.style.border = "1px solid #e5e7eb";
+          layerField.style.borderRadius = "8px";
+          layerField.style.padding = "10px";
+          layerField.style.marginTop = "10px";
+          layerField.style.backgroundColor = "#f9fafb";
+
+          layerField.appendChild(createField(`Layer ${index + 1}`, createCheckbox(layer.enabled, (v) => {
+            layer.enabled = v;
+            renderPreview();
+          })));
+          layerField.appendChild(createField("Offset X", createStepper(layer.offsetX ?? 0, (v) => {
+            layer.offsetX = v;
+            renderPreview();
+          }, 1)));
+          layerField.appendChild(createField("Offset Y", createStepper(layer.offsetY ?? 0, (v) => {
+            layer.offsetY = v;
+            renderPreview();
+          }, 1)));
+          layerField.appendChild(createField("Blur", createStepper(layer.blur ?? 4, (v) => {
+            layer.blur = v;
+            renderPreview();
+          }, 1)));
+          layerField.appendChild(createField("Spread", createStepper(layer.spread ?? 0, (v) => {
+            layer.spread = v;
+            renderPreview();
+          }, 1)));
+          const layerOpacity = createRangeInput(layer.opacity ?? 0.15, 0, 1, 0.05, (v) => {
+            layer.opacity = v;
+            renderPreview();
+          });
+          layerField.appendChild(createField("Opacity", layerOpacity));
+          const removeLayer = document.createElement("button");
+          removeLayer.type = "button";
+          removeLayer.textContent = "Remove Layer";
+          removeLayer.addEventListener("click", () => {
+            node.styles.textShadow.multiShadows.splice(index, 1);
+            renderPreview();
+          });
+          layerField.appendChild(removeLayer);
+          content.appendChild(layerField);
+        });
       }
     }, false));
 
@@ -642,9 +730,24 @@ function buildComponentAccordions(panel, node) {
         node.layout.y = Math.max(0, v);
         renderPreview();
       })));
+      content.appendChild(createField("Width Mode", createSelect([
+        { value: "auto", label: "Auto" },
+        { value: "fixed", label: "Fixed" },
+        { value: "fill", label: "Fill" }
+      ], node.styles.widthMode || "auto", (v) => {
+        node.styles.widthMode = v;
+        renderPreview();
+      })));
       content.appendChild(createField("Width", createStepper(node.layout.width, (v) => {
         node.layout.width = Math.max(24, v);
         if (node.type === "container") ComponentFactory.syncContainerFlexDirection(node);
+        renderPreview();
+      })));
+      content.appendChild(createField("Height Mode", createSelect([
+        { value: "auto", label: "Auto" },
+        { value: "fixed", label: "Fixed" }
+      ], node.styles.heightMode || "auto", (v) => {
+        node.styles.heightMode = v;
         renderPreview();
       })));
       content.appendChild(createField("Height", createStepper(node.layout.height, (v) => {
