@@ -13,6 +13,8 @@ window.AppState = {
       nextScreenId: null
     },
     pages: [],
+    pageGroups: [],
+    pagePanelCollapsed: false,
     currentPageId: null,
     initialPageId: null,
     navigationStack: []

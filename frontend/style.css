@@ -232,6 +232,8 @@ body.runtime-active .preview-app-btn {
   padding-left: 8px;
 }
 
+.pages-list.collapsed { display: none; }
+
 .page-item { display: inline-flex; align-items: center; gap: 6px; }
 .page-switch-btn {
   border: 1px solid var(--line);
@@ -246,6 +248,30 @@ body.runtime-active .preview-app-btn {
 .page-item.active .page-switch-btn { border-color: var(--primary); background: #eff6ff; }
 .page-mini-btn { border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 4px 6px; cursor: pointer; font-size: 12px; }
 .page-mini-btn.danger { color: var(--danger); border-color: rgba(220,38,38,0.12); }
+
+/* Confirmation modal */
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.confirm-modal.open { display: flex; }
+.confirm-backdrop { position: absolute; inset: 0; background: rgba(15,23,42,0.45); }
+.confirm-card { position: relative; background: #fff; border-radius: 10px; padding: 18px; width: min(420px, 94vw); box-shadow: 0 20px 50px rgba(15,23,42,0.2); z-index: 2; }
+.confirm-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+.confirm-actions button { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; }
+.confirm-actions .danger { background: linear-gradient(180deg,#dc2626,#b91c1c); color: #fff; border: none; }
+
+.page-thumb { width: 36px; height: 36px; border-radius: 6px; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: #fff; border: 1px solid var(--line); margin-right: 8px; }
+.page-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.page-initials { font-weight: 700; color: var(--muted); }
+.page-group-header { font-size: 12px; font-weight: 700; color: var(--muted); padding: 6px 8px; }
+.page-item.drag-over { outline: 2px dashed var(--primary); }
+.page-rename-input { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
+.page-assign-select { margin-left: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
 
 .center-toolbar-title {
   display: flex;

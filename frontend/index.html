@@ -37,12 +37,14 @@
           <span id="screen-label" class="screen-label">Screen</span>
         </div>
         <div class="center-toolbar-controls">
-          <div id="pages-panel-container" class="pages-panel-container">
-            <button id="add-page-btn" type="button" class="toolbar-btn">+ Add Page</button>
-            <div id="pages-panel" class="pages-list"></div>
-          </div>
-          <select id="device-select" class="device-select"></select>
+        <div id="pages-panel-container" class="pages-panel-container">
+          <button id="add-page-btn" type="button" class="toolbar-btn">+ Add Page</button>
+          <button id="toggle-pages-btn" type="button" class="toolbar-btn">▾</button>
+          <button id="create-group-btn" type="button" class="toolbar-btn">+ Group</button>
+          <div id="pages-panel" class="pages-list"></div>
         </div>
+        <select id="device-select" class="device-select"></select>
+      </div>
       </div>
       <div class="preview-viewport">
         <div class="preview-frame-wrap">
@@ -69,6 +71,18 @@
       <div class="accordion-content"></div>
     </section>
   </template>
+
+  <!-- Confirmation modal -->
+  <div id="confirm-modal" class="confirm-modal" aria-hidden="true">
+    <div class="confirm-backdrop"></div>
+    <div class="confirm-card">
+      <div id="confirm-message">Are you sure?</div>
+      <div class="confirm-actions">
+        <button id="confirm-cancel" type="button">Cancel</button>
+        <button id="confirm-ok" type="button" class="danger">Yes, delete</button>
+      </div>
+    </div>
+  </div>
 
   <script src="core/state.js"></script>
   <script src="core/components.js"></script>
