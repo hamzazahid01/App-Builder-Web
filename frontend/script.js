@@ -31,22 +31,39 @@ window.addEventListener("DOMContentLoaded", () => {
   updateScreenLabel();
 
   // Pages UI
-  const addPageBtn = document.getElementById('add-page-btn');
-  if (addPageBtn) addPageBtn.addEventListener('click', () => {
-    PageManager.addPage();
-    PageManager.render();
-  });
-  const togglePagesBtn = document.getElementById('toggle-pages-btn');
-  const createGroupBtn = document.getElementById('create-group-btn');
-  if (togglePagesBtn) togglePagesBtn.addEventListener('click', () => {
-    AppState.app.pagePanelCollapsed = !AppState.app.pagePanelCollapsed;
-    const panel = document.getElementById('pages-panel');
-    if (AppState.app.pagePanelCollapsed) panel.classList.add('collapsed'); else panel.classList.remove('collapsed');
-  });
-  if (createGroupBtn) createGroupBtn.addEventListener('click', () => {
-    const name = prompt('Group name:'); if (!name) return; PageManager.createGroup(name);
-  });
-  if (window.PageManager && typeof PageManager.render === 'function') PageManager.render();
+  // Ensure PageManager is available before wiring buttons. If not, dynamically load the script.
+  function bindPagesUI() {
+    const addPageBtn = document.getElementById('add-page-btn');
+    if (addPageBtn && window.PageManager) addPageBtn.addEventListener('click', () => { PageManager.addPage(); PageManager.render(); });
+
+    const togglePagesBtn = document.getElementById('toggle-pages-btn');
+    const createGroupBtn = document.getElementById('create-group-btn');
+    if (togglePagesBtn) togglePagesBtn.addEventListener('click', () => {
+      AppState.app.pagePanelCollapsed = !AppState.app.pagePanelCollapsed;
+      const panel = document.getElementById('pages-panel');
+      if (AppState.app.pagePanelCollapsed) panel.classList.add('collapsed'); else panel.classList.remove('collapsed');
+    });
+    if (createGroupBtn && window.PageManager) createGroupBtn.addEventListener('click', () => { const name = prompt('Group name:'); if (!name) return; PageManager.createGroup(name); });
+    if (window.PageManager && typeof PageManager.render === 'function') PageManager.render();
+  }
+
+  if (window.PageManager) {
+    bindPagesUI();
+  } else {
+    // try to load the pages script dynamically and bind after load
+    const scriptUrl = 'ui/pages.js';
+    const existing = Array.from(document.scripts).find(s => s.src && s.src.endsWith(scriptUrl));
+    if (!existing) {
+      const s = document.createElement('script');
+      s.src = scriptUrl;
+      s.onload = () => { bindPagesUI(); };
+      s.onerror = () => console.warn('Failed to load pages script:', scriptUrl);
+      document.body.appendChild(s);
+    } else {
+      // script tag exists but PageManager still undefined; bind after short delay
+      setTimeout(() => { if (window.PageManager) bindPagesUI(); else console.warn('PageManager still not defined after delay'); }, 200);
+    }
+  }
 
   document.getElementById("undo-btn").addEventListener("click", () => {
     if (!StateUtils.canUndo()) return;
