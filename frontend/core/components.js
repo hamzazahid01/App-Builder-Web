@@ -55,29 +55,42 @@ window.ComponentFactory = {
     };
 
     if (type === "button") {
-      return {
+      const btn = {
         ...common,
         styles: {
+          backgroundType: "solid",
           backgroundColor: "#2563eb",
+          gradientStart: "#2563eb",
+          gradientEnd: "#1d4ed8",
           textColor: "#ffffff",
+          fontFamily: "Inter",
+          fontSize: 14,
+          fontSizeManual: false,
+          fontScale: 1,
+          fontStyle: { bold: true, italic: false, underline: false, lineThrough: false },
+          textAlign: "center",
           padding: boxSpacing(10, 16, 10, 16),
           borderRadius: 10,
-          fontSize: 14,
-          fontWeight: "600",
-          opacity: 1
+          borderRadiusCorners: { tl: 10, tr: 10, bl: 10, br: 10 },
+          opacity: 1,
+          shadow: { enabled: false, color: "#000000", opacity: 0.25, blur: 8, spread: 0, offsetX: 0, offsetY: 4 },
+          widthMode: "fill",
+          heightMode: "fill"
         },
         props: {
           text: "Button",
-          onClick: {
-            type: "navigate",
-            targetPageId: "",
+          action: {
+            type: "none",
+            targetPageId: AppState?.app?.initialPageId || "",
             url: "",
-            dialogText: "Hello from dialog",
-            customCode: "",
-            back: false
-          }
+            dialogText: "Message",
+            customCode: ""
+          },
+          onClick: null
         }
       };
+      btn.props.onClick = btn.props.action;
+      return btn;
     }
 
     if (type === "text") {
@@ -166,16 +179,21 @@ window.ComponentFactory = {
     }
 
     if (node.type === "container") this.syncContainerFlexDirection(node);
+    if (node.type === "button") ButtonStyles.ensure(node);
     return node;
   },
 
   migrateApp(app) {
-    for (const page of app.pages) {
+    for (const page of app.pages || []) {
       page.components = (page.components || [])
         .map((c) => this.migrateComponent(c))
         .filter(Boolean);
-      StateUtils.ensurePageCanvasLayout(page);
     }
+    if (!app.pages?.length) return app;
+    if (!app.initialPageId) app.initialPageId = app.pages[0].id;
+    if (!app.currentPageId) app.currentPageId = app.pages[0].id;
+    if (!app.splashScreen.nextScreenId) app.splashScreen.nextScreenId = app.initialPageId;
+    for (const page of app.pages) StateUtils.ensurePageCanvasLayout(page);
     return app;
   }
 };

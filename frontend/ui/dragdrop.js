@@ -30,8 +30,7 @@ window.DragDrop = {
       if (!e.target.closest(".page-canvas")) return;
       AppState.selectedId = null;
       AppState.selectedType = "page";
-      Inspector.render();
-      renderPreview();
+      Builder.refreshAll();
     });
 
     document.addEventListener("pointermove", (e) => this.onPointerMove(e));
@@ -40,8 +39,12 @@ window.DragDrop = {
   },
 
   startPlaceFromLibrary(type, e) {
-    const target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
-    let canvas = target?.canvasEl ?? document.querySelector(".page-canvas");
+    const pageCanvas = document.querySelector(".page-canvas");
+    let target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
+    if (type === "container") {
+      target = { kind: "page", canvasEl: pageCanvas, list: StateUtils.getCurrentPage()?.components };
+    }
+    let canvas = type === "container" ? pageCanvas : (target?.canvasEl ?? pageCanvas);
     if (!canvas) {
       renderPreview();
       canvas = document.querySelector(".page-canvas");
@@ -50,13 +53,14 @@ window.DragDrop = {
 
     const defaults = ComponentFactory.getDefaultLayout(type);
     const pos = CanvasUtils.clientToCanvas(e.clientX, e.clientY, canvas);
+    const size = CanvasUtils.getCanvasSize(canvas);
     const start = CanvasUtils.clampToBounds(
       pos.x - defaults.width / 2,
       pos.y - defaults.height / 2,
       defaults.width,
       defaults.height,
-      canvas.clientWidth,
-      canvas.clientHeight
+      size.width,
+      size.height
     );
 
     this.beginSession({
@@ -173,15 +177,20 @@ window.DragDrop = {
     if (!session || e.pointerId !== session.pointerId) return;
 
     if (session.mode === "place") {
-      const target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
-      const canvas = target?.canvasEl ?? session.canvasEl;
+      let target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
+      const pageCanvas = document.querySelector(".page-canvas");
+      if (session.type === "container") {
+        target = { kind: "page", canvasEl: pageCanvas, list: StateUtils.getCurrentPage()?.components };
+      }
+      const canvas = session.type === "container" ? pageCanvas : (target?.canvasEl ?? session.canvasEl);
       session.canvasEl = canvas;
       session.dropTarget = target;
       const pos = CanvasUtils.clientToCanvas(e.clientX, e.clientY, canvas);
       const x = pos.x - session.offsetX;
       const y = pos.y - session.offsetY;
+      const cs = CanvasUtils.getCanvasSize(canvas);
       const clamped = CanvasUtils.clampToBounds(
-        x, y, session.layout.width, session.layout.height, canvas.clientWidth, canvas.clientHeight
+        x, y, session.layout.width, session.layout.height, cs.width, cs.height
       );
       session.pendingX = clamped.x;
       session.pendingY = clamped.y;
@@ -208,9 +217,9 @@ window.DragDrop = {
       const dx = e.clientX - session.startClientX;
       const dy = e.clientY - session.startClientY;
       const next = CanvasUtils.applyResize(session.startLayout, session.handle, dx, dy);
+      const cs = CanvasUtils.getCanvasSize(session.canvasEl);
       const clamped = CanvasUtils.clampToBounds(
-        next.x, next.y, next.width, next.height,
-        session.canvasEl.clientWidth, session.canvasEl.clientHeight
+        next.x, next.y, next.width, next.height, cs.width, cs.height
       );
       Object.assign(component.layout, clamped);
       if (component.type === "container") ComponentFactory.syncContainerFlexDirection(component);
@@ -220,13 +229,14 @@ window.DragDrop = {
 
     if (session.mode === "move") {
       const pos = CanvasUtils.clientToCanvas(e.clientX, e.clientY, session.canvasEl);
+      const cs = CanvasUtils.getCanvasSize(session.canvasEl);
       const clamped = CanvasUtils.clampToBounds(
         pos.x - session.offsetX,
         pos.y - session.offsetY,
         component.layout.width,
         component.layout.height,
-        session.canvasEl.clientWidth,
-        session.canvasEl.clientHeight
+        cs.width,
+        cs.height
       );
       component.layout.x = clamped.x;
       component.layout.y = clamped.y;
@@ -246,11 +256,30 @@ window.DragDrop = {
       this.placeComponent(session.type, session.pendingX, session.pendingY, target);
     }
 
-    if (session.mode === "move" && session.wrapperEl) {
-      session.wrapperEl.classList.remove("is-dragging");
-      try {
-        session.wrapperEl.releasePointerCapture(e.pointerId);
-      } catch (_) {}
+    if (session.mode === "move" && session.component) {
+      if (session.moved) {
+        const target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
+        const ctx = StateUtils.findParentContext(session.component.id);
+        if (
+          target &&
+          ctx &&
+          target.list !== ctx.parentList &&
+          session.component.type !== "container"
+        ) {
+          StateUtils.reparentComponent(
+            session.component.id,
+            target.list,
+            session.component.layout.x,
+            session.component.layout.y
+          );
+        }
+      }
+      if (session.wrapperEl) {
+        session.wrapperEl.classList.remove("is-dragging");
+        try {
+          session.wrapperEl.releasePointerCapture(e.pointerId);
+        } catch (_) {}
+      }
       if (!session.moved && session.component) {
         AppState.selectedId = session.component.id;
         AppState.selectedType = "component";
@@ -271,10 +300,25 @@ window.DragDrop = {
     const page = StateUtils.getCurrentPage();
     if (!page) return;
     const component = ComponentFactory.create(type);
-    component.layout.x = x;
-    component.layout.y = y;
+    const pageCanvas = document.querySelector(".page-canvas");
+    const pageSize = CanvasUtils.getCanvasSize(pageCanvas);
 
-    const list = target?.list ?? page.components;
+    let list = page.components;
+    let canvasEl = pageCanvas;
+    if (type === "container") {
+      list = page.components;
+      canvasEl = pageCanvas;
+    } else if (target?.kind === "container" && target.list) {
+      list = target.list;
+      canvasEl = target.canvasEl;
+    }
+
+    const bounds = CanvasUtils.getCanvasSize(canvasEl);
+    const clamped = CanvasUtils.clampToBounds(x, y, component.layout.width, component.layout.height, bounds.width, bounds.height);
+    component.layout.x = clamped.x;
+    component.layout.y = clamped.y;
+    component.layout.width = clamped.width;
+    component.layout.height = clamped.height;
     component.layout.zIndex = StateUtils.getNextZIndexInList(list);
     list.push(component);
 
@@ -288,8 +332,7 @@ window.DragDrop = {
     this.session = null;
     AppState.suppressCanvasClickUntil = Date.now() + 120;
     if (commitHistory) StateUtils.pushHistorySnapshot();
-    renderPreview();
-    Inspector.render();
+    Builder.refreshAll();
   },
 
   cancelSession() {
@@ -299,11 +342,13 @@ window.DragDrop = {
   },
 
   attachNode(wrapperEl, component) {
+    wrapperEl.style.pointerEvents = "auto";
     wrapperEl.addEventListener("pointerdown", (e) => {
       if (AppState.runtimeMode) return;
       if (e.button !== 0) return;
       if (e.target.closest(".resize-handle")) return;
-      if (e.target.closest("input, textarea, select")) return;
+      e.stopPropagation();
+      e.preventDefault();
       this.startMoveComponent(component, wrapperEl, e);
     }, true);
 

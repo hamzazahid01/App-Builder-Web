@@ -2,14 +2,33 @@ window.CanvasUtils = {
   MIN_SIZE: 24,
   HANDLES: ["nw", "n", "ne", "e", "se", "s", "sw", "w"],
 
-  clampToBounds(x, y, width, height, maxW, maxH) {
-    const maxX = Math.max(0, maxW - width);
-    const maxY = Math.max(0, maxH - height);
+  snap(value) {
+    if (!AppState.snapToGrid) return Math.round(value);
+    const grid = 8;
+    return Math.round(value / grid) * grid;
+  },
+
+  getCanvasSize(canvasEl) {
+    if (!canvasEl) return { width: 320, height: 640 };
+    const w = canvasEl.clientWidth || canvasEl.offsetWidth || 0;
+    const h = canvasEl.clientHeight || canvasEl.offsetHeight || 0;
+    const frame = AppState.deviceMap[AppState.currentDeviceKey] || AppState.deviceMap["iphone-14"];
     return {
-      x: Math.round(Math.max(0, Math.min(x, maxX))),
-      y: Math.round(Math.max(0, Math.min(y, maxY))),
-      width: Math.max(this.MIN_SIZE, width),
-      height: Math.max(this.MIN_SIZE, height)
+      width: Math.max(120, w || frame.width - 24),
+      height: Math.max(120, h || frame.height - 100)
+    };
+  },
+
+  clampToBounds(x, y, width, height, maxW, maxH) {
+    const safeW = Math.max(this.MIN_SIZE * 2, maxW || 0);
+    const safeH = Math.max(this.MIN_SIZE * 2, maxH || 0);
+    const maxX = Math.max(0, safeW - width);
+    const maxY = Math.max(0, safeH - height);
+    return {
+      x: this.snap(Math.max(0, Math.min(x, maxX))),
+      y: this.snap(Math.max(0, Math.min(y, maxY))),
+      width: Math.max(this.MIN_SIZE, Math.round(width)),
+      height: Math.max(this.MIN_SIZE, Math.round(height))
     };
   },
 

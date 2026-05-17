@@ -11,8 +11,7 @@ function selectNode(component, e) {
   AppState.selectedId = component.id;
   AppState.selectedType = "component";
   StateUtils.bringToFront(component);
-  Inspector.render();
-  renderPreview();
+  Builder.refreshAll();
 }
 
 function applyCanvasLayout(wrapper, layout) {
@@ -60,6 +59,7 @@ function bindEditSelect(el, component, runtimeHandler) {
 
 function executeAction(onClickAction) {
   if (!onClickAction || !AppState.runtimeMode) return;
+  if (onClickAction.type === "none") return;
   if (onClickAction.type === "navigate" && onClickAction.targetPageId) {
     StateUtils.setCurrentPage(onClickAction.targetPageId, true);
     renderPreview();
@@ -98,23 +98,19 @@ function renderComponent(component) {
 }
 
 function renderButton(component) {
+  ButtonStyles.ensure(component);
   const el = document.createElement("button");
-  el.textContent = component.props.text;
-  el.style.backgroundColor = component.styles.backgroundColor;
-  el.style.color = component.styles.textColor;
-  el.style.border = "none";
-  el.style.borderRadius = `${component.styles.borderRadius}px`;
-  el.style.fontSize = `${component.styles.fontSize}px`;
-  el.style.fontWeight = component.styles.fontWeight;
-  el.style.opacity = `${component.styles.opacity}`;
-  el.style.cursor = AppState.runtimeMode ? "pointer" : "default";
-  applySpacing(el, "padding", component.styles.padding);
-  el.style.width = "100%";
-  el.style.height = "100%";
-  bindEditSelect(el, component, (e) => {
-    e.stopPropagation();
-    executeAction(component.props.onClick);
-  });
+  el.type = "button";
+  ButtonStyles.applyToElement(el, component);
+  if (!AppState.runtimeMode) {
+    el.style.pointerEvents = "none";
+  } else {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const action = component.props.action || component.props.onClick;
+      executeAction(action);
+    });
+  }
   return el;
 }
 
@@ -149,14 +145,16 @@ function renderInputNode(component) {
   const el = document.createElement("input");
   el.type = component.props.inputType;
   el.placeholder = component.props.placeholder;
+  el.readOnly = !AppState.runtimeMode;
   el.style.borderStyle = "solid";
   el.style.borderColor = component.styles.borderColor;
   el.style.borderWidth = `${component.styles.borderWidth}px`;
   el.style.borderRadius = `${component.styles.borderRadius}px`;
   el.style.width = "100%";
   el.style.height = "100%";
+  el.style.pointerEvents = AppState.runtimeMode ? "auto" : "none";
+  el.style.boxSizing = "border-box";
   applySpacing(el, "padding", component.styles.padding);
-  bindEditSelect(el, component);
   return el;
 }
 
@@ -201,7 +199,7 @@ function renderContainerNode(component) {
   el.style.opacity = `${component.styles.opacity ?? 1}`;
   el.style.display = "flex";
   el.style.flexDirection = "column";
-  el.style.overflow = "hidden";
+  el.style.overflow = "visible";
 
   const label = document.createElement("div");
   label.className = "container-layout-badge";
@@ -214,7 +212,10 @@ function renderContainerNode(component) {
   innerCanvas.style.position = "relative";
   innerCanvas.style.flex = "1";
   innerCanvas.style.width = "100%";
-  innerCanvas.style.minHeight = "0";
+  innerCanvas.style.minHeight = "100%";
+  innerCanvas.style.height = "100%";
+  innerCanvas.style.overflow = "visible";
+  innerCanvas.style.pointerEvents = "auto";
   applySpacing(innerCanvas, "padding", component.styles.padding);
 
   if (!AppState.runtimeMode && (!component.children || component.children.length === 0)) {
@@ -227,7 +228,22 @@ function renderContainerNode(component) {
   }
 
   el.appendChild(innerCanvas);
-  bindEditSelect(el, component);
+
+  innerCanvas.addEventListener("pointerdown", (e) => {
+    if (AppState.runtimeMode) return;
+    if (e.target.closest(".canvas-node")) return;
+    e.stopPropagation();
+    selectNode(component, e);
+  });
+
+  el.addEventListener("click", (e) => {
+    if (AppState.runtimeMode) return;
+    if (AppState.suppressCanvasClickUntil && Date.now() < AppState.suppressCanvasClickUntil) return;
+    if (e.target.closest(".canvas-node")) return;
+    e.stopPropagation();
+    selectNode(component, e);
+  });
+
   return el;
 }
 
@@ -268,7 +284,7 @@ function renderPage(preview, page) {
   root.style.flexDirection = "column";
   root.style.overflow = "hidden";
 
-  if (page.appBar.enabled) {
+  if (AppState.runtimeMode && page.appBar.enabled) {
     const appBar = document.createElement("div");
     appBar.className = "page-appbar";
     appBar.style.backgroundColor = page.appBar.backgroundColor;
@@ -279,12 +295,16 @@ function renderPage(preview, page) {
 
   StateUtils.ensurePageCanvasLayout(page);
 
+  const frame = AppState.deviceMap[AppState.currentDeviceKey] || { width: 390, height: 844 };
+  const canvasH = Math.max(400, frame.height - (AppState.runtimeMode && page.appBar.enabled ? 56 : 24));
+
   const body = document.createElement("div");
   body.className = "page-body page-canvas";
   body.style.position = "relative";
   body.style.flex = "1";
   body.style.width = "100%";
-  body.style.minHeight = "0";
+  body.style.minHeight = `${canvasH}px`;
+  body.style.height = `${canvasH}px`;
 
   if (!AppState.runtimeMode && page.components.length === 0) {
     const hint = document.createElement("div");
@@ -313,13 +333,22 @@ window.renderPreview = function renderPreview() {
   }
 
   renderPage(preview, page);
+  updateScreenLabel();
 };
 
 window.applyDeviceFrame = function applyDeviceFrame(deviceKey) {
+  AppState.currentDeviceKey = deviceKey;
   const frame = AppState.deviceMap[deviceKey];
   const preview = document.getElementById("mobile-preview");
   preview.style.width = `${frame.width}px`;
   preview.style.height = `${frame.height}px`;
+  renderPreview();
+};
+
+window.updateScreenLabel = function updateScreenLabel() {
+  const page = StateUtils.getCurrentPage();
+  const el = document.getElementById("screen-label");
+  if (el && page) el.textContent = page.name || "Screen";
 };
 
 window.RuntimeEngine = {
@@ -329,8 +358,7 @@ window.RuntimeEngine = {
     AppState.app.navigationStack = [];
     AppState.selectedId = null;
     AppState.selectedType = "none";
-    Inspector.render();
-    renderPreview();
+    Builder.refreshAll();
 
     if (AppState.app.splashScreen.enabled) {
       if (AppState.runtimeSplashTimer) clearTimeout(AppState.runtimeSplashTimer);
@@ -351,7 +379,6 @@ window.RuntimeEngine = {
     AppState.runtimeScreen = "page";
     if (AppState.runtimeSplashTimer) clearTimeout(AppState.runtimeSplashTimer);
     AppState.runtimeSplashTimer = null;
-    renderPreview();
-    Inspector.render();
+    Builder.refreshAll();
   }
 };

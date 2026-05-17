@@ -3,53 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>No-Code App Builder</title>
+  <title>App Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header class="app-toolbar">
+    <div class="toolbar-brand">
+      <strong id="app-title-label">App Builder</strong>
+    </div>
+    <button id="run-app-btn" class="preview-app-btn" type="button">▶ App Preview</button>
+  </header>
+
   <div class="app-shell">
     <aside class="left-panel">
       <div class="panel-header">
-        <h2>Component Library</h2>
-        <p>Component chunein aur screen par kahin bhi rakhein</p>
+        <h2>Components</h2>
+        <p>Screen par click karke rakhein, kheench kar move karein</p>
       </div>
       <div id="component-library" class="component-library"></div>
-
-      <div class="panel-header section-gap">
-        <h2>Pages</h2>
-        <p>Manage routes and initial page</p>
-      </div>
-      <div id="pages-panel" class="pages-panel"></div>
-      <button id="add-page-btn" class="secondary-btn" type="button">+ Add Page</button>
-
-      <div class="left-panel-actions">
-        <button id="undo-btn" class="secondary-btn" type="button">Undo</button>
-        <button id="redo-btn" class="secondary-btn" type="button">Redo</button>
-        <button id="run-app-btn" class="secondary-btn" type="button">Run Runtime Flow</button>
-        <button id="export-project-btn" class="secondary-btn" type="button">Export Flutter Project</button>
-        <button id="export-flutter-btn" class="primary-btn">Export Flutter</button>
+      <div class="left-panel-footer">
+        <button id="undo-btn" class="footer-btn" type="button" title="Undo">↶</button>
+        <button id="redo-btn" class="footer-btn" type="button" title="Redo">↷</button>
       </div>
     </aside>
 
     <main class="center-panel">
       <div class="center-toolbar">
-        <h2>Mobile  Preview</h2>
-        <select id="device-select">
-          <option value="iphone-se">iPhone SE</option>
-          <option value="iphone-14" selected>iPhone 14</option>
-          <option value="android-small">Android Small</option>
-          <option value="android-large">Android Large</option>
-        </select>
+        <div class="center-toolbar-title">
+          <h2>Mobile Preview</h2>
+          <span id="screen-label" class="screen-label">Screen</span>
+        </div>
+        <select id="device-select" class="device-select"></select>
       </div>
       <div class="preview-viewport">
-        <div id="mobile-preview" class="mobile-preview"></div>
+        <div class="preview-frame-wrap">
+          <div id="mobile-preview" class="mobile-preview"></div>
+        </div>
       </div>
     </main>
 
     <aside class="right-panel">
       <div class="panel-header">
-        <h2>Properties</h2>
-        <p>Inspector updates by selected component</p>
+        <h2>Settings</h2>
+        <p>Jo cheez select ho uski settings</p>
       </div>
       <div id="properties-panel" class="properties-panel"></div>
     </aside>
@@ -68,11 +67,14 @@
   <script src="core/state.js"></script>
   <script src="core/components.js"></script>
   <script src="core/canvas.js"></script>
+  <script src="core/button-styles.js"></script>
   <script src="core/render.js"></script>
-  <script src="ui/pages.js"></script>
+  <script src="ui/toast.js"></script>
+  <script src="ui/builder.js"></script>
+  <script src="ui/button-inspector.js"></script>
   <script src="ui/inspector.js"></script>
   <script src="ui/dragdrop.js"></script>
-  <script src="export/flutter.js"></script>
+  <script src="ui/keyboard.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

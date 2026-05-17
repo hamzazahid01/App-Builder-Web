@@ -15,9 +15,7 @@ window.PageManager = {
         StateUtils.setCurrentPage(page.id, false);
         AppState.selectedId = null;
         AppState.selectedType = "page";
-        renderPreview();
-        Inspector.render();
-        this.render();
+        Builder.refreshAll();
       });
 
       row.appendChild(btn);
@@ -78,9 +76,8 @@ window.PageManager = {
     StateUtils.setCurrentPage(page.id, false);
     AppState.selectedId = null;
     AppState.selectedType = "page";
-    this.render();
-    Inspector.render();
-    renderPreview();
+    StateUtils.pushHistorySnapshot();
+    Builder.refreshAll();
   },
 
   duplicatePage(pageId) {
@@ -92,9 +89,8 @@ window.PageManager = {
     clone.appBar.title = clone.name;
     AppState.app.pages.push(clone);
     StateUtils.setCurrentPage(clone.id, false);
-    this.render();
-    Inspector.render();
-    renderPreview();
+    StateUtils.pushHistorySnapshot();
+    Builder.refreshAll();
   },
 
   reorderPage(pageId, offset) {
@@ -104,6 +100,7 @@ window.PageManager = {
     if (target < 0 || target >= AppState.app.pages.length) return;
     const pages = AppState.app.pages;
     [pages[idx], pages[target]] = [pages[target], pages[idx]];
+    StateUtils.pushHistorySnapshot();
     this.render();
   },
 
@@ -119,8 +116,8 @@ window.PageManager = {
     if (AppState.app.splashScreen.nextScreenId === pageId) {
       AppState.app.splashScreen.nextScreenId = AppState.app.initialPageId;
     }
-    this.render();
-    Inspector.render();
-    renderPreview();
+    StateUtils.pushHistorySnapshot();
+    Builder.refreshAll();
+    Toast.show("Page deleted");
   }
 };

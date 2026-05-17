@@ -16,12 +16,395 @@ body {
   color: var(--text);
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-toolbar {
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  gap: 12px;
+}
+
+.preview-app-btn {
+  border: none;
+  background: linear-gradient(180deg, #2e6cff, #1f57df);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.preview-app-btn:hover { filter: brightness(1.05); }
+
+body.runtime-active .preview-app-btn {
+  background: linear-gradient(180deg, #dc2626, #b91c1c);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+.toolbar-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.toolbar-brand strong { font-size: 15px; }
+
+.save-status {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toolbar-btn:hover { background: #f8faff; }
+
+.toolbar-snap {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .app-shell {
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 280px 1fr 360px;
+}
+
+.secondary-btn:disabled,
+.toolbar-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.left-panel {
+  overflow: hidden;
+}
+
+.left-panel .panel-header {
+  flex-shrink: 0;
+}
+
+.component-library {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-content: start;
+  padding-right: 4px;
+  margin-bottom: 0;
+}
+
+.left-panel-footer {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.footer-btn {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.footer-btn:hover { background: #f8faff; }
+.footer-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.inspector-hint,
+.inspector-note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 8px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px dashed var(--line);
+}
+
+.device-select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 220px;
+}
+
+.layer-row {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 7px 10px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.layer-row.active {
+  border-color: var(--primary);
+  background: #eff6ff;
+}
+
+.layer-type {
+  text-transform: capitalize;
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 52px;
+}
+
+.layer-label {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-frame-wrap {
+  transition: transform 0.15s ease;
+}
+
+.center-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.center-toolbar-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.center-toolbar-title h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.screen-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.center-toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.font-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.font-chip {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 6px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.font-chip.active {
+  border-color: var(--primary);
+  background: #eff6ff;
+}
+
+.style-chip-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.style-chip {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  min-width: 36px;
+  padding: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.style-chip.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.canvas-node-inner input,
+.canvas-node-inner button,
+.canvas-node-inner textarea {
+  pointer-events: none;
+}
+
+body.runtime-active .canvas-node-inner input,
+body.runtime-active .canvas-node-inner button {
+  pointer-events: auto;
+}
+
+.zoom-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.zoom-control input { width: 100px; }
+
+.component-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.component-actions button {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#toast-root {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: #0f172a;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: 0.25s ease;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+}
+
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast-error { background: #991b1b; }
+
+.shortcuts-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.shortcuts-modal.open { display: flex; }
+
+.shortcuts-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.shortcuts-card {
+  position: relative;
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px;
+  width: min(420px, 92vw);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+}
+
+.shortcuts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.shortcuts-header h3 { font-size: 16px; }
+
+.shortcuts-header button {
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.shortcuts-list {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.shortcuts-list kbd {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  margin-right: 6px;
 }
 
 .left-panel,
@@ -42,12 +425,7 @@ body {
 .panel-header h2 { font-size: 18px; margin-bottom: 4px; }
 .panel-header p { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
 
-.component-library {
-  overflow-y: auto;
-  display: grid;
-  gap: 8px;
-  padding-right: 4px;
-}
+/* component-library layout in left-panel block above */
 
 .library-item {
   border: 1px solid var(--line);
@@ -61,8 +439,10 @@ body {
 
 .library-item:active { cursor: grabbing; }
 
-.left-panel-actions { margin-top: 12px; }
 .section-gap { margin-top: 12px; }
+
+.accordion:not(.open) .accordion-content { display: none; }
+.accordion.open .accordion-icon { transform: rotate(45deg); }
 
 .primary-btn {
   width: 100%;
@@ -151,9 +531,6 @@ body {
 }
 
 .center-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 12px;
 }
 
@@ -305,6 +682,13 @@ body.canvas-placing {
     linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
   background-size: 12px 12px;
+  overflow: visible !important;
+}
+
+.page-canvas .canvas-node,
+.container-canvas .canvas-node {
+  pointer-events: auto;
+  touch-action: none;
 }
 
 .container-hint {

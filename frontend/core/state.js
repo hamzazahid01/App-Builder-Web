@@ -21,6 +21,10 @@ window.AppState = {
   selectedType: "none",
   draggedNodeId: null,
   suppressCanvasClickUntil: 0,
+  clipboard: null,
+  previewZoom: 1,
+  snapToGrid: true,
+  currentDeviceKey: "iphone-14",
   runtimeMode: false,
   runtimeSplashTimer: null,
   runtimeScreen: "page",
@@ -32,10 +36,29 @@ window.AppState = {
     isApplying: false
   },
   deviceMap: {
-    "iphone-se": { width: 320, height: 568 },
-    "iphone-14": { width: 390, height: 844 },
-    "android-small": { width: 360, height: 640 },
-    "android-large": { width: 412, height: 915 }
+    "iphone-se": { width: 320, height: 568, label: "iPhone SE" },
+    "iphone-8": { width: 375, height: 667, label: "iPhone 8 / SE2" },
+    "iphone-x": { width: 375, height: 812, label: "iPhone X / 11 Pro" },
+    "iphone-12": { width: 390, height: 844, label: "iPhone 12 / 13" },
+    "iphone-14": { width: 390, height: 844, label: "iPhone 14" },
+    "iphone-14-plus": { width: 428, height: 926, label: "iPhone 14 Plus" },
+    "iphone-14-pro": { width: 393, height: 852, label: "iPhone 14 Pro" },
+    "iphone-14-pro-max": { width: 430, height: 932, label: "iPhone 14 Pro Max" },
+    "iphone-15": { width: 393, height: 852, label: "iPhone 15" },
+    "iphone-15-pro-max": { width: 430, height: 932, label: "iPhone 15 Pro Max" },
+    "iphone-16-pro": { width: 402, height: 874, label: "iPhone 16 Pro" },
+    "pixel-5": { width: 393, height: 851, label: "Pixel 5" },
+    "pixel-7": { width: 412, height: 915, label: "Pixel 7 / 8" },
+    "pixel-8-pro": { width: 448, height: 998, label: "Pixel 8 Pro" },
+    "galaxy-s21": { width: 360, height: 800, label: "Galaxy S21" },
+    "galaxy-s23": { width: 360, height: 780, label: "Galaxy S23" },
+    "galaxy-s24": { width: 360, height: 780, label: "Galaxy S24" },
+    "galaxy-s24-ultra": { width: 384, height: 824, label: "Galaxy S24 Ultra" },
+    "galaxy-z-fold": { width: 344, height: 882, label: "Galaxy Z Fold (cover)" },
+    "ipad-mini": { width: 744, height: 1133, label: "iPad Mini" },
+    "android-small": { width: 360, height: 640, label: "Android Small" },
+    "android-medium": { width: 384, height: 854, label: "Android Medium" },
+    "android-large": { width: 412, height: 915, label: "Android Large" }
   }
 };
 
@@ -164,6 +187,113 @@ window.StateUtils = {
     const ctx = this.findParentContext(component.id);
     if (!ctx || !component.layout) return;
     component.layout.zIndex = this.getNextZIndexInList(ctx.parentList);
+  },
+
+  sendToBack(component) {
+    const ctx = this.findParentContext(component.id);
+    if (!ctx || !component.layout) return;
+    const list = ctx.parentList;
+    let min = Infinity;
+    for (const item of list) {
+      const z = item.layout?.zIndex ?? 0;
+      if (z < min) min = z;
+    }
+    component.layout.zIndex = Math.max(0, min - 1);
+  },
+
+  reIdComponentTree(node) {
+    node.id = this.makeId(node.type);
+    if (node.children?.length) {
+      for (const child of node.children) this.reIdComponentTree(child);
+    }
+    return node;
+  },
+
+  duplicateComponent(componentId) {
+    const page = this.getCurrentPage();
+    if (!page) return null;
+    const source = this.findById(page.components, componentId);
+    const ctx = this.findParentContext(componentId);
+    if (!source || !ctx) return null;
+    const clone = this.cloneApp(source);
+    this.reIdComponentTree(clone);
+    if (!clone.layout) this.ensureComponentLayout(clone, ctx.parentList.length);
+    clone.layout.x = (source.layout?.x ?? 0) + 16;
+    clone.layout.y = (source.layout?.y ?? 0) + 16;
+    clone.layout.zIndex = this.getNextZIndexInList(ctx.parentList);
+    ctx.parentList.push(clone);
+    return clone;
+  },
+
+  reparentComponent(componentId, newList, x, y) {
+    const page = this.getCurrentPage();
+    if (!page) return false;
+    const ctx = this.findParentContext(componentId);
+    if (!ctx) return false;
+    if (ctx.parentList === newList) return false;
+    const [node] = ctx.parentList.splice(ctx.index, 1);
+    if (!node) return false;
+    if (x !== undefined) node.layout.x = x;
+    if (y !== undefined) node.layout.y = y;
+    node.layout.zIndex = this.getNextZIndexInList(newList);
+    newList.push(node);
+    return true;
+  },
+
+  copyToClipboard(componentId) {
+    const page = this.getCurrentPage();
+    const source = this.findById(page?.components || [], componentId);
+    if (!source) return;
+    AppState.clipboard = this.cloneApp(source);
+    Toast.show("Copied");
+  },
+
+  pasteFromClipboard() {
+    if (!AppState.clipboard) {
+      Toast.show("Nothing to paste", "error");
+      return;
+    }
+    const page = this.getCurrentPage();
+    if (!page) return;
+    const clone = this.cloneApp(AppState.clipboard);
+    this.reIdComponentTree(clone);
+    this.ensureComponentLayout(clone, page.components.length);
+    clone.layout.x += 20;
+    clone.layout.y += 20;
+    clone.layout.zIndex = this.getNextZIndexInList(page.components);
+    page.components.push(clone);
+    AppState.selectedId = clone.id;
+    AppState.selectedType = "component";
+    this.pushHistorySnapshot();
+    Builder.refreshAll();
+    Toast.show("Pasted");
+  },
+
+  nudgeComponent(componentId, dx, dy) {
+    const node = this.findById(this.getCurrentPage()?.components || [], componentId);
+    if (!node?.layout) return;
+    node.layout.x = Math.max(0, node.layout.x + dx);
+    node.layout.y = Math.max(0, node.layout.y + dy);
+    renderPreview();
+    Inspector.render();
+  },
+
+  canUndo() {
+    return AppState.history.past.length > 1;
+  },
+
+  canRedo() {
+    return AppState.history.future.length > 0;
+  },
+
+  deleteSelected() {
+    const page = this.getCurrentPage();
+    if (!page || !AppState.selectedId) return;
+    StateUtils.removeById(page.components, AppState.selectedId);
+    AppState.selectedId = null;
+    AppState.selectedType = "page";
+    this.pushHistorySnapshot();
+    Builder.refreshAll();
   },
 
   cloneApp(app) {
