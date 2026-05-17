@@ -1,29 +1,10 @@
 window.PageManager = {
   render() {
-    const panel = document.getElementById("pages-panel");
+    const panel = document.getElementById("pages-dropdown");
     if (!panel) return;
     panel.innerHTML = "";
-
-    const groups = AppState.app.pageGroups || [];
-    const ungrouped = [];
-    const groupedMap = {};
-    for (const g of groups) groupedMap[g.id] = { group: g, pages: [] };
-
-    for (const page of AppState.app.pages) {
-      if (page.groupId && groupedMap[page.groupId]) groupedMap[page.groupId].pages.push(page);
-      else ungrouped.push(page);
-    }
-
-    for (const g of groups) {
-      const hdr = document.createElement('div');
-      hdr.className = 'page-group-header';
-      hdr.textContent = g.name;
-      panel.appendChild(hdr);
-      const list = groupedMap[g.id].pages;
-      for (const page of list) this._renderPageItem(panel, page);
-    }
-
-    for (const page of ungrouped) this._renderPageItem(panel, page);
+    // render flat list of pages (no groups)
+    for (const page of AppState.app.pages) this._renderPageItem(panel, page);
   },
 
   _renderPageItem(panel, page) {
@@ -93,11 +74,6 @@ window.PageManager = {
     const rename = document.createElement('button'); rename.type = 'button'; rename.className = 'page-mini-btn'; rename.textContent = '✎';
     rename.addEventListener('click', (e) => { e.stopPropagation(); this._startRename(page, btn, row); });
 
-    const assign = document.createElement('select'); assign.className = 'page-assign-select';
-    const optNone = document.createElement('option'); optNone.value=''; optNone.textContent='No group'; assign.appendChild(optNone);
-    for (const g of AppState.app.pageGroups || []) { const o = document.createElement('option'); o.value = g.id; o.textContent = g.name; if (page.groupId === g.id) o.selected = true; assign.appendChild(o); }
-    assign.addEventListener('change', (e) => { page.groupId = e.target.value || null; StateUtils.pushHistorySnapshot(); this.render(); });
-
     const del = document.createElement("button"); del.type = "button"; del.className = "page-mini-btn danger"; del.textContent = "×";
     del.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -105,7 +81,11 @@ window.PageManager = {
       this.showConfirm(`Delete page \"${page.name}\"?`, () => this.deletePage(page.id));
     });
 
-    controls.appendChild(up); controls.appendChild(down); controls.appendChild(copy); controls.appendChild(rename); controls.appendChild(assign); controls.appendChild(del);
+    const gear = document.createElement('button'); gear.type = 'button'; gear.className = 'page-mini-btn'; gear.textContent = '⚙';
+    gear.title = 'Edit screen properties';
+    gear.addEventListener('click', (e) => { e.stopPropagation(); StateUtils.setCurrentPage(page.id, false); AppState.selectedType = 'page'; AppState.selectedId = null; Builder.refreshAll(); });
+
+    controls.appendChild(up); controls.appendChild(down); controls.appendChild(copy); controls.appendChild(rename); controls.appendChild(gear); controls.appendChild(del);
     row.appendChild(controls); panel.appendChild(row);
   },
 
@@ -182,11 +162,5 @@ window.PageManager = {
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { input.value = page.name; input.blur(); } });
   },
 
-  createGroup(name) {
-    const id = StateUtils.makeId('group');
-    AppState.app.pageGroups = AppState.app.pageGroups || [];
-    AppState.app.pageGroups.push({ id, name });
-    StateUtils.pushHistorySnapshot();
-    this.render();
-  }
+  // groups removed: simplified pages UI
 };

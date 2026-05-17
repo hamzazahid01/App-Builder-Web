@@ -237,7 +237,8 @@ body.runtime-active .preview-app-btn {
   box-shadow: 0 4px 14px rgba(15,23,42,0.04);
 }
 
-.pages-list.collapsed { display: none; }
+.pages-dropdown { margin-top: 10px; display: none; }
+.pages-dropdown.open { display: block; }
 
 .page-item { display: inline-flex; align-items: center; gap: 10px; padding: 6px; border-radius: 8px; transition: background .12s ease, transform .08s ease; }
 .page-item:hover { background: rgba(14, 56, 150, 0.03); transform: translateY(-1px); }

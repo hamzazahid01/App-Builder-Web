@@ -37,13 +37,13 @@ window.addEventListener("DOMContentLoaded", () => {
     if (addPageBtn && window.PageManager) addPageBtn.addEventListener('click', () => { PageManager.addPage(); PageManager.render(); });
 
     const togglePagesBtn = document.getElementById('toggle-pages-btn');
-    const createGroupBtn = document.getElementById('create-group-btn');
     if (togglePagesBtn) togglePagesBtn.addEventListener('click', () => {
-      AppState.app.pagePanelCollapsed = !AppState.app.pagePanelCollapsed;
-      const panel = document.getElementById('pages-panel');
-      if (AppState.app.pagePanelCollapsed) panel.classList.add('collapsed'); else panel.classList.remove('collapsed');
+      const panel = document.getElementById('pages-dropdown');
+      if (!panel) return;
+      const open = panel.classList.toggle('open');
+      panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+      if (open && window.PageManager && typeof PageManager.render === 'function') PageManager.render();
     });
-    if (createGroupBtn && window.PageManager) createGroupBtn.addEventListener('click', () => { const name = prompt('Group name:'); if (!name) return; PageManager.createGroup(name); });
     if (window.PageManager && typeof PageManager.render === 'function') PageManager.render();
   }
 
