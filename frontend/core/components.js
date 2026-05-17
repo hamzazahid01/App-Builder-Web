@@ -4,14 +4,11 @@ window.ComponentCatalog = [
   { type: "image", label: "Image" },
   { type: "container", label: "Container" },
   { type: "input", label: "Input" },
-  { type: "card", label: "Card" },
-  { type: "row", label: "Row" },
-  { type: "column", label: "Column" },
-  { type: "stack", label: "Stack" },
-  { type: "center", label: "Center" },
-  { type: "icon", label: "Icon" },
-  { type: "spacer", label: "Spacer" }
+  { type: "icon", label: "Icon" }
 ];
+
+const REMOVED_TYPES = new Set(["spacer", "center", "row", "column", "stack", "card"]);
+const CONVERT_TO_CONTAINER = new Set(["row", "column", "stack", "center", "card"]);
 
 function boxSpacing(top = 0, right = 0, bottom = 0, left = 0) {
   return { top, right, bottom, left };
@@ -23,13 +20,7 @@ const DEFAULT_CANVAS_LAYOUTS = {
   image: { width: 280, height: 150 },
   input: { width: 280, height: 44 },
   icon: { width: 48, height: 48 },
-  spacer: { width: 280, height: 24 },
-  container: { width: 300, height: 200 },
-  card: { width: 300, height: 200 },
-  row: { width: 300, height: 120 },
-  column: { width: 280, height: 200 },
-  stack: { width: 300, height: 180 },
-  center: { width: 300, height: 160 }
+  container: { width: 300, height: 200 }
 };
 
 window.ComponentFactory = {
@@ -40,6 +31,17 @@ window.ComponentFactory = {
   createLayout(type, x = 16, y = 16, zIndex = 1) {
     const size = this.getDefaultLayout(type);
     return { x, y, width: size.width, height: size.height, zIndex };
+  },
+
+  detectFlexDirection(component) {
+    const w = component.layout?.width ?? 300;
+    const h = component.layout?.height ?? 200;
+    return w >= h ? "row" : "column";
+  },
+
+  syncContainerFlexDirection(component) {
+    if (component.type !== "container" || !component.styles) return;
+    component.styles.flexDirection = this.detectFlexDirection(component);
   },
 
   create(type) {
@@ -59,7 +61,6 @@ window.ComponentFactory = {
           backgroundColor: "#2563eb",
           textColor: "#ffffff",
           padding: boxSpacing(10, 16, 10, 16),
-          margin: boxSpacing(),
           borderRadius: 10,
           fontSize: 14,
           fontWeight: "600",
@@ -82,36 +83,36 @@ window.ComponentFactory = {
     if (type === "text") {
       return {
         ...common,
-        styles: { fontSize: 16, color: "#111827", fontWeight: "400", textAlign: "left", margin: boxSpacing(4, 0, 4, 0) },
+        styles: { fontSize: 16, color: "#111827", fontWeight: "400", textAlign: "left" },
         props: { value: "Text" }
       };
     }
 
     if (type === "container") {
-      return {
+      const container = {
         ...common,
         styles: {
-          width: "100%",
-          height: "auto",
           backgroundColor: "#f8fafc",
-          padding: boxSpacing(12, 12, 12, 12),
-          margin: boxSpacing(8, 0, 8, 0),
+          padding: boxSpacing(8, 8, 8, 8),
           borderColor: "#d1d5db",
           borderWidth: 1,
           borderRadius: 10,
-          flexDirection: "column",
           gap: 8,
           opacity: 1,
           alignItems: "start",
-          justifyContent: "start"
-        }
+          justifyContent: "start",
+          flexDirection: "column"
+        },
+        props: { layoutMode: "auto" }
       };
+      this.syncContainerFlexDirection(container);
+      return container;
     }
 
     if (type === "image") {
       return {
         ...common,
-        styles: { width: "100%", height: 140, borderRadius: 10, fit: "cover", margin: boxSpacing(8, 0, 8, 0) },
+        styles: { borderRadius: 10, fit: "cover" },
         props: { src: "https://placehold.co/600x300" }
       };
     }
@@ -119,74 +120,21 @@ window.ComponentFactory = {
     if (type === "input") {
       return {
         ...common,
-        styles: { borderColor: "#cbd5e1", borderWidth: 1, borderRadius: 8, padding: boxSpacing(10, 10, 10, 10), margin: boxSpacing(8, 0, 8, 0) },
+        styles: {
+          borderColor: "#cbd5e1",
+          borderWidth: 1,
+          borderRadius: 8,
+          padding: boxSpacing(10, 10, 10, 10)
+        },
         props: { placeholder: "Enter text", inputType: "text" }
       };
-    }
-
-    if (type === "card") {
-      const card = this.create("container");
-      card.type = "card";
-      card.styles.backgroundColor = "#ffffff";
-      card.styles.boxShadow = "0 6px 16px rgba(15,23,42,0.12)";
-      return card;
-    }
-
-    if (type === "row") {
-      const row = this.create("container");
-      row.type = "row";
-      row.styles.flexDirection = "row";
-      row.styles.width = "100%";
-      return row;
-    }
-
-    if (type === "column") {
-      const col = this.create("container");
-      col.type = "column";
-      col.styles.flexDirection = "column";
-      return col;
     }
 
     if (type === "icon") {
       return {
         ...common,
-        styles: { fontSize: 24, color: "#1f2937", margin: boxSpacing(8, 0, 8, 0) },
+        styles: { fontSize: 24, color: "#1f2937" },
         props: { symbol: "⭐" }
-      };
-    }
-
-    if (type === "spacer") {
-      return {
-        ...common,
-        styles: { height: 24, margin: boxSpacing(2, 0, 2, 0) }
-      };
-    }
-
-    if (type === "stack") {
-      return {
-        ...common,
-        styles: {
-          width: "100%",
-          height: 180,
-          backgroundColor: "#f1f5f9",
-          margin: boxSpacing(8, 0, 8, 0),
-          borderRadius: 10
-        }
-      };
-    }
-
-    if (type === "center") {
-      return {
-        ...common,
-        styles: {
-          width: "100%",
-          minHeight: 120,
-          backgroundColor: "#ffffff",
-          margin: boxSpacing(8, 0, 8, 0),
-          borderColor: "#d1d5db",
-          borderWidth: 1,
-          borderRadius: 10
-        }
       };
     }
 
@@ -194,6 +142,40 @@ window.ComponentFactory = {
   },
 
   supportsChildren(type) {
-    return ["container", "card", "row", "column", "stack", "center"].includes(type);
+    return type === "container";
+  },
+
+  migrateComponent(node) {
+    if (!node) return null;
+    if (REMOVED_TYPES.has(node.type) && !CONVERT_TO_CONTAINER.has(node.type)) return null;
+
+    if (CONVERT_TO_CONTAINER.has(node.type)) {
+      node.type = "container";
+      if (!node.children) node.children = [];
+      if (!node.props) node.props = { layoutMode: "auto" };
+      node.props.layoutMode = "auto";
+    }
+
+    if (node.children?.length) {
+      node.children = node.children.map((c) => this.migrateComponent(c)).filter(Boolean);
+    }
+
+    if (!node.layout) {
+      const size = this.getDefaultLayout(node.type);
+      node.layout = { x: 8, y: 8, width: size.width, height: size.height, zIndex: 1 };
+    }
+
+    if (node.type === "container") this.syncContainerFlexDirection(node);
+    return node;
+  },
+
+  migrateApp(app) {
+    for (const page of app.pages) {
+      page.components = (page.components || [])
+        .map((c) => this.migrateComponent(c))
+        .filter(Boolean);
+      StateUtils.ensurePageCanvasLayout(page);
+    }
+    return app;
   }
 };

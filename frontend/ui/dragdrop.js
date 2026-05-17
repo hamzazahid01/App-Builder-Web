@@ -26,6 +26,7 @@ window.DragDrop = {
     preview.addEventListener("click", (e) => {
       if (AppState.runtimeMode) return;
       if (e.target.closest(".canvas-node")) return;
+      if (e.target.closest(".resize-handle")) return;
       if (!e.target.closest(".page-canvas")) return;
       AppState.selectedId = null;
       AppState.selectedType = "page";
@@ -38,43 +39,24 @@ window.DragDrop = {
     document.addEventListener("pointercancel", (e) => this.onPointerUp(e));
   },
 
-  getCanvasEl() {
-    return document.querySelector(".page-canvas");
-  },
-
-  clientToCanvas(clientX, clientY, canvasEl) {
-    const rect = canvasEl.getBoundingClientRect();
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
-    };
-  },
-
-  clampToCanvas(x, y, width, height, canvasEl) {
-    const maxX = Math.max(0, canvasEl.clientWidth - width);
-    const maxY = Math.max(0, canvasEl.clientHeight - height);
-    return {
-      x: Math.round(Math.max(0, Math.min(x, maxX))),
-      y: Math.round(Math.max(0, Math.min(y, maxY)))
-    };
-  },
-
   startPlaceFromLibrary(type, e) {
-    let canvas = this.getCanvasEl();
+    const target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
+    let canvas = target?.canvasEl ?? document.querySelector(".page-canvas");
     if (!canvas) {
       renderPreview();
-      canvas = this.getCanvasEl();
+      canvas = document.querySelector(".page-canvas");
     }
     if (!canvas) return;
 
     const defaults = ComponentFactory.getDefaultLayout(type);
-    const pos = this.clientToCanvas(e.clientX, e.clientY, canvas);
-    const start = this.clampToCanvas(
+    const pos = CanvasUtils.clientToCanvas(e.clientX, e.clientY, canvas);
+    const start = CanvasUtils.clampToBounds(
       pos.x - defaults.width / 2,
       pos.y - defaults.height / 2,
       defaults.width,
       defaults.height,
-      canvas
+      canvas.clientWidth,
+      canvas.clientHeight
     );
 
     this.beginSession({
@@ -82,6 +64,7 @@ window.DragDrop = {
       type,
       pointerId: e.pointerId,
       canvasEl: canvas,
+      dropTarget: target,
       offsetX: defaults.width / 2,
       offsetY: defaults.height / 2,
       layout: { width: defaults.width, height: defaults.height },
@@ -91,19 +74,20 @@ window.DragDrop = {
       startClientY: e.clientY,
       moved: false
     });
-    this.updateGhost(start.x, start.y, defaults.width, defaults.height, type);
+    this.updateGhost(start.x, start.y, defaults.width, defaults.height, type, canvas);
     document.body.classList.add("canvas-placing");
   },
 
   startMoveComponent(component, wrapperEl, e) {
     if (AppState.runtimeMode) return;
-    const canvas = wrapperEl.closest(".page-canvas");
+    if (e.target.closest(".resize-handle")) return;
+    const canvas = wrapperEl.closest(".page-canvas, .container-canvas");
     if (!canvas || !component.layout) return;
 
     e.stopPropagation();
     e.preventDefault();
 
-    const pos = this.clientToCanvas(e.clientX, e.clientY, canvas);
+    const pos = CanvasUtils.clientToCanvas(e.clientX, e.clientY, canvas);
     this.beginSession({
       mode: "move",
       componentId: component.id,
@@ -115,9 +99,39 @@ window.DragDrop = {
       offsetY: pos.y - component.layout.y,
       startClientX: e.clientX,
       startClientY: e.clientY,
-      moved: false,
-      selectedOnUp: false
+      moved: false
     });
+
+    try {
+      wrapperEl.setPointerCapture(e.pointerId);
+    } catch (_) {}
+  },
+
+  startResize(component, wrapperEl, handle, e) {
+    if (AppState.runtimeMode) return;
+    const canvas = wrapperEl.closest(".page-canvas, .container-canvas");
+    if (!canvas || !component.layout) return;
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    this.beginSession({
+      mode: "resize",
+      componentId: component.id,
+      component,
+      handle,
+      pointerId: e.pointerId,
+      canvasEl: canvas,
+      wrapperEl,
+      startLayout: { ...component.layout },
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      moved: true
+    });
+
+    AppState.selectedId = component.id;
+    AppState.selectedType = "component";
+    StateUtils.bringToFront(component);
 
     try {
       wrapperEl.setPointerCapture(e.pointerId);
@@ -130,20 +144,19 @@ window.DragDrop = {
     document.body.classList.add("canvas-dragging");
   },
 
-  updateGhost(x, y, w, h, label) {
+  updateGhost(x, y, w, h, label, canvasEl) {
     if (!this.ghostEl) {
-      this.ghostEl = document.createElement("div");
+      this.ghostEl = document.createElement("motion");
       this.ghostEl.className = "drag-ghost";
       document.body.appendChild(this.ghostEl);
     }
-    const canvas = this.session?.canvasEl;
+    const canvas = canvasEl || this.session?.canvasEl;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     this.ghostEl.style.left = `${rect.left + x}px`;
     this.ghostEl.style.top = `${rect.top + y}px`;
     this.ghostEl.style.width = `${w}px`;
     this.ghostEl.style.height = `${h}px`;
-    this.ghostEl.dataset.label = label || "";
     this.ghostEl.textContent = ComponentCatalog.find((c) => c.type === label)?.label || "";
   },
 
@@ -158,9 +171,26 @@ window.DragDrop = {
     const session = this.session;
     if (!session || e.pointerId !== session.pointerId) return;
 
-    if (!session.moved) {
-      const dx = e.clientX - (session.startClientX ?? e.clientX);
-      const dy = e.clientY - (session.startClientY ?? e.clientY);
+    if (session.mode === "place") {
+      const target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
+      const canvas = target?.canvasEl ?? session.canvasEl;
+      session.canvasEl = canvas;
+      session.dropTarget = target;
+      const pos = CanvasUtils.clientToCanvas(e.clientX, e.clientY, canvas);
+      const x = pos.x - session.offsetX;
+      const y = pos.y - session.offsetY;
+      const clamped = CanvasUtils.clampToBounds(
+        x, y, session.layout.width, session.layout.height, canvas.clientWidth, canvas.clientHeight
+      );
+      session.pendingX = clamped.x;
+      session.pendingY = clamped.y;
+      this.updateGhost(clamped.x, clamped.y, session.layout.width, session.layout.height, session.type, canvas);
+      return;
+    }
+
+    if (!session.moved && session.mode !== "resize") {
+      const dx = e.clientX - session.startClientX;
+      const dy = e.clientY - session.startClientY;
       if (Math.hypot(dx, dy) < this.DRAG_THRESHOLD) return;
       session.moved = true;
       if (session.mode === "move" && session.component) {
@@ -170,28 +200,37 @@ window.DragDrop = {
       }
     }
 
-    const pos = this.clientToCanvas(e.clientX, e.clientY, session.canvasEl);
-    const x = pos.x - session.offsetX;
-    const y = pos.y - session.offsetY;
+    const component = session.component || StateUtils.findById(StateUtils.getCurrentPage().components, session.componentId);
+    if (!component?.layout) return;
 
-    if (session.mode === "place") {
-      const clamped = this.clampToCanvas(x, y, session.layout.width, session.layout.height, session.canvasEl);
-      session.pendingX = clamped.x;
-      session.pendingY = clamped.y;
-      this.updateGhost(clamped.x, clamped.y, session.layout.width, session.layout.height, session.type);
+    if (session.mode === "resize") {
+      const dx = e.clientX - session.startClientX;
+      const dy = e.clientY - session.startClientY;
+      const next = CanvasUtils.applyResize(session.startLayout, session.handle, dx, dy);
+      const clamped = CanvasUtils.clampToBounds(
+        next.x, next.y, next.width, next.height,
+        session.canvasEl.clientWidth, session.canvasEl.clientHeight
+      );
+      Object.assign(component.layout, clamped);
+      if (component.type === "container") ComponentFactory.syncContainerFlexDirection(component);
+      if (session.wrapperEl) CanvasUtils.applyLayoutToWrapper(session.wrapperEl, component.layout);
       return;
     }
 
     if (session.mode === "move") {
-      const page = StateUtils.getCurrentPage();
-      const node = StateUtils.findById(page.components, session.componentId);
-      if (!node?.layout) return;
-      const clamped = this.clampToCanvas(x, y, node.layout.width, node.layout.height, session.canvasEl);
-      node.layout.x = clamped.x;
-      node.layout.y = clamped.y;
+      const pos = CanvasUtils.clientToCanvas(e.clientX, e.clientY, session.canvasEl);
+      const clamped = CanvasUtils.clampToBounds(
+        pos.x - session.offsetX,
+        pos.y - session.offsetY,
+        component.layout.width,
+        component.layout.height,
+        session.canvasEl.clientWidth,
+        session.canvasEl.clientHeight
+      );
+      component.layout.x = clamped.x;
+      component.layout.y = clamped.y;
       if (session.wrapperEl) {
-        session.wrapperEl.style.left = `${clamped.x}px`;
-        session.wrapperEl.style.top = `${clamped.y}px`;
+        CanvasUtils.applyLayoutToWrapper(session.wrapperEl, component.layout);
         session.wrapperEl.classList.add("is-dragging");
       }
     }
@@ -201,39 +240,43 @@ window.DragDrop = {
     const session = this.session;
     if (!session || e.pointerId !== session.pointerId) return;
 
-    if (session.mode === "place") {
-      if (session.pendingX !== undefined) {
-        this.placeComponent(session.type, session.pendingX, session.pendingY);
-      }
+    if (session.mode === "place" && session.pendingX !== undefined) {
+      const target = CanvasUtils.findDropTarget(e.clientX, e.clientY) ?? session.dropTarget;
+      this.placeComponent(session.type, session.pendingX, session.pendingY, target);
     }
 
-    if (session.mode === "move") {
-      if (session.wrapperEl) {
-        session.wrapperEl.classList.remove("is-dragging");
-        try {
-          session.wrapperEl.releasePointerCapture(e.pointerId);
-        } catch (_) {}
-      }
+    if (session.mode === "move" && session.wrapperEl) {
+      session.wrapperEl.classList.remove("is-dragging");
+      try {
+        session.wrapperEl.releasePointerCapture(e.pointerId);
+      } catch (_) {}
       if (!session.moved && session.component) {
         AppState.selectedId = session.component.id;
         AppState.selectedType = "component";
         StateUtils.bringToFront(session.component);
-        Inspector.render();
-        renderPreview();
       }
     }
 
-    this.finishSession(session.moved || session.mode === "place");
+    if (session.mode === "resize" && session.wrapperEl) {
+      try {
+        session.wrapperEl.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+    }
+
+    this.finishSession(session.moved || session.mode === "place" || session.mode === "resize");
   },
 
-  placeComponent(type, x, y) {
+  placeComponent(type, x, y, target) {
     const page = StateUtils.getCurrentPage();
     if (!page) return;
     const component = ComponentFactory.create(type);
     component.layout.x = x;
     component.layout.y = y;
-    component.layout.zIndex = StateUtils.getNextZIndex(page);
-    page.components.push(component);
+
+    const list = target?.list ?? page.components;
+    component.layout.zIndex = StateUtils.getNextZIndexInList(list);
+    list.push(component);
+
     AppState.selectedId = component.id;
     AppState.selectedType = "component";
   },
@@ -258,8 +301,21 @@ window.DragDrop = {
     wrapperEl.addEventListener("pointerdown", (e) => {
       if (AppState.runtimeMode) return;
       if (e.button !== 0) return;
+      if (e.target.closest(".resize-handle")) return;
       if (e.target.closest("input, textarea, select")) return;
       this.startMoveComponent(component, wrapperEl, e);
     }, true);
+
+    if (AppState.selectedId !== component.id || AppState.runtimeMode) return;
+
+    for (const handle of CanvasUtils.HANDLES) {
+      const handleEl = document.createElement("div");
+      handleEl.className = `resize-handle resize-${handle}`;
+      handleEl.dataset.handle = handle;
+      handleEl.addEventListener("pointerdown", (e) => {
+        this.startResize(component, wrapperEl, handle, e);
+      });
+      wrapperEl.appendChild(handleEl);
+    }
   }
 };

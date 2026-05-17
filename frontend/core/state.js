@@ -120,22 +120,50 @@ window.StateUtils = {
 
   ensurePageCanvasLayout(page) {
     if (!page?.components) return;
-    page.components.forEach((component, index) => this.ensureComponentLayout(component, index));
+    this.ensureListLayout(page.components);
   },
 
-  getNextZIndex(page) {
+  ensureListLayout(list) {
+    list.forEach((component, index) => {
+      this.ensureComponentLayout(component, index);
+      if (component.children?.length) this.ensureListLayout(component.children);
+      if (component.type === "container") ComponentFactory.syncContainerFlexDirection(component);
+    });
+  },
+
+  findParentContext(componentId, nodes = null, parent = null) {
+    const page = this.getCurrentPage();
+    const list = nodes ?? page?.components;
+    if (!list) return null;
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id === componentId) {
+        return { parentList: list, parentComponent: parent, index: i, component: list[i] };
+      }
+      if (list[i].children?.length) {
+        const found = this.findParentContext(componentId, list[i].children, list[i]);
+        if (found) return found;
+      }
+    }
+    return null;
+  },
+
+  getNextZIndexInList(list) {
     let max = 0;
-    for (const component of page.components) {
+    for (const component of list) {
       const z = component.layout?.zIndex ?? 0;
       if (z > max) max = z;
     }
     return max + 1;
   },
 
+  getNextZIndex(page) {
+    return this.getNextZIndexInList(page.components);
+  },
+
   bringToFront(component) {
-    const page = this.getCurrentPage();
-    if (!page || !component.layout) return;
-    component.layout.zIndex = this.getNextZIndex(page);
+    const ctx = this.findParentContext(component.id);
+    if (!ctx || !component.layout) return;
+    component.layout.zIndex = this.getNextZIndexInList(ctx.parentList);
   },
 
   cloneApp(app) {
@@ -193,7 +221,7 @@ window.StateUtils = {
     const raw = localStorage.getItem("app_builder_state_v2");
     if (!raw) return false;
     try {
-      AppState.app = JSON.parse(raw);
+      AppState.app = ComponentFactory.migrateApp(JSON.parse(raw));
       return true;
     } catch (err) {
       return false;
