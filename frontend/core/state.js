@@ -20,6 +20,7 @@ window.AppState = {
   selectedId: null,
   selectedType: "none",
   draggedNodeId: null,
+  suppressCanvasClickUntil: 0,
   runtimeMode: false,
   runtimeSplashTimer: null,
   runtimeScreen: "page",
@@ -103,6 +104,38 @@ window.StateUtils = {
       if (removed) return removed;
     }
     return null;
+  },
+
+  ensureComponentLayout(component, index = 0) {
+    if (component.layout) return;
+    const size = ComponentFactory.getDefaultLayout(component.type);
+    component.layout = {
+      x: 12 + (index % 3) * 20,
+      y: 12 + index * 72,
+      width: size.width,
+      height: size.height,
+      zIndex: index + 1
+    };
+  },
+
+  ensurePageCanvasLayout(page) {
+    if (!page?.components) return;
+    page.components.forEach((component, index) => this.ensureComponentLayout(component, index));
+  },
+
+  getNextZIndex(page) {
+    let max = 0;
+    for (const component of page.components) {
+      const z = component.layout?.zIndex ?? 0;
+      if (z > max) max = z;
+    }
+    return max + 1;
+  },
+
+  bringToFront(component) {
+    const page = this.getCurrentPage();
+    if (!page || !component.layout) return;
+    component.layout.zIndex = this.getNextZIndex(page);
   },
 
   cloneApp(app) {

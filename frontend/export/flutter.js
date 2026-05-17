@@ -30,7 +30,7 @@ function renderAction(onClick) {
   return "() {}";
 }
 
-function renderFlutterNode(node, depth = 4) {
+function renderFlutterNodeInner(node, depth = 4) {
   const i = "  ".repeat(depth);
   const childWidgets = (node.children || []).map((c) => renderFlutterNode(c, depth + 2)).join(",\n");
 
@@ -143,8 +143,40 @@ ${i}  ),
 ${i})`;
 }
 
+function renderFlutterNode(node, depth = 4) {
+  const inner = renderFlutterNodeInner(node, depth + 2);
+  if (!node.layout) return inner;
+  const i = "  ".repeat(depth);
+  return `${i}Positioned(
+${i}  left: ${node.layout.x},
+${i}  top: ${node.layout.y},
+${i}  width: ${node.layout.width},
+${i}  height: ${node.layout.height},
+${i}  child: ${inner.trim()},
+${i})`;
+}
+
 function renderPageWidget(page) {
-  const widgets = page.components.map((node) => renderFlutterNode(node)).join(",\n");
+  const widgets = page.components.map((node) => renderFlutterNode(node, 10)).join(",\n");
+  const usesCanvas = page.components.some((node) => node.layout);
+  const bodyChild = usesCanvas
+    ? `SizedBox(
+          width: double.infinity,
+          height: 640,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+${widgets}
+            ],
+          ),
+        )`
+    : `Column(
+          crossAxisAlignment: ${page.layout.alignment === "stretch" ? "CrossAxisAlignment.stretch" : page.layout.alignment === "center" ? "CrossAxisAlignment.center" : "CrossAxisAlignment.start"},
+          mainAxisAlignment: ${page.layout.alignment === "bottom" ? "MainAxisAlignment.end" : "MainAxisAlignment.start"},
+          children: [
+${widgets}
+          ],
+        )`;
   return `class ${page.id.replace(/[^a-zA-Z0-9]/g, "")}Page extends StatelessWidget {
   const ${page.id.replace(/[^a-zA-Z0-9]/g, "")}Page({super.key});
 
@@ -153,16 +185,10 @@ function renderPageWidget(page) {
     return Scaffold(
       backgroundColor: ${flutterColor(page.backgroundColor)},
       appBar: ${page.appBar.enabled ? `AppBar(backgroundColor: ${flutterColor(page.appBar.backgroundColor)}, title: Text('${(page.appBar.title || page.name).replace(/'/g, "\\'")}', style: TextStyle(color: ${flutterColor(page.appBar.textColor)})), iconTheme: IconThemeData(color: ${flutterColor(page.appBar.textColor)}))` : "null"},
-      body: ${page.layout.safeArea ? "SafeArea(" : ""}${page.layout.scrollBehavior === "scroll" ? "SingleChildScrollView(" : ""}Padding(
+      body: ${page.layout.safeArea ? "SafeArea(" : ""}${page.layout.scrollBehavior === "scroll" && !usesCanvas ? "SingleChildScrollView(" : ""}Padding(
         padding: ${edgeInsets(page.layout.padding)},
-        child: Column(
-          crossAxisAlignment: ${page.layout.alignment === "stretch" ? "CrossAxisAlignment.stretch" : page.layout.alignment === "center" ? "CrossAxisAlignment.center" : "CrossAxisAlignment.start"},
-          mainAxisAlignment: ${page.layout.alignment === "bottom" ? "MainAxisAlignment.end" : "MainAxisAlignment.start"},
-          children: [
-${widgets}
-          ],
-        ),
-      )${page.layout.scrollBehavior === "scroll" ? ")" : ""}${page.layout.safeArea ? ")" : ""},
+        child: ${bodyChild},
+      )${page.layout.scrollBehavior === "scroll" && !usesCanvas ? ")" : ""}${page.layout.safeArea ? ")" : ""},
     );
   }
 }

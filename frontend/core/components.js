@@ -13,18 +13,43 @@ window.ComponentCatalog = [
   { type: "spacer", label: "Spacer" }
 ];
 
-function boxSpacing(top = 8, right = 8, bottom = 8, left = 8) {
+function boxSpacing(top = 0, right = 0, bottom = 0, left = 0) {
   return { top, right, bottom, left };
 }
 
+const DEFAULT_CANVAS_LAYOUTS = {
+  button: { width: 130, height: 44 },
+  text: { width: 200, height: 36 },
+  image: { width: 280, height: 150 },
+  input: { width: 280, height: 44 },
+  icon: { width: 48, height: 48 },
+  spacer: { width: 280, height: 24 },
+  container: { width: 300, height: 200 },
+  card: { width: 300, height: 200 },
+  row: { width: 300, height: 120 },
+  column: { width: 280, height: 200 },
+  stack: { width: 300, height: 180 },
+  center: { width: 300, height: 160 }
+};
+
 window.ComponentFactory = {
+  getDefaultLayout(type) {
+    return { ...(DEFAULT_CANVAS_LAYOUTS[type] || { width: 260, height: 120 }) };
+  },
+
+  createLayout(type, x = 16, y = 16, zIndex = 1) {
+    const size = this.getDefaultLayout(type);
+    return { x, y, width: size.width, height: size.height, zIndex };
+  },
+
   create(type) {
     const common = {
       id: StateUtils.makeId(type),
       type,
       styles: {},
       props: {},
-      children: []
+      children: [],
+      layout: this.createLayout(type)
     };
 
     if (type === "button") {

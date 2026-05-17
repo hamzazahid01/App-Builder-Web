@@ -227,6 +227,12 @@ function buildComponentAccordions(panel, node) {
   }));
 
   panel.appendChild(createAccordion("Layout", (content) => {
+    if (node.layout) {
+      content.appendChild(createField("Position X", createStepper(node.layout.x, (v) => { node.layout.x = Math.max(0, v); renderPreview(); })));
+      content.appendChild(createField("Position Y", createStepper(node.layout.y, (v) => { node.layout.y = Math.max(0, v); renderPreview(); })));
+      content.appendChild(createField("Box Width", createStepper(node.layout.width, (v) => { node.layout.width = Math.max(24, v); renderPreview(); })));
+      content.appendChild(createField("Box Height", createStepper(node.layout.height, (v) => { node.layout.height = Math.max(24, v); renderPreview(); })));
+    }
     if (node.styles.width !== undefined) content.appendChild(createField("Width", createTextInput(node.styles.width, (v) => { node.styles.width = v; renderPreview(); })));
     if (node.styles.height !== undefined) content.appendChild(createField("Height", createStepper(node.styles.height, (v) => { node.styles.height = v; renderPreview(); })));
     if (node.styles.minHeight !== undefined) content.appendChild(createField("Min Height", createStepper(node.styles.minHeight, (v) => { node.styles.minHeight = v; renderPreview(); })));

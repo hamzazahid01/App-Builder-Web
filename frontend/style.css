@@ -179,9 +179,80 @@ body {
   border: 10px solid #0f172a;
   border-radius: 36px;
   background: #fff;
-  overflow-y: auto;
-  padding: 16px;
+  overflow: hidden;
+  padding: 0;
   box-shadow: 0 25px 40px rgba(15, 23, 42, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.page-root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page-canvas {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+  background-size: 16px 16px;
+  overflow: hidden;
+}
+
+.canvas-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  font-size: 13px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.canvas-node {
+  cursor: grab;
+  touch-action: none;
+}
+
+.canvas-node.is-dragging,
+body.canvas-dragging .canvas-node {
+  cursor: grabbing;
+}
+
+.canvas-node.selected-node {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.canvas-node-inner {
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  border: 2px dashed var(--primary);
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+body.canvas-placing {
+  cursor: crosshair;
 }
 
 .splash-screen {
@@ -223,7 +294,7 @@ body {
   min-height: 20px;
 }
 
-.app-node.selected-node {
+.app-node.selected-node:not(.canvas-node) {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
 }
 

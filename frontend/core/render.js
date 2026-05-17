@@ -10,8 +10,34 @@ function selectNode(component, e) {
   e.stopPropagation();
   AppState.selectedId = component.id;
   AppState.selectedType = "component";
+  StateUtils.bringToFront(component);
   Inspector.render();
   renderPreview();
+}
+
+function applyCanvasLayout(wrapper, layout) {
+  wrapper.style.position = "absolute";
+  wrapper.style.left = `${layout.x}px`;
+  wrapper.style.top = `${layout.y}px`;
+  wrapper.style.width = `${layout.width}px`;
+  wrapper.style.height = `${layout.height}px`;
+  wrapper.style.zIndex = `${layout.zIndex ?? 1}`;
+}
+
+function wrapCanvasNode(innerEl, component) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "canvas-node app-node";
+  wrapper.dataset.componentId = component.id;
+  applyCanvasLayout(wrapper, component.layout);
+  innerEl.classList.add("canvas-node-inner");
+  innerEl.style.width = "100%";
+  innerEl.style.height = "100%";
+  innerEl.style.margin = "0";
+  innerEl.style.boxSizing = "border-box";
+  wrapper.appendChild(innerEl);
+  if (AppState.selectedId === component.id) wrapper.classList.add("selected-node");
+  if (!AppState.runtimeMode) DragDrop.attachNode(wrapper, component);
+  return wrapper;
 }
 
 function getCurrentComponentTree() {
@@ -60,29 +86,15 @@ function executeAction(onClickAction) {
   }
 }
 
-function addDnDBehavior(nodeEl, component) {
-  if (AppState.runtimeMode) return;
-  nodeEl.classList.add("app-node");
-  nodeEl.dataset.componentId = component.id;
-  nodeEl.draggable = true;
-
-  nodeEl.addEventListener("dragstart", (e) => {
-    AppState.draggedNodeId = component.id;
-    e.dataTransfer.setData("text/plain", JSON.stringify({ source: "node", id: component.id }));
-  });
-
-  if (!ComponentFactory.supportsChildren(component.type)) return;
-
-  nodeEl.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    nodeEl.classList.add("dropzone-active");
-  });
-
-  nodeEl.addEventListener("dragleave", () => nodeEl.classList.remove("dropzone-active"));
-  nodeEl.addEventListener("drop", (e) => {
-    e.preventDefault();
-    nodeEl.classList.remove("dropzone-active");
-    DragDrop.handleDrop(component.id, e.dataTransfer.getData("text/plain"));
+function bindEditSelect(el, component, runtimeHandler) {
+  el.addEventListener("click", (e) => {
+    if (AppState.runtimeMode) {
+      if (runtimeHandler) runtimeHandler(e);
+      return;
+    }
+    if (AppState.suppressCanvasClickUntil && Date.now() < AppState.suppressCanvasClickUntil) return;
+    e.stopPropagation();
+    selectNode(component, e);
   });
 }
 
@@ -110,17 +122,12 @@ function renderButton(component) {
   el.style.opacity = `${component.styles.opacity}`;
   el.style.cursor = "pointer";
   applySpacing(el, "padding", component.styles.padding);
-  applySpacing(el, "margin", component.styles.margin);
-  if (AppState.selectedId === component.id) el.classList.add("selected-node");
-  el.addEventListener("click", (e) => {
-    if (AppState.runtimeMode) {
-      e.stopPropagation();
-      executeAction(component.props.onClick);
-      return;
-    }
-    selectNode(component, e);
+  el.style.width = "100%";
+  el.style.height = "100%";
+  bindEditSelect(el, component, (e) => {
+    e.stopPropagation();
+    executeAction(component.props.onClick);
   });
-  addDnDBehavior(el, component);
   return el;
 }
 
@@ -131,10 +138,8 @@ function renderTextNode(component) {
   el.style.color = component.styles.color;
   el.style.fontWeight = component.styles.fontWeight;
   el.style.textAlign = component.styles.textAlign;
-  applySpacing(el, "margin", component.styles.margin);
-  if (AppState.selectedId === component.id) el.classList.add("selected-node");
-  el.addEventListener("click", (e) => selectNode(component, e));
-  addDnDBehavior(el, component);
+  el.style.margin = "0";
+  bindEditSelect(el, component);
   return el;
 }
 
@@ -142,14 +147,12 @@ function renderImageNode(component) {
   const el = document.createElement("img");
   el.src = component.props.src;
   el.alt = "Builder image";
-  el.style.width = component.styles.width;
-  el.style.height = `${component.styles.height}px`;
+  el.style.width = "100%";
+  el.style.height = "100%";
   el.style.borderRadius = `${component.styles.borderRadius}px`;
   el.style.objectFit = component.styles.fit;
-  applySpacing(el, "margin", component.styles.margin);
-  if (AppState.selectedId === component.id) el.classList.add("selected-node");
-  el.addEventListener("click", (e) => selectNode(component, e));
-  addDnDBehavior(el, component);
+  el.style.margin = "0";
+  bindEditSelect(el, component);
   return el;
 }
 
@@ -161,11 +164,10 @@ function renderInputNode(component) {
   el.style.borderColor = component.styles.borderColor;
   el.style.borderWidth = `${component.styles.borderWidth}px`;
   el.style.borderRadius = `${component.styles.borderRadius}px`;
+  el.style.width = "100%";
+  el.style.height = "100%";
   applySpacing(el, "padding", component.styles.padding);
-  applySpacing(el, "margin", component.styles.margin);
-  if (AppState.selectedId === component.id) el.classList.add("selected-node");
-  el.addEventListener("click", (e) => selectNode(component, e));
-  addDnDBehavior(el, component);
+  bindEditSelect(el, component);
   return el;
 }
 
@@ -174,28 +176,28 @@ function renderIconNode(component) {
   el.textContent = component.props.symbol;
   el.style.fontSize = `${component.styles.fontSize}px`;
   el.style.color = component.styles.color;
-  applySpacing(el, "margin", component.styles.margin);
-  if (AppState.selectedId === component.id) el.classList.add("selected-node");
-  el.addEventListener("click", (e) => selectNode(component, e));
-  addDnDBehavior(el, component);
+  el.style.display = "flex";
+  el.style.alignItems = "center";
+  el.style.justifyContent = "center";
+  el.style.height = "100%";
+  bindEditSelect(el, component);
   return el;
 }
 
 function renderSpacerNode(component) {
   const el = document.createElement("div");
-  el.style.height = `${component.styles.height}px`;
+  el.style.height = "100%";
   el.style.width = "100%";
-  applySpacing(el, "margin", component.styles.margin);
-  if (AppState.selectedId === component.id) el.classList.add("selected-node");
-  el.addEventListener("click", (e) => selectNode(component, e));
-  addDnDBehavior(el, component);
+  el.style.backgroundColor = "rgba(148, 163, 184, 0.25)";
+  bindEditSelect(el, component);
   return el;
 }
 
 function renderFlexContainerNode(component) {
   const el = document.createElement("div");
-  el.style.width = component.styles.width ?? "100%";
-  el.style.height = component.styles.height === "auto" ? "auto" : `${component.styles.height ?? 0}px`;
+  el.style.width = "100%";
+  el.style.height = "100%";
+  el.style.minHeight = "0";
   el.style.backgroundColor = component.styles.backgroundColor ?? "transparent";
   el.style.border = `${component.styles.borderWidth ?? 0}px solid ${component.styles.borderColor ?? "transparent"}`;
   el.style.borderRadius = `${component.styles.borderRadius ?? 0}px`;
@@ -207,26 +209,23 @@ function renderFlexContainerNode(component) {
   el.style.gap = `${component.styles.gap ?? 0}px`;
   if (component.styles.boxShadow) el.style.boxShadow = component.styles.boxShadow;
   applySpacing(el, "padding", component.styles.padding);
-  applySpacing(el, "margin", component.styles.margin);
+  el.style.overflow = "auto";
 
   for (const child of component.children) {
     el.appendChild(renderComponent(child));
   }
 
-  if (AppState.selectedId === component.id) el.classList.add("selected-node");
-  el.addEventListener("click", (e) => selectNode(component, e));
-  addDnDBehavior(el, component);
+  bindEditSelect(el, component);
   return el;
 }
 
 function renderStackNode(component) {
   const el = document.createElement("div");
   el.style.position = "relative";
-  el.style.width = component.styles.width ?? "100%";
-  el.style.height = `${component.styles.height ?? 180}px`;
+  el.style.width = "100%";
+  el.style.height = "100%";
   el.style.backgroundColor = component.styles.backgroundColor ?? "#f1f5f9";
   el.style.borderRadius = `${component.styles.borderRadius ?? 10}px`;
-  applySpacing(el, "margin", component.styles.margin);
   for (const child of component.children) {
     const childEl = renderComponent(child);
     childEl.style.position = "absolute";
@@ -234,29 +233,25 @@ function renderStackNode(component) {
     childEl.style.top = "0";
     el.appendChild(childEl);
   }
-  if (AppState.selectedId === component.id) el.classList.add("selected-node");
-  el.addEventListener("click", (e) => selectNode(component, e));
-  addDnDBehavior(el, component);
+  bindEditSelect(el, component);
   return el;
 }
 
 function renderCenterNode(component) {
   const el = document.createElement("div");
-  el.style.width = component.styles.width ?? "100%";
-  el.style.minHeight = `${component.styles.minHeight ?? 120}px`;
+  el.style.width = "100%";
+  el.style.height = "100%";
+  el.style.minHeight = "0";
   el.style.backgroundColor = component.styles.backgroundColor ?? "#ffffff";
   el.style.border = `${component.styles.borderWidth ?? 0}px solid ${component.styles.borderColor ?? "transparent"}`;
   el.style.borderRadius = `${component.styles.borderRadius ?? 0}px`;
   el.style.display = "flex";
   el.style.alignItems = "center";
   el.style.justifyContent = "center";
-  applySpacing(el, "margin", component.styles.margin);
   for (const child of component.children) {
     el.appendChild(renderComponent(child));
   }
-  if (AppState.selectedId === component.id) el.classList.add("selected-node");
-  el.addEventListener("click", (e) => selectNode(component, e));
-  addDnDBehavior(el, component);
+  bindEditSelect(el, component);
   return el;
 }
 
@@ -308,15 +303,25 @@ function renderPage(preview, page) {
     root.appendChild(appBar);
   }
 
+  StateUtils.ensurePageCanvasLayout(page);
+
   const body = document.createElement("div");
-  body.className = "page-body";
-  body.style.display = "flex";
-  body.style.flexDirection = "column";
+  body.className = "page-body page-canvas";
+  body.style.position = "relative";
+  body.style.flex = "1";
   body.style.width = "100%";
-  body.style.gap = "8px";
+  body.style.minHeight = "480px";
+
+  if (!AppState.runtimeMode && page.components.length === 0) {
+    const hint = document.createElement("div");
+    hint.className = "canvas-hint";
+    hint.textContent = "Library se component chunein aur screen par kahin bhi rakhein";
+    body.appendChild(hint);
+  }
 
   for (const component of page.components) {
-    body.appendChild(renderComponent(component));
+    const inner = renderComponent(component);
+    body.appendChild(wrapCanvasNode(inner, component));
   }
   root.appendChild(body);
   preview.appendChild(root);
