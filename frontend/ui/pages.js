@@ -35,6 +35,15 @@ window.PageManager = {
       this.render();
     });
 
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.page-mini-btn') || e.target.closest('.page-rename-input')) return;
+      StateUtils.setCurrentPage(page.id, false);
+      AppState.selectedId = null;
+      AppState.selectedType = 'page';
+      Builder.refreshAll();
+      this.render();
+    });
+
     // thumbnail
     const thumb = document.createElement('div');
     thumb.className = 'page-thumb';
