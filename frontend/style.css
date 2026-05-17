@@ -685,6 +685,13 @@ body.canvas-placing {
   overflow: visible !important;
 }
 
+/* Remove grid/background guide lines when shown inside the mobile preview frame */
+.mobile-preview .page-canvas,
+.mobile-preview .container-canvas {
+  background-image: none !important;
+  background-size: auto !important;
+}
+
 .page-canvas .canvas-node,
 .container-canvas .canvas-node {
   pointer-events: auto;
