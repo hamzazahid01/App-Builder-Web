@@ -150,8 +150,41 @@ function buildComponentAccordions(panel, node) {
 
   panel.appendChild(createAccordion("Basic", (content) => {
     if (node.type === "text") {
-      content.appendChild(createField("Text", createTextInput(node.props.value, (v) => {
-        node.props.value = v;
+      // Text content
+      const textArea = document.createElement("textarea");
+      textArea.value = node.props.value || "Text";
+      textArea.style.width = "100%";
+      textArea.style.minHeight = "60px";
+      textArea.style.padding = "8px";
+      textArea.style.fontSize = "12px";
+      textArea.style.fontFamily = "monospace";
+      textArea.style.border = "1px solid #d1d5db";
+      textArea.style.borderRadius = "4px";
+      textArea.style.boxSizing = "border-box";
+      textArea.addEventListener("input", (e) => {
+        node.props.value = e.target.value;
+        renderPreview();
+      });
+      content.appendChild(createField("Text Content", textArea));
+
+      // Text Type
+      content.appendChild(createField("Text Type", createSelect([
+        { value: "heading1", label: "Heading 1" },
+        { value: "heading2", label: "Heading 2" },
+        { value: "heading3", label: "Heading 3" },
+        { value: "paragraph", label: "Paragraph" },
+        { value: "caption", label: "Caption" },
+        { value: "label", label: "Label" },
+        { value: "small", label: "Small Text" },
+        { value: "custom", label: "Custom" }
+      ], node.styles.textType || "custom", (v) => {
+        node.styles.textType = v;
+        const preset = TextStyles.TEXT_TYPES[v];
+        if (preset && v !== "custom") {
+          node.styles.fontSize = preset.fontSize;
+          node.styles.fontWeight = preset.fontWeight.toString();
+          node.styles.lineHeight = preset.lineHeight;
+        }
         renderPreview();
       })));
     }
@@ -187,6 +220,368 @@ function buildComponentAccordions(panel, node) {
       content.appendChild(info);
     }
   }, true));
+
+  // Text styling sections - only show for text components
+  if (node.type === "text") {
+    // Typography section
+    panel.appendChild(createAccordion("Typography", (content) => {
+      content.appendChild(createField("Font", createSelect(
+        TextStyles.FONT_OPTIONS.map(f => ({ value: f, label: f })),
+        node.styles.fontFamily || "Inter",
+        (v) => {
+          node.styles.fontFamily = v;
+          renderPreview();
+        }
+      )));
+
+      content.appendChild(createField("Size", createStepper(node.styles.fontSize || 16, (v) => {
+        node.styles.fontSize = Math.max(8, v);
+        renderPreview();
+      }, 1)));
+
+      content.appendChild(createField("Weight", createSelect(
+        TextStyles.FONT_WEIGHTS,
+        node.styles.fontWeight || "400",
+        (v) => {
+          node.styles.fontWeight = v;
+          renderPreview();
+        }
+      )));
+
+      content.appendChild(createField("Style", createSelect([
+        { value: "normal", label: "Normal" },
+        { value: "italic", label: "Italic" }
+      ], node.styles.fontStyle || "normal", (v) => {
+        node.styles.fontStyle = v;
+        renderPreview();
+      })));
+
+      content.appendChild(createField("Line Height", createStepper(node.styles.lineHeight || 1.5, (v) => {
+        node.styles.lineHeight = Math.max(0.5, v);
+        renderPreview();
+      }, 0.1)));
+
+      content.appendChild(createField("Letter Spacing", createStepper(node.styles.letterSpacing || 0, (v) => {
+        node.styles.letterSpacing = v;
+        renderPreview();
+      }, 0.5)));
+
+      content.appendChild(createField("Word Spacing", createStepper(node.styles.wordSpacing || 0, (v) => {
+        node.styles.wordSpacing = v;
+        renderPreview();
+      }, 0.5)));
+    }, false));
+
+    // Text Color & Opacity
+    panel.appendChild(createAccordion("Colors & Effects", (content) => {
+      content.appendChild(createField("Text Color", createColorInput(node.styles.color || "#111827", (v) => {
+        node.styles.color = v;
+        renderPreview();
+      })));
+
+      const opacityInput = document.createElement("input");
+      opacityInput.type = "range";
+      opacityInput.min = "0";
+      opacityInput.max = "1";
+      opacityInput.step = "0.1";
+      opacityInput.value = node.styles.textOpacity ?? 1;
+      opacityInput.addEventListener("input", (e) => {
+        node.styles.textOpacity = parseFloat(e.target.value);
+        renderPreview();
+      });
+      content.appendChild(createField("Opacity", opacityInput));
+
+      // Text Decorations
+      const decorWrap = document.createElement("div");
+      decorWrap.style.display = "flex";
+      decorWrap.style.gap = "12px";
+      decorWrap.style.flexWrap = "wrap";
+
+      const underlineCheck = createCheckbox(node.styles.textDecoration?.underline, (v) => {
+        node.styles.textDecoration.underline = v;
+        renderPreview();
+      });
+      decorWrap.appendChild(createField("Underline", underlineCheck));
+
+      const overlineCheck = createCheckbox(node.styles.textDecoration?.overline, (v) => {
+        node.styles.textDecoration.overline = v;
+        renderPreview();
+      });
+      decorWrap.appendChild(createField("Overline", overlineCheck));
+
+      const strikeCheck = createCheckbox(node.styles.textDecoration?.lineThrough, (v) => {
+        node.styles.textDecoration.lineThrough = v;
+        renderPreview();
+      });
+      decorWrap.appendChild(createField("Strike", strikeCheck));
+
+      content.appendChild(decorWrap);
+    }, false));
+
+    // Text Alignment
+    panel.appendChild(createAccordion("Alignment", (content) => {
+      content.appendChild(createField("Horizontal", createSelect([
+        { value: "left", label: "Left" },
+        { value: "center", label: "Center" },
+        { value: "right", label: "Right" },
+        { value: "justify", label: "Justify" }
+      ], node.styles.textAlign || "left", (v) => {
+        node.styles.textAlign = v;
+        renderPreview();
+      })));
+
+      content.appendChild(createField("Vertical", createSelect([
+        { value: "top", label: "Top" },
+        { value: "center", label: "Center" },
+        { value: "bottom", label: "Bottom" }
+      ], node.styles.verticalAlign || "top", (v) => {
+        node.styles.verticalAlign = v;
+        renderPreview();
+      })));
+    }, false));
+
+    // Text Shadow
+    panel.appendChild(createAccordion("Text Shadow", (content) => {
+      content.appendChild(createField("Enable", createCheckbox(node.styles.textShadow?.enabled, (v) => {
+        node.styles.textShadow.enabled = v;
+        renderPreview();
+      })));
+
+      if (node.styles.textShadow?.enabled) {
+        content.appendChild(createField("Shadow Color", createColorInput(node.styles.textShadow.color || "#000000", (v) => {
+          node.styles.textShadow.color = v;
+          renderPreview();
+        })));
+
+        const shadowOpacity = document.createElement("input");
+        shadowOpacity.type = "range";
+        shadowOpacity.min = "0";
+        shadowOpacity.max = "1";
+        shadowOpacity.step = "0.1";
+        shadowOpacity.value = node.styles.textShadow.opacity ?? 0.25;
+        shadowOpacity.addEventListener("input", (e) => {
+          node.styles.textShadow.opacity = parseFloat(e.target.value);
+          renderPreview();
+        });
+        content.appendChild(createField("Opacity", shadowOpacity));
+
+        content.appendChild(createField("Blur", createStepper(node.styles.textShadow.blur ?? 0, (v) => {
+          node.styles.textShadow.blur = Math.max(0, v);
+          renderPreview();
+        }, 1)));
+
+        content.appendChild(createField("Offset X", createStepper(node.styles.textShadow.offsetX ?? 0, (v) => {
+          node.styles.textShadow.offsetX = v;
+          renderPreview();
+        }, 1)));
+
+        content.appendChild(createField("Offset Y", createStepper(node.styles.textShadow.offsetY ?? 0, (v) => {
+          node.styles.textShadow.offsetY = v;
+          renderPreview();
+        }, 1)));
+
+        content.appendChild(createField("Intensity", createSelect([
+          { value: "soft", label: "Soft" },
+          { value: "medium", label: "Medium" },
+          { value: "hard", label: "Hard" }
+        ], node.styles.textShadow.intensity || "soft", (v) => {
+          node.styles.textShadow.intensity = v;
+          renderPreview();
+        })));
+      }
+    }, false));
+
+    // Text Stroke/Outline
+    panel.appendChild(createAccordion("Text Outline", (content) => {
+      content.appendChild(createField("Enable", createCheckbox(node.styles.textStroke?.enabled, (v) => {
+        node.styles.textStroke.enabled = v;
+        renderPreview();
+      })));
+
+      if (node.styles.textStroke?.enabled) {
+        content.appendChild(createField("Color", createColorInput(node.styles.textStroke.color || "#000000", (v) => {
+          node.styles.textStroke.color = v;
+          renderPreview();
+        })));
+
+        content.appendChild(createField("Width", createStepper(node.styles.textStroke.width ?? 1, (v) => {
+          node.styles.textStroke.width = Math.max(0, v);
+          renderPreview();
+        }, 0.5)));
+
+        const strokeOpacity = document.createElement("input");
+        strokeOpacity.type = "range";
+        strokeOpacity.min = "0";
+        strokeOpacity.max = "1";
+        strokeOpacity.step = "0.1";
+        strokeOpacity.value = node.styles.textStroke.opacity ?? 1;
+        strokeOpacity.addEventListener("input", (e) => {
+          node.styles.textStroke.opacity = parseFloat(e.target.value);
+          renderPreview();
+        });
+        content.appendChild(createField("Opacity", strokeOpacity));
+      }
+    }, false));
+
+    // Text Background
+    panel.appendChild(createAccordion("Text Background", (content) => {
+      content.appendChild(createField("Enable", createCheckbox(node.styles.textBackground?.enabled, (v) => {
+        node.styles.textBackground.enabled = v;
+        renderPreview();
+      })));
+
+      if (node.styles.textBackground?.enabled) {
+        content.appendChild(createField("Color", createColorInput(node.styles.textBackground.color || "#ffffff", (v) => {
+          node.styles.textBackground.color = v;
+          renderPreview();
+        })));
+
+        const bgOpacity = document.createElement("input");
+        bgOpacity.type = "range";
+        bgOpacity.min = "0";
+        bgOpacity.max = "1";
+        bgOpacity.step = "0.1";
+        bgOpacity.value = node.styles.textBackground.opacity ?? 1;
+        bgOpacity.addEventListener("input", (e) => {
+          node.styles.textBackground.opacity = parseFloat(e.target.value);
+          renderPreview();
+        });
+        content.appendChild(createField("Opacity", bgOpacity));
+
+        content.appendChild(createField("Border Radius", createStepper(node.styles.textBackground.borderRadius ?? 0, (v) => {
+          node.styles.textBackground.borderRadius = Math.max(0, v);
+          renderPreview();
+        }, 2)));
+
+        content.appendChild(createSpacingEditor("Padding", node.styles.textBackground.padding || { top: 4, right: 8, bottom: 4, left: 8 }, (k, v) => {
+          node.styles.textBackground.padding[k] = v;
+          renderPreview();
+        }));
+      }
+    }, false));
+
+    // Overflow & Layout
+    panel.appendChild(createAccordion("Text Layout", (content) => {
+      content.appendChild(createField("Overflow", createSelect([
+        { value: "wrap", label: "Wrap" },
+        { value: "clip", label: "Clip" },
+        { value: "ellipsis", label: "Ellipsis (...)" },
+        { value: "scroll", label: "Scroll" }
+      ], node.styles.overflow || "wrap", (v) => {
+        node.styles.overflow = v;
+        renderPreview();
+      })));
+
+      content.appendChild(createField("Max Lines", createStepper(node.styles.maxLines ?? 0, (v) => {
+        node.styles.maxLines = v > 0 ? v : null;
+        renderPreview();
+      }, 1)));
+
+      content.appendChild(createField("Rotation", createStepper(node.styles.rotation ?? 0, (v) => {
+        node.styles.rotation = v;
+        renderPreview();
+      }, 5)));
+
+      content.appendChild(createSpacingEditor("Padding", node.styles.padding || { top: 0, right: 0, bottom: 0, left: 0 }, (k, v) => {
+        node.styles.padding[k] = v;
+        renderPreview();
+      }));
+
+      content.appendChild(createSpacingEditor("Margin", node.styles.margin || { top: 0, right: 0, bottom: 0, left: 0 }, (k, v) => {
+        node.styles.margin[k] = v;
+        renderPreview();
+      }));
+    }, false));
+
+    // Responsive & Animation
+    panel.appendChild(createAccordion("Advanced", (content) => {
+      // Responsive
+      content.appendChild(createField("Responsive", createCheckbox(node.styles.responsive?.enabled, (v) => {
+        node.styles.responsive.enabled = v;
+        renderPreview();
+      })));
+
+      if (node.styles.responsive?.enabled) {
+        content.appendChild(createField("Mobile Scale", createStepper(node.styles.responsive.mobileScale ?? 0.85, (v) => {
+          node.styles.responsive.mobileScale = Math.max(0.5, v);
+          renderPreview();
+        }, 0.05)));
+
+        content.appendChild(createField("Tablet Scale", createStepper(node.styles.responsive.tabletScale ?? 0.95, (v) => {
+          node.styles.responsive.tabletScale = Math.max(0.5, v);
+          renderPreview();
+        }, 0.05)));
+      }
+
+      // Animation
+      content.appendChild(createField("Animation", createCheckbox(node.styles.animation?.enabled, (v) => {
+        node.styles.animation.enabled = v;
+        renderPreview();
+      })));
+
+      if (node.styles.animation?.enabled) {
+        content.appendChild(createField("Type", createSelect([
+          { value: "none", label: "None" },
+          { value: "fade", label: "Fade In" },
+          { value: "slide", label: "Slide" },
+          { value: "typing", label: "Typing" },
+          { value: "bounce", label: "Bounce" },
+          { value: "glow", label: "Glow" }
+        ], node.styles.animation.type || "none", (v) => {
+          node.styles.animation.type = v;
+          renderPreview();
+        })));
+
+        content.appendChild(createField("Duration (ms)", createStepper(node.styles.animation.duration ?? 1000, (v) => {
+          node.styles.animation.duration = Math.max(100, v);
+          renderPreview();
+        }, 100)));
+
+        content.appendChild(createField("Delay (ms)", createStepper(node.styles.animation.delay ?? 0, (v) => {
+          node.styles.animation.delay = Math.max(0, v);
+          renderPreview();
+        }, 100)));
+
+        content.appendChild(createField("Speed", createStepper(node.styles.animation.speed ?? 1, (v) => {
+          node.styles.animation.speed = Math.max(0.5, v);
+          renderPreview();
+        }, 0.1)));
+
+        content.appendChild(createField("Loop", createCheckbox(node.styles.animation.loop, (v) => {
+          node.styles.animation.loop = v;
+          renderPreview();
+        })));
+      }
+
+      // Interaction
+      content.appendChild(createField("Clickable", createCheckbox(node.styles.interaction?.clickable, (v) => {
+        node.styles.interaction.clickable = v;
+        renderPreview();
+      })));
+
+      if (node.styles.interaction?.clickable) {
+        content.appendChild(createField("Link URL", createTextInput(node.styles.interaction.href || "", (v) => {
+          node.styles.interaction.href = v;
+          renderPreview();
+        })));
+
+        content.appendChild(createField("Hover Effect", createSelect([
+          { value: "none", label: "None" },
+          { value: "underline", label: "Underline" },
+          { value: "scale", label: "Scale" },
+          { value: "color", label: "Color Change" }
+        ], node.styles.interaction.hoverEffect || "none", (v) => {
+          node.styles.interaction.hoverEffect = v;
+          renderPreview();
+        })));
+      }
+
+      content.appendChild(createField("Copyable", createCheckbox(node.styles.interaction?.copyable, (v) => {
+        node.styles.interaction.copyable = v;
+        renderPreview();
+      })));
+    }, false));
+  }
 
   panel.appendChild(createAccordion("Advanced layout", (content) => {
     if (node.layout) {

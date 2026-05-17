@@ -126,14 +126,10 @@ function renderButton(component) {
 }
 
 function renderTextNode(component) {
-  const el = document.createElement("p");
-  el.textContent = component.props.value;
-  el.style.fontSize = `${component.styles.fontSize}px`;
-  el.style.color = component.styles.color;
-  el.style.fontWeight = component.styles.fontWeight;
-  el.style.textAlign = component.styles.textAlign;
-  el.style.margin = "0";
-  el.style.overflow = "hidden";
+  const el = document.createElement("div");
+  el.className = "text-element";
+  TextStyles.ensure(component);
+  TextStyles.applyToElement(el, component);
   bindEditSelect(el, component);
   return el;
 }

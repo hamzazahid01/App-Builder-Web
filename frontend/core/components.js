@@ -94,11 +94,105 @@ window.ComponentFactory = {
     }
 
     if (type === "text") {
-      return {
+      const text = {
         ...common,
-        styles: { fontSize: 16, color: "#111827", fontWeight: "400", textAlign: "left" },
+        styles: {
+          // Text content
+          textType: "custom",
+          
+          // Typography
+          fontSize: 16,
+          fontFamily: "Inter",
+          fontWeight: "400",
+          fontStyle: "normal",
+          
+          // Color & Opacity
+          color: "#111827",
+          textOpacity: 1,
+          
+          // Text Decorations
+          textDecoration: { underline: false, overline: false, lineThrough: false },
+          
+          // Spacing
+          letterSpacing: 0,
+          lineHeight: 1.5,
+          wordSpacing: 0,
+          
+          // Alignment
+          textAlign: "left",
+          verticalAlign: "top",
+          
+          // Text Shadow
+          textShadow: {
+            enabled: false,
+            color: "#000000",
+            opacity: 0.25,
+            blur: 0,
+            offsetX: 0,
+            offsetY: 0,
+            spread: 0,
+            intensity: "soft"
+          },
+          
+          // Text Stroke
+          textStroke: {
+            enabled: false,
+            color: "#000000",
+            width: 1,
+            opacity: 1
+          },
+          
+          // Text Background
+          textBackground: {
+            enabled: false,
+            color: "#ffffff",
+            opacity: 1,
+            padding: boxSpacing(4, 8, 4, 8),
+            borderRadius: 0
+          },
+          
+          // Layout
+          widthMode: "auto",
+          heightMode: "auto",
+          rotation: 0,
+          
+          // Overflow
+          overflow: "wrap",
+          maxLines: null,
+          
+          // Padding & Margin
+          padding: boxSpacing(0, 0, 0, 0),
+          margin: boxSpacing(0, 0, 0, 0),
+          
+          // Responsive
+          responsive: {
+            enabled: false,
+            mobileScale: 0.85,
+            tabletScale: 0.95
+          },
+          
+          // Animation
+          animation: {
+            enabled: false,
+            type: "none",
+            duration: 1000,
+            delay: 0,
+            loop: false,
+            speed: 1
+          },
+          
+          // Interaction
+          interaction: {
+            clickable: false,
+            href: "",
+            hoverEffect: "none",
+            copyable: false
+          }
+        },
         props: { value: "Text" }
       };
+      TextStyles.ensure(text);
+      return text;
     }
 
     if (type === "container") {
