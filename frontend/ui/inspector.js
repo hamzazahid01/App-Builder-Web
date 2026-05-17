@@ -16,6 +16,15 @@ function createTextInput(value, onChange) {
   return input;
 }
 
+function createButton(label, onClick) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  button.className = "secondary-btn";
+  button.addEventListener("click", onClick);
+  return button;
+}
+
 function createSelect(options, value, onChange) {
   const select = document.createElement("select");
   for (const opt of options) {
@@ -224,8 +233,48 @@ function buildComponentAccordions(panel, node) {
       })));
     }
     if (node.type === "image") {
-      content.appendChild(createField("Image link", createTextInput(node.props.src, (v) => {
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.style.display = "none";
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          node.props.src = reader.result;
+          node.props.source = "upload";
+          renderPreview();
+        };
+        reader.readAsDataURL(file);
+      });
+      content.appendChild(fileInput);
+
+      const actions = document.createElement("div");
+      actions.style.display = "flex";
+      actions.style.flexWrap = "wrap";
+      actions.style.gap = "8px";
+      actions.appendChild(createButton("Upload Image", () => fileInput.click()));
+      actions.appendChild(createButton("Replace Image", () => fileInput.click()));
+      actions.appendChild(createButton("Remove Image", () => {
+        node.props.src = node.styles.placeholderSrc;
+        node.props.source = "url";
+        renderPreview();
+      }));
+      actions.appendChild(createButton("Duplicate", () => {
+        StateUtils.duplicateComponent(node.id);
+        renderPreview();
+      }));
+      content.appendChild(actions);
+
+      content.appendChild(createField("Image URL", createTextInput(node.props.src, (v) => {
         node.props.src = v;
+        node.props.source = "url";
+        renderPreview();
+      })));
+
+      content.appendChild(createField("Alt Text", createTextInput(node.props.alt || "", (v) => {
+        node.props.alt = v;
         renderPreview();
       })));
     }
@@ -763,6 +812,337 @@ function buildComponentAccordions(panel, node) {
       }));
     }
   }, false));
+
+  if (node.type === "image") {
+    const imageStyles = node.styles;
+
+    panel.appendChild(createAccordion("Image Display", (content) => {
+      content.appendChild(createField("Display Type", createSelect([
+        { value: "normal", label: "Normal" },
+        { value: "rounded", label: "Rounded" },
+        { value: "circular", label: "Circular" },
+        { value: "avatar", label: "Avatar" },
+        { value: "banner", label: "Banner" },
+        { value: "thumbnail", label: "Thumbnail" },
+        { value: "cover", label: "Cover" }
+      ], imageStyles.displayType || "normal", (v) => {
+        imageStyles.displayType = v;
+        if (v === "circular" || v === "avatar") {
+          imageStyles.borderRadiusCorners = { tl: 9999, tr: 9999, bl: 9999, br: 9999 };
+        }
+        renderPreview();
+      })));
+
+      content.appendChild(createField("Fit", createSelect([
+        { value: "cover", label: "Cover" },
+        { value: "contain", label: "Contain" },
+        { value: "fill", label: "Fill" },
+        { value: "none", label: "None" },
+        { value: "scale-down", label: "Scale Down" }
+      ], imageStyles.fit || "cover", (v) => {
+        imageStyles.fit = v;
+        renderPreview();
+      })));
+
+      content.appendChild(createField("Opacity", createRangeInput(imageStyles.opacity ?? 1, 0, 1, 0.05, (v) => {
+        imageStyles.opacity = v;
+        renderPreview();
+      })));
+
+      content.appendChild(createField("Alt Text", createTextInput(node.props.alt || "", (v) => {
+        node.props.alt = v;
+        renderPreview();
+      })));
+    }, false));
+
+    panel.appendChild(createAccordion("Border & Shape", (content) => {
+      content.appendChild(createField("Enable Border", createCheckbox(imageStyles.borderEnabled, (v) => {
+        imageStyles.borderEnabled = v;
+        renderPreview();
+      })));
+
+      if (imageStyles.borderEnabled) {
+        content.appendChild(createField("Border Width", createStepper(imageStyles.borderWidth ?? 1, (v) => {
+          imageStyles.borderWidth = Math.max(0, v);
+          renderPreview();
+        }, 1)));
+        content.appendChild(createField("Border Color", createColorInput(imageStyles.borderColor || "#000000", (v) => {
+          imageStyles.borderColor = v;
+          renderPreview();
+        })));
+        content.appendChild(createField("Border Style", createSelect([
+          { value: "solid", label: "Solid" },
+          { value: "dashed", label: "Dashed" },
+          { value: "dotted", label: "Dotted" }
+        ], imageStyles.borderStyle || "solid", (v) => {
+          imageStyles.borderStyle = v;
+          renderPreview();
+        })));
+      }
+
+      content.appendChild(createField("Radius Top Left", createStepper(imageStyles.borderRadiusCorners?.tl ?? imageStyles.borderRadius, (v) => {
+        imageStyles.borderRadiusCorners.tl = Math.max(0, v);
+        renderPreview();
+      }, 1)));
+      content.appendChild(createField("Radius Top Right", createStepper(imageStyles.borderRadiusCorners?.tr ?? imageStyles.borderRadius, (v) => {
+        imageStyles.borderRadiusCorners.tr = Math.max(0, v);
+        renderPreview();
+      }, 1)));
+      content.appendChild(createField("Radius Bottom Left", createStepper(imageStyles.borderRadiusCorners?.bl ?? imageStyles.borderRadius, (v) => {
+        imageStyles.borderRadiusCorners.bl = Math.max(0, v);
+        renderPreview();
+      }, 1)));
+      content.appendChild(createField("Radius Bottom Right", createStepper(imageStyles.borderRadiusCorners?.br ?? imageStyles.borderRadius, (v) => {
+        imageStyles.borderRadiusCorners.br = Math.max(0, v);
+        renderPreview();
+      }, 1)));
+    }, false));
+
+    panel.appendChild(createAccordion("Background & Overlay", (content) => {
+      content.appendChild(createField("Enable Background", createCheckbox(imageStyles.background?.enabled, (v) => {
+        imageStyles.background.enabled = v;
+        renderPreview();
+      })));
+      if (imageStyles.background?.enabled) {
+        content.appendChild(createField("Background Type", createSelect([
+          { value: "solid", label: "Solid" },
+          { value: "gradient", label: "Gradient" }
+        ], imageStyles.background.type || "solid", (v) => {
+          imageStyles.background.type = v;
+          renderPreview();
+        })));
+        if (imageStyles.background.type === "solid") {
+          content.appendChild(createField("Color", createColorInput(imageStyles.background.color || "#ffffff", (v) => {
+            imageStyles.background.color = v;
+            renderPreview();
+          })));
+        }
+        if (imageStyles.background.type === "gradient") {
+          content.appendChild(createField("Gradient Start", createColorInput(imageStyles.background.gradientStart || "#ffffff", (v) => {
+            imageStyles.background.gradientStart = v;
+            renderPreview();
+          })));
+          content.appendChild(createField("Gradient End", createColorInput(imageStyles.background.gradientEnd || "#f8fafc", (v) => {
+            imageStyles.background.gradientEnd = v;
+            renderPreview();
+          })));
+          content.appendChild(createField("Gradient Angle", createStepper(imageStyles.background.gradientAngle ?? 90, (v) => {
+            imageStyles.background.gradientAngle = v;
+            renderPreview();
+          }, 5)));
+        }
+      }
+
+      content.appendChild(createField("Enable Overlay", createCheckbox(imageStyles.overlay?.enabled, (v) => {
+        imageStyles.overlay.enabled = v;
+        renderPreview();
+      })));
+      if (imageStyles.overlay?.enabled) {
+        content.appendChild(createField("Overlay Type", createSelect([
+          { value: "color", label: "Color" },
+          { value: "gradient", label: "Gradient" }
+        ], imageStyles.overlay.type || "color", (v) => {
+          imageStyles.overlay.type = v;
+          renderPreview();
+        })));
+        content.appendChild(createField("Overlay Color", createColorInput(imageStyles.overlay.color || "#000000", (v) => {
+          imageStyles.overlay.color = v;
+          renderPreview();
+        })));
+        content.appendChild(createField("Opacity", createRangeInput(imageStyles.overlay.opacity ?? 0.2, 0, 1, 0.05, (v) => {
+          imageStyles.overlay.opacity = v;
+          renderPreview();
+        })));
+      }
+    }, false));
+
+    panel.appendChild(createAccordion("Image Shadow", (content) => {
+      content.appendChild(createField("Enable Shadow", createCheckbox(imageStyles.shadow?.enabled, (v) => {
+        imageStyles.shadow.enabled = v;
+        renderPreview();
+      })));
+      if (imageStyles.shadow?.enabled) {
+        content.appendChild(createField("Shadow Color", createColorInput(imageStyles.shadow.color || "#000000", (v) => {
+          imageStyles.shadow.color = v;
+          renderPreview();
+        })));
+        content.appendChild(createField("Opacity", createRangeInput(imageStyles.shadow.opacity ?? 0.25, 0, 1, 0.05, (v) => {
+          imageStyles.shadow.opacity = v;
+          renderPreview();
+        })));
+        content.appendChild(createField("Blur", createStepper(imageStyles.shadow.blur ?? 8, (v) => {
+          imageStyles.shadow.blur = Math.max(0, v);
+          renderPreview();
+        }, 1)));
+        content.appendChild(createField("Spread", createStepper(imageStyles.shadow.spread ?? 0, (v) => {
+          imageStyles.shadow.spread = v;
+          renderPreview();
+        }, 1)));
+        content.appendChild(createField("Offset X", createStepper(imageStyles.shadow.offsetX ?? 0, (v) => {
+          imageStyles.shadow.offsetX = v;
+          renderPreview();
+        }, 1)));
+        content.appendChild(createField("Offset Y", createStepper(imageStyles.shadow.offsetY ?? 0, (v) => {
+          imageStyles.shadow.offsetY = v;
+          renderPreview();
+        }, 1)));
+        content.appendChild(createField("Intensity", createSelect([
+          { value: "soft", label: "Soft" },
+          { value: "medium", label: "Medium" },
+          { value: "hard", label: "Hard" }
+        ], imageStyles.shadow.intensity || "soft", (v) => {
+          imageStyles.shadow.intensity = v;
+          renderPreview();
+        })));
+      }
+    }, false));
+
+    panel.appendChild(createAccordion("Image Layout", (content) => {
+      content.appendChild(createField("Width Mode", createSelect([
+        { value: "auto", label: "Auto" },
+        { value: "fixed", label: "Fixed" },
+        { value: "fill", label: "Fill" }
+      ], imageStyles.widthMode || "fixed", (v) => {
+        imageStyles.widthMode = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Height Mode", createSelect([
+        { value: "auto", label: "Auto" },
+        { value: "fixed", label: "Fixed" }
+      ], imageStyles.heightMode || "fixed", (v) => {
+        imageStyles.heightMode = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Aspect Ratio Lock", createCheckbox(imageStyles.aspectRatioLocked, (v) => {
+        imageStyles.aspectRatioLocked = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Rotation", createStepper(imageStyles.rotation ?? 0, (v) => {
+        imageStyles.rotation = v;
+        renderPreview();
+      }, 5)));
+      content.appendChild(createField("Flip Horizontal", createCheckbox(imageStyles.flipHorizontal, (v) => {
+        imageStyles.flipHorizontal = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Flip Vertical", createCheckbox(imageStyles.flipVertical, (v) => {
+        imageStyles.flipVertical = v;
+        renderPreview();
+      })));
+      content.appendChild(createSpacingEditor("Padding", imageStyles.padding || { top: 0, right: 0, bottom: 0, left: 0 }, (k, v) => {
+        imageStyles.padding[k] = v;
+        renderPreview();
+      }));
+      content.appendChild(createSpacingEditor("Margin", imageStyles.margin || { top: 0, right: 0, bottom: 0, left: 0 }, (k, v) => {
+        imageStyles.margin[k] = v;
+        renderPreview();
+      }));
+    }, false));
+
+    panel.appendChild(createAccordion("Image Filters", (content) => {
+      content.appendChild(createField("Brightness", createRangeInput(imageStyles.filters.brightness ?? 1, 0, 2, 0.05, (v) => {
+        imageStyles.filters.brightness = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Contrast", createRangeInput(imageStyles.filters.contrast ?? 1, 0, 2, 0.05, (v) => {
+        imageStyles.filters.contrast = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Saturation", createRangeInput(imageStyles.filters.saturation ?? 1, 0, 2, 0.05, (v) => {
+        imageStyles.filters.saturation = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Blur", createRangeInput(imageStyles.filters.blur ?? 0, 0, 20, 1, (v) => {
+        imageStyles.filters.blur = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Grayscale", createRangeInput(imageStyles.filters.grayscale ?? 0, 0, 1, 0.05, (v) => {
+        imageStyles.filters.grayscale = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Sepia", createRangeInput(imageStyles.filters.sepia ?? 0, 0, 1, 0.05, (v) => {
+        imageStyles.filters.sepia = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Hue Rotate", createStepper(imageStyles.filters.hueRotate ?? 0, (v) => {
+        imageStyles.filters.hueRotate = v;
+        renderPreview();
+      }, 15)));
+    }, false));
+
+    panel.appendChild(createAccordion("Interaction", (content) => {
+      content.appendChild(createField("Clickable", createCheckbox(imageStyles.interaction?.clickable, (v) => {
+        imageStyles.interaction.clickable = v;
+        renderPreview();
+      })));
+      if (imageStyles.interaction?.clickable) {
+        content.appendChild(createField("Link URL", createTextInput(imageStyles.interaction.href || "", (v) => {
+          imageStyles.interaction.href = v;
+          renderPreview();
+        })));
+        content.appendChild(createField("Hover Effect", createSelect([
+          { value: "none", label: "None" },
+          { value: "zoom", label: "Zoom" },
+          { value: "glow", label: "Glow" }
+        ], imageStyles.interaction.hoverEffect || "none", (v) => {
+          imageStyles.interaction.hoverEffect = v;
+          renderPreview();
+        })));
+        content.appendChild(createField("Zoom on Hover", createCheckbox(imageStyles.interaction.zoomOnHover, (v) => {
+          imageStyles.interaction.zoomOnHover = v;
+          renderPreview();
+        })));
+      }
+    }, false));
+
+    panel.appendChild(createAccordion("Advanced", (content) => {
+      content.appendChild(createField("Lazy load", createCheckbox(imageStyles.lazyLoad, (v) => {
+        imageStyles.lazyLoad = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Image visible on desktop", createCheckbox(imageStyles.visibleOn.desktop, (v) => {
+        imageStyles.visibleOn.desktop = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Image visible on tablet", createCheckbox(imageStyles.visibleOn.tablet, (v) => {
+        imageStyles.visibleOn.tablet = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Image visible on mobile", createCheckbox(imageStyles.visibleOn.mobile, (v) => {
+        imageStyles.visibleOn.mobile = v;
+        renderPreview();
+      })));
+      content.appendChild(createField("Animation", createCheckbox(imageStyles.animation?.enabled, (v) => {
+        imageStyles.animation.enabled = v;
+        renderPreview();
+      })));
+      if (imageStyles.animation?.enabled) {
+        content.appendChild(createField("Type", createSelect([
+          { value: "none", label: "None" },
+          { value: "fade", label: "Fade" },
+          { value: "slide", label: "Slide" },
+          { value: "zoom", label: "Zoom" },
+          { value: "rotate", label: "Rotate" },
+          { value: "float", label: "Floating" }
+        ], imageStyles.animation.type || "none", (v) => {
+          imageStyles.animation.type = v;
+          renderPreview();
+        })));
+        content.appendChild(createField("Duration", createStepper(imageStyles.animation.duration ?? 1000, (v) => {
+          imageStyles.animation.duration = Math.max(100, v);
+          renderPreview();
+        }, 100)));
+        content.appendChild(createField("Delay", createStepper(imageStyles.animation.delay ?? 0, (v) => {
+          imageStyles.animation.delay = Math.max(0, v);
+          renderPreview();
+        }, 100)));
+        content.appendChild(createField("Loop", createCheckbox(imageStyles.animation.loop, (v) => {
+          imageStyles.animation.loop = v;
+          renderPreview();
+        })));
+      }
+    }, false));
+  }
 
   panel.appendChild(createAccordion("Advanced style", (content) => {
     if (node.styles.backgroundColor !== undefined && node.type !== "container") {
