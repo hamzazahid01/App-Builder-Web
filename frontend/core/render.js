@@ -35,7 +35,7 @@ function getJustifyContentValue(value) {
 
 function executeAction(onClickAction) {
   if (!onClickAction || !AppState.runtimeMode) return;
-  if (onClickAction.type === "navigate" && onClickAction.targetPageId) {
+  if (onClickAction.type === "navigate" &&  onClickAction.targetPageId) {
     StateUtils.setCurrentPage(onClickAction.targetPageId, true);
     renderPreview();
     return;
