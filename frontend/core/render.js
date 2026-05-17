@@ -514,14 +514,9 @@ function renderPage(preview, page) {
   root.style.flexDirection = "column";
   root.style.overflow = "hidden";
 
-  if (AppState.runtimeMode && page.appBar.enabled) {
-    const appBar = document.createElement("div");
-    appBar.className = "page-appbar";
-    appBar.style.backgroundColor = page.appBar.backgroundColor;
-    appBar.style.color = page.appBar.textColor;
-    appBar.textContent = page.appBar.title || page.name;
-    root.appendChild(appBar);
-  }
+  // Do not render the in-app appBar inside the mobile preview to keep
+  // the preview clean. The appBar was previously shown when
+  // `AppState.runtimeMode && page.appBar.enabled` was true.
 
   StateUtils.ensurePageCanvasLayout(page);
 
