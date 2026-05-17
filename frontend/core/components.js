@@ -122,7 +122,13 @@ window.ComponentFactory = {
           textAlign: "left",
           verticalAlign: "top",
           
-          // Text Shadow
+          // Text Fill and shadow
+          textFillType: "solid",
+          textGradient: {
+            angle: 90,
+            start: "#111827",
+            end: "#2563eb"
+          },
           textShadow: {
             enabled: false,
             color: "#000000",
@@ -131,7 +137,13 @@ window.ComponentFactory = {
             offsetX: 0,
             offsetY: 0,
             spread: 0,
-            intensity: "soft"
+            intensity: "soft",
+            presetType: "none",
+            multiShadows: [],
+            glowEnabled: false,
+            glowColor: "#ffffff",
+            glowBlur: 0,
+            glowSpread: 0
           },
           
           // Text Stroke
@@ -145,8 +157,12 @@ window.ComponentFactory = {
           // Text Background
           textBackground: {
             enabled: false,
+            type: "solid",
             color: "#ffffff",
             opacity: 1,
+            gradientAngle: 90,
+            gradientStart: "#ffffff",
+            gradientEnd: "#f8fafc",
             padding: boxSpacing(4, 8, 4, 8),
             borderRadius: 0
           },
