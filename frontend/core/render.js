@@ -32,6 +32,17 @@ function wrapCanvasNode(innerEl, component) {
   wrapper.appendChild(innerEl);
   if (AppState.selectedId === component.id) wrapper.classList.add("selected-node");
   if (!AppState.runtimeMode) DragDrop.attachNode(wrapper, component);
+  
+  // Add double-click support for nested components
+  wrapper.addEventListener("dblclick", (e) => {
+    if (AppState.runtimeMode) return;
+    e.stopPropagation();
+    AppState.selectedId = component.id;
+    AppState.selectedType = "component";
+    StateUtils.bringToFront(component);
+    Builder.refreshAll();
+  });
+  
   return wrapper;
 }
 
@@ -185,6 +196,36 @@ function getJustifyContentValue(value) {
   return "flex-start";
 }
 
+function buildBoxShadowString(shadow) {
+  if (!shadow || !shadow.enabled) return "none";
+  
+  const shadows = [];
+  
+  // Main shadow
+  const insetStr = shadow.insetEnabled ? "inset " : "";
+  const mainShadow = `${insetStr}${shadow.offsetX ?? 0}px ${shadow.offsetY ?? 4}px ${shadow.blur ?? 8}px ${shadow.spread ?? 0}px rgba(0, 0, 0, ${(shadow.opacity ?? 0.25).toFixed(2)})`;
+  shadows.push(mainShadow);
+  
+  // Multiple shadows
+  if (shadow.multiShadows?.length > 0) {
+    shadow.multiShadows.forEach(s => {
+      if (s.enabled !== false) {
+        const shadowStr = `${s.offsetX ?? 0}px ${s.offsetY ?? 0}px ${s.blur ?? 0}px ${s.spread ?? 0}px rgba(0, 0, 0, ${(s.opacity ?? 0.25).toFixed(2)})`;
+        shadows.push(shadowStr);
+      }
+    });
+  }
+  
+  // Glow effect
+  if (shadow.glowEnabled) {
+    const glowColor = shadow.glowColor ?? "#ffffff";
+    const glowShadow = `0 0 ${shadow.glowBlur ?? 10}px ${shadow.glowSpread ?? 0}px ${glowColor}`;
+    shadows.push(glowShadow);
+  }
+  
+  return shadows.join(", ") || "none";
+}
+
 function renderContainerNode(component) {
   ComponentFactory.syncContainerFlexDirection(component);
 
@@ -193,18 +234,21 @@ function renderContainerNode(component) {
   el.style.width = "100%";
   el.style.height = "100%";
   el.style.boxSizing = "border-box";
-  el.style.backgroundColor = component.styles.backgroundColor ?? "#f8fafc";
+  // Use transparent background if not explicitly set
+  if (component.styles.backgroundColor) {
+    el.style.backgroundColor = component.styles.backgroundColor;
+  }
   el.style.border = `${component.styles.borderWidth ?? 0}px solid ${component.styles.borderColor ?? "#d1d5db"}`;
   el.style.borderRadius = `${component.styles.borderRadius ?? 10}px`;
   el.style.opacity = `${component.styles.opacity ?? 1}`;
   el.style.display = "flex";
   el.style.flexDirection = "column";
-  el.style.overflow = "visible";
-
-  const label = document.createElement("div");
-  label.className = "container-layout-badge";
-  label.textContent = component.styles.flexDirection === "row" ? "Row" : "Column";
-  el.appendChild(label);
+  el.style.overflow = "visible";  
+  // Apply shadow styles
+  if (component.styles.shadow) {
+    el.style.boxShadow = buildBoxShadowString(component.styles.shadow);
+  }
+  // Badge is now hidden - do not render it
 
   const innerCanvas = document.createElement("div");
   innerCanvas.className = "container-canvas";
@@ -217,6 +261,9 @@ function renderContainerNode(component) {
   innerCanvas.style.overflow = "visible";
   innerCanvas.style.pointerEvents = "auto";
   applySpacing(innerCanvas, "padding", component.styles.padding);
+  
+  // Ensure children are draggable within container
+  innerCanvas.dataset.isContainerCanvas = "true";
 
   if (!AppState.runtimeMode && (!component.children || component.children.length === 0)) {
     const hint = document.createElement("div");

@@ -286,6 +286,246 @@ function buildComponentAccordions(panel, node) {
     }
   }, false));
 
+  // Add shadow customization for containers
+  if (node.type === "container") {
+    panel.appendChild(createAccordion("Shadow Settings", (content) => {
+      // Initialize shadow if not exists
+      if (!node.styles.shadow) {
+        node.styles.shadow = {
+          enabled: false,
+          color: "#000000",
+          opacity: 0.25,
+          blur: 8,
+          spread: 0,
+          offsetX: 0,
+          offsetY: 4,
+          insetEnabled: false,
+          insetBlur: 0,
+          insetOffsetX: 0,
+          insetOffsetY: 0,
+          multiShadows: [],
+          glowEnabled: false,
+          glowColor: "#ffffff",
+          glowBlur: 0,
+          glowSpread: 0,
+          presetType: "none",
+          intensity: "medium"
+        };
+      }
+
+      // 1. Shadow Enable/Disable
+      content.appendChild(createField("Enable Shadow", createCheckbox(node.styles.shadow.enabled, (v) => {
+        node.styles.shadow.enabled = v;
+        renderPreview();
+      })));
+
+      if (node.styles.shadow.enabled) {
+        // 2. Horizontal Shadow Position
+        content.appendChild(createField("Horizontal Offset", createStepper(node.styles.shadow.offsetX ?? 0, (v) => {
+          node.styles.shadow.offsetX = v;
+          renderPreview();
+        }, 1)));
+
+        // 3. Vertical Shadow Position
+        content.appendChild(createField("Vertical Offset", createStepper(node.styles.shadow.offsetY ?? 4, (v) => {
+          node.styles.shadow.offsetY = v;
+          renderPreview();
+        }, 1)));
+
+        // 4. Blur Settings
+        content.appendChild(createField("Blur Radius", createStepper(node.styles.shadow.blur ?? 8, (v) => {
+          node.styles.shadow.blur = Math.max(0, v);
+          renderPreview();
+        }, 1)));
+
+        // 5. Spread Settings
+        content.appendChild(createField("Spread Radius", createStepper(node.styles.shadow.spread ?? 0, (v) => {
+          node.styles.shadow.spread = v;
+          renderPreview();
+        }, 1)));
+
+        // 6. Shadow Color
+        content.appendChild(createField("Shadow Color", createColorInput(node.styles.shadow.color ?? "#000000", (v) => {
+          node.styles.shadow.color = v;
+          renderPreview();
+        })));
+
+        // 7. Shadow Opacity
+        const opacityInput = document.createElement("input");
+        opacityInput.type = "range";
+        opacityInput.min = "0";
+        opacityInput.max = "1";
+        opacityInput.step = "0.05";
+        opacityInput.value = node.styles.shadow.opacity ?? 0.25;
+        opacityInput.addEventListener("input", (e) => {
+          node.styles.shadow.opacity = parseFloat(e.target.value);
+          renderPreview();
+        });
+        content.appendChild(createField("Shadow Opacity", opacityInput));
+
+        // 8. Shadow Intensity
+        content.appendChild(createField("Shadow Intensity", createSelect([
+          { value: "light", label: "Light Shadow" },
+          { value: "medium", label: "Medium Shadow" },
+          { value: "strong", label: "Strong Shadow" }
+        ], node.styles.shadow.intensity ?? "medium", (v) => {
+          node.styles.shadow.intensity = v;
+          if (v === "light") {
+            node.styles.shadow.blur = 4;
+            node.styles.shadow.spread = 0;
+            node.styles.shadow.opacity = 0.1;
+          } else if (v === "medium") {
+            node.styles.shadow.blur = 8;
+            node.styles.shadow.spread = 0;
+            node.styles.shadow.opacity = 0.25;
+          } else if (v === "strong") {
+            node.styles.shadow.blur = 16;
+            node.styles.shadow.spread = 4;
+            node.styles.shadow.opacity = 0.4;
+          }
+          renderPreview();
+        })));
+
+        // 10. Inner Shadow
+        content.appendChild(createField("Enable Inner Shadow", createCheckbox(node.styles.shadow.insetEnabled, (v) => {
+          node.styles.shadow.insetEnabled = v;
+          renderPreview();
+        })));
+
+        if (node.styles.shadow.insetEnabled) {
+          content.appendChild(createField("Inner Shadow Blur", createStepper(node.styles.shadow.insetBlur ?? 0, (v) => {
+            node.styles.shadow.insetBlur = Math.max(0, v);
+            renderPreview();
+          }, 1)));
+
+          content.appendChild(createField("Inner Shadow Offset X", createStepper(node.styles.shadow.insetOffsetX ?? 0, (v) => {
+            node.styles.shadow.insetOffsetX = v;
+            renderPreview();
+          }, 1)));
+
+          content.appendChild(createField("Inner Shadow Offset Y", createStepper(node.styles.shadow.insetOffsetY ?? 0, (v) => {
+            node.styles.shadow.insetOffsetY = v;
+            renderPreview();
+          }, 1)));
+        }
+
+        // 11. Glow Effect
+        content.appendChild(createField("Enable Glow", createCheckbox(node.styles.shadow.glowEnabled, (v) => {
+          node.styles.shadow.glowEnabled = v;
+          renderPreview();
+        })));
+
+        if (node.styles.shadow.glowEnabled) {
+          content.appendChild(createField("Glow Color", createColorInput(node.styles.shadow.glowColor ?? "#ffffff", (v) => {
+            node.styles.shadow.glowColor = v;
+            renderPreview();
+          })));
+
+          content.appendChild(createField("Glow Blur", createStepper(node.styles.shadow.glowBlur ?? 0, (v) => {
+            node.styles.shadow.glowBlur = Math.max(0, v);
+            renderPreview();
+          }, 1)));
+
+          content.appendChild(createField("Glow Spread", createStepper(node.styles.shadow.glowSpread ?? 0, (v) => {
+            node.styles.shadow.glowSpread = v;
+            renderPreview();
+          }, 1)));
+        }
+
+        // 13. Shadow Style Presets
+        content.appendChild(createField("Preset Style", createSelect([
+          { value: "none", label: "Custom" },
+          { value: "soft", label: "Soft Shadow" },
+          { value: "hard", label: "Hard Shadow" },
+          { value: "floating", label: "Floating Shadow" },
+          { value: "neumorphism", label: "Neumorphism Shadow" },
+          { value: "material", label: "Material Shadow" }
+        ], node.styles.shadow.presetType ?? "none", (v) => {
+          node.styles.shadow.presetType = v;
+          if (v === "soft") {
+            node.styles.shadow.blur = 12;
+            node.styles.shadow.spread = 0;
+            node.styles.shadow.offsetX = 0;
+            node.styles.shadow.offsetY = 4;
+            node.styles.shadow.opacity = 0.08;
+          } else if (v === "hard") {
+            node.styles.shadow.blur = 0;
+            node.styles.shadow.spread = 0;
+            node.styles.shadow.offsetX = 2;
+            node.styles.shadow.offsetY = 2;
+            node.styles.shadow.opacity = 0.5;
+          } else if (v === "floating") {
+            node.styles.shadow.blur = 24;
+            node.styles.shadow.spread = 8;
+            node.styles.shadow.offsetX = 0;
+            node.styles.shadow.offsetY = 8;
+            node.styles.shadow.opacity = 0.3;
+          } else if (v === "neumorphism") {
+            node.styles.shadow.blur = 16;
+            node.styles.shadow.spread = -2;
+            node.styles.shadow.offsetX = -4;
+            node.styles.shadow.offsetY = -4;
+            node.styles.shadow.opacity = 0.25;
+          } else if (v === "material") {
+            node.styles.shadow.blur = 8;
+            node.styles.shadow.spread = 0;
+            node.styles.shadow.offsetX = 0;
+            node.styles.shadow.offsetY = 4;
+            node.styles.shadow.opacity = 0.2;
+          }
+          renderPreview();
+        })));
+      }
+
+      const hint = document.createElement("p");
+      hint.className = "inspector-note";
+      hint.textContent = "Configure shadow effects for the container";
+      content.appendChild(hint);
+    }, false));
+  }
+
+  // Add components section for containers
+  if (node.type === "container" && node.children?.length > 0) {
+    panel.appendChild(createAccordion("Components", (content) => {
+      const listContainer = document.createElement("div");
+      listContainer.style.display = "flex";
+      listContainer.style.flexDirection = "column";
+      listContainer.style.gap = "8px";
+
+      node.children.forEach((child) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.style.padding = "8px 12px";
+        btn.style.textAlign = "left";
+        btn.style.backgroundColor = "#f3f4f6";
+        btn.style.border = "1px solid #d1d5db";
+        btn.style.borderRadius = "6px";
+        btn.style.cursor = "pointer";
+        btn.style.fontSize = "14px";
+        btn.style.transition = "all 0.2s";
+        btn.textContent = `${child.type} ${child.props?.text || child.props?.value || child.props?.placeholder || ""}`.trim();
+        
+        btn.addEventListener("mouseover", () => {
+          btn.style.backgroundColor = "#e5e7eb";
+        });
+        btn.addEventListener("mouseout", () => {
+          btn.style.backgroundColor = "#f3f4f6";
+        });
+        
+        btn.addEventListener("click", () => {
+          AppState.selectedId = child.id;
+          AppState.selectedType = "component";
+          StateUtils.bringToFront(child);
+          Builder.refreshAll();
+        });
+
+        listContainer.appendChild(btn);
+      });
+
+      content.appendChild(listContainer);
+    }, false));
+  }
+
   const deleteBtn = document.createElement("button");
   deleteBtn.type = "button";
   deleteBtn.className = "danger-btn";

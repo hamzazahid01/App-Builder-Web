@@ -105,7 +105,7 @@ window.ComponentFactory = {
       const container = {
         ...common,
         styles: {
-          backgroundColor: "#f8fafc",
+          backgroundColor: null,
           padding: boxSpacing(8, 8, 8, 8),
           borderColor: "#d1d5db",
           borderWidth: 1,
@@ -114,7 +114,27 @@ window.ComponentFactory = {
           opacity: 1,
           alignItems: "start",
           justifyContent: "start",
-          flexDirection: "column"
+          flexDirection: "column",
+          shadow: {
+            enabled: false,
+            color: "#000000",
+            opacity: 0.25,
+            blur: 8,
+            spread: 0,
+            offsetX: 0,
+            offsetY: 4,
+            insetEnabled: false,
+            insetBlur: 0,
+            insetOffsetX: 0,
+            insetOffsetY: 0,
+            multiShadows: [],
+            glowEnabled: false,
+            glowColor: "#ffffff",
+            glowBlur: 0,
+            glowSpread: 0,
+            presetType: "none",
+            intensity: "medium"
+          }
         },
         props: { layoutMode: "auto" }
       };
