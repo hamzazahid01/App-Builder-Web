@@ -30,6 +30,14 @@ window.addEventListener("DOMContentLoaded", () => {
   deviceSelect.addEventListener("change", (e) => applyDeviceFrame(e.target.value));
   updateScreenLabel();
 
+  // Pages UI
+  const addPageBtn = document.getElementById('add-page-btn');
+  if (addPageBtn) addPageBtn.addEventListener('click', () => {
+    PageManager.addPage();
+    PageManager.render();
+  });
+  if (window.PageManager && typeof PageManager.render === 'function') PageManager.render();
+
   document.getElementById("undo-btn").addEventListener("click", () => {
     if (!StateUtils.canUndo()) return;
     StateUtils.undo();

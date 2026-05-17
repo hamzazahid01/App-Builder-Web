@@ -217,6 +217,36 @@ body.runtime-active .preview-app-btn {
   flex-shrink: 0;
 }
 
+.pages-panel-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pages-list {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  max-width: 480px;
+  overflow-x: auto;
+  padding-left: 8px;
+}
+
+.page-item { display: inline-flex; align-items: center; gap: 6px; }
+.page-switch-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.page-switch-btn:hover { background: #f8faff; }
+.page-item.active .page-switch-btn { border-color: var(--primary); background: #eff6ff; }
+.page-mini-btn { border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 4px 6px; cursor: pointer; font-size: 12px; }
+.page-mini-btn.danger { color: var(--danger); border-color: rgba(220,38,38,0.12); }
+
 .center-toolbar-title {
   display: flex;
   flex-direction: column;
