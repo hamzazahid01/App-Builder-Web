@@ -126,12 +126,40 @@ function renderButton(component) {
 }
 
 function renderTextNode(component) {
+  TextStyles.ensure(component);
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "text-element-wrapper";
+  wrapper.style.width = "100%";
+  wrapper.style.height = "100%";
+  wrapper.style.boxSizing = "border-box";
+  wrapper.style.display = "flex";
+  wrapper.style.alignItems = "stretch";
+  wrapper.style.justifyContent = "stretch";
+
   const el = document.createElement("div");
   el.className = "text-element";
-  TextStyles.ensure(component);
   TextStyles.applyToElement(el, component);
-  bindEditSelect(el, component);
-  return el;
+
+  if (component.styles.textBackground?.enabled) {
+    TextStyles.applyTextBackground(wrapper, component.styles.textBackground);
+  }
+
+  if (!AppState.runtimeMode) {
+    el.contentEditable = "true";
+    el.spellcheck = false;
+    el.addEventListener("input", () => {
+      component.props.value = el.innerText;
+      renderPreview();
+    });
+    el.addEventListener("blur", () => {
+      component.props.value = el.innerText;
+    });
+  }
+
+  wrapper.appendChild(el);
+  bindEditSelect(wrapper, component);
+  return wrapper;
 }
 
 function renderImageNode(component) {

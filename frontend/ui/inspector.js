@@ -76,6 +76,17 @@ function createStepper(value, onChange, step = 1) {
   return wrap;
 }
 
+function createRangeInput(value, min, max, step, onChange) {
+  const input = document.createElement("input");
+  input.type = "range";
+  input.min = `${min}`;
+  input.max = `${max}`;
+  input.step = `${step}`;
+  input.value = Number(value ?? min);
+  input.addEventListener("input", (e) => onChange(Number(e.target.value)));
+  return input;
+}
+
 function createSpacingEditor(title, spacingObj, onChange) {
   const wrap = document.createElement("div");
   const toggle = document.createElement("button");
@@ -274,19 +285,38 @@ function buildComponentAccordions(panel, node) {
 
     // Text Color & Opacity
     panel.appendChild(createAccordion("Colors & Effects", (content) => {
-      content.appendChild(createField("Text Color", createColorInput(node.styles.color || "#111827", (v) => {
-        node.styles.color = v;
+      content.appendChild(createField("Text Fill", createSelect([
+        { value: "solid", label: "Solid" },
+        { value: "gradient", label: "Gradient" }
+      ], node.styles.textFillType || "solid", (v) => {
+        node.styles.textFillType = v;
         renderPreview();
       })));
 
-      const opacityInput = document.createElement("input");
-      opacityInput.type = "range";
-      opacityInput.min = "0";
-      opacityInput.max = "1";
-      opacityInput.step = "0.1";
-      opacityInput.value = node.styles.textOpacity ?? 1;
-      opacityInput.addEventListener("input", (e) => {
-        node.styles.textOpacity = parseFloat(e.target.value);
+      if (node.styles.textFillType !== "gradient") {
+        content.appendChild(createField("Text Color", createColorInput(node.styles.color || "#111827", (v) => {
+          node.styles.color = v;
+          renderPreview();
+        })));
+      }
+
+      if (node.styles.textFillType === "gradient") {
+        content.appendChild(createField("Gradient Start", createColorInput(node.styles.textGradient?.start || "#111827", (v) => {
+          node.styles.textGradient.start = v;
+          renderPreview();
+        })));
+        content.appendChild(createField("Gradient End", createColorInput(node.styles.textGradient?.end || "#2563eb", (v) => {
+          node.styles.textGradient.end = v;
+          renderPreview();
+        })));
+        content.appendChild(createField("Gradient Angle", createStepper(node.styles.textGradient?.angle ?? 90, (v) => {
+          node.styles.textGradient.angle = v;
+          renderPreview();
+        }, 5)));
+      }
+
+      const opacityInput = createRangeInput(node.styles.textOpacity ?? 1, 0, 1, 0.05, (v) => {
+        node.styles.textOpacity = v;
         renderPreview();
       });
       content.appendChild(createField("Opacity", opacityInput));
@@ -431,19 +461,38 @@ function buildComponentAccordions(panel, node) {
       })));
 
       if (node.styles.textBackground?.enabled) {
-        content.appendChild(createField("Color", createColorInput(node.styles.textBackground.color || "#ffffff", (v) => {
-          node.styles.textBackground.color = v;
+        content.appendChild(createField("Background Type", createSelect([
+          { value: "solid", label: "Solid" },
+          { value: "gradient", label: "Gradient" }
+        ], node.styles.textBackground.type || "solid", (v) => {
+          node.styles.textBackground.type = v;
           renderPreview();
         })));
 
-        const bgOpacity = document.createElement("input");
-        bgOpacity.type = "range";
-        bgOpacity.min = "0";
-        bgOpacity.max = "1";
-        bgOpacity.step = "0.1";
-        bgOpacity.value = node.styles.textBackground.opacity ?? 1;
-        bgOpacity.addEventListener("input", (e) => {
-          node.styles.textBackground.opacity = parseFloat(e.target.value);
+        if (node.styles.textBackground.type === "solid") {
+          content.appendChild(createField("Color", createColorInput(node.styles.textBackground.color || "#ffffff", (v) => {
+            node.styles.textBackground.color = v;
+            renderPreview();
+          })));
+        }
+
+        if (node.styles.textBackground.type === "gradient") {
+          content.appendChild(createField("Gradient Start", createColorInput(node.styles.textBackground.gradientStart || "#ffffff", (v) => {
+            node.styles.textBackground.gradientStart = v;
+            renderPreview();
+          })));
+          content.appendChild(createField("Gradient End", createColorInput(node.styles.textBackground.gradientEnd || "#f8fafc", (v) => {
+            node.styles.textBackground.gradientEnd = v;
+            renderPreview();
+          })));
+          content.appendChild(createField("Gradient Angle", createStepper(node.styles.textBackground.gradientAngle ?? 90, (v) => {
+            node.styles.textBackground.gradientAngle = v;
+            renderPreview();
+          }, 5)));
+        }
+
+        const bgOpacity = createRangeInput(node.styles.textBackground.opacity ?? 1, 0, 1, 0.05, (v) => {
+          node.styles.textBackground.opacity = v;
           renderPreview();
         });
         content.appendChild(createField("Opacity", bgOpacity));

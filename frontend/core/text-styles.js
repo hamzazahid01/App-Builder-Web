@@ -41,6 +41,8 @@ window.TextStyles = {
     if (s.fontStyle === undefined) s.fontStyle = "normal"; // normal or italic
     if (s.color === undefined) s.color = "#111827";
     if (s.textOpacity === undefined) s.textOpacity = 1;
+    if (s.textFillType === undefined) s.textFillType = "solid";
+    if (!s.textGradient) s.textGradient = { angle: 90, start: "#111827", end: "#2563eb" };
 
     // Text decorations
     if (!s.textDecoration) s.textDecoration = { underline: false, overline: false, lineThrough: false };
@@ -82,12 +84,17 @@ window.TextStyles = {
     if (!s.textBackground) {
       s.textBackground = {
         enabled: false,
+        type: "solid",
         color: "#ffffff",
+        gradientAngle: 90,
+        gradientStart: "#ffffff",
+        gradientEnd: "#f8fafc",
         opacity: 1,
         padding: { top: 4, right: 8, bottom: 4, left: 8 },
         borderRadius: 0
       };
     }
+    if (s.textBackground.type === undefined) s.textBackground.type = "solid";
 
     // Layout
     if (s.widthMode === undefined) s.widthMode = "auto"; // auto, fixed, fill
@@ -142,6 +149,54 @@ window.TextStyles = {
     return parts.length > 0 ? parts.join(" ") : "none";
   },
 
+  parseHexColorToRgba(value, alpha = 1) {
+    if (!value) return `rgba(0,0,0,${alpha})`;
+    if (typeof value !== "string") return `rgba(0,0,0,${alpha})`;
+    if (value.startsWith("#")) {
+      const hex = value.slice(1).trim();
+      let r = 0; let g = 0; let b = 0;
+      if (hex.length === 3) {
+        r = parseInt(hex[0] + hex[0], 16);
+        g = parseInt(hex[1] + hex[1], 16);
+        b = parseInt(hex[2] + hex[2], 16);
+      } else if (hex.length >= 6) {
+        r = parseInt(hex.slice(0, 2), 16);
+        g = parseInt(hex.slice(2, 4), 16);
+        b = parseInt(hex.slice(4, 6), 16);
+      }
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    return value;
+  },
+
+  getResponsiveScale(styles) {
+    if (!styles?.responsive?.enabled) return 1;
+    const key = AppState.currentDeviceKey || "";
+    const lower = key.toLowerCase();
+    if (lower.includes("ipad") || lower.includes("tablet") || lower.includes("large") || lower.includes("pro")) {
+      return styles.responsive.tabletScale ?? 0.95;
+    }
+    return styles.responsive.mobileScale ?? 0.85;
+  },
+
+  applyTextBackground(el, background) {
+    if (!background?.enabled) return;
+    if (background.type === "gradient") {
+      el.style.backgroundImage = `linear-gradient(${background.gradientAngle ?? 90}deg, ${background.gradientStart}, ${background.gradientEnd})`;
+      el.style.backgroundColor = "transparent";
+    } else {
+      el.style.backgroundImage = "none";
+      el.style.backgroundColor = this.parseHexColorToRgba(background.color || "#ffffff", background.opacity ?? 1);
+    }
+    el.style.borderRadius = `${background.borderRadius ?? 0}px`;
+    if (background.padding) {
+      el.style.paddingTop = `${background.padding.top}px`;
+      el.style.paddingRight = `${background.padding.right}px`;
+      el.style.paddingBottom = `${background.padding.bottom}px`;
+      el.style.paddingLeft = `${background.padding.left}px`;
+    }
+  },
+
   shadowCss(shadow) {
     if (!shadow?.enabled) return "none";
     const x = shadow.offsetX ?? 0;
@@ -169,11 +224,24 @@ window.TextStyles = {
 
     // Font and text styling
     el.style.fontFamily = `"${s.fontFamily}", sans-serif`;
-    el.style.fontSize = `${s.fontSize}px`;
+    const responsiveScale = this.getResponsiveScale(s);
+    el.style.fontSize = `${Math.max(8, Math.round((s.fontSize ?? 16) * responsiveScale))}px`;
     el.style.fontWeight = s.fontWeight || "400";
     el.style.fontStyle = s.fontStyle === "italic" ? "italic" : "normal";
-    el.style.color = s.color || "#111827";
     el.style.opacity = s.textOpacity ?? 1;
+
+    // Text fill type
+    if (s.textFillType === "gradient") {
+      el.style.color = "transparent";
+      el.style.backgroundImage = `linear-gradient(${s.textGradient.angle ?? 90}deg, ${s.textGradient.start}, ${s.textGradient.end})`;
+      el.style.webkitBackgroundClip = "text";
+      el.style.backgroundClip = "text";
+    } else {
+      el.style.color = s.color || "#111827";
+      el.style.backgroundImage = "none";
+      el.style.webkitBackgroundClip = "";
+      el.style.backgroundClip = "";
+    }
 
     // Text decorations
     el.style.textDecoration = this.computeTextDecorationCss(s.textDecoration);
@@ -192,7 +260,8 @@ window.TextStyles = {
 
     // Text stroke (webkit)
     if (s.textStroke?.enabled) {
-      el.style.webkitTextStroke = this.strokeCss(s.textStroke);
+      const strokeColor = this.parseHexColorToRgba(s.textStroke.color || "#000000", s.textStroke.opacity ?? 1);
+      el.style.webkitTextStroke = `${s.textStroke.width ?? 1}px ${strokeColor}`;
     }
 
     // Padding & Margin
@@ -232,19 +301,6 @@ window.TextStyles = {
     // Rotation
     if (s.rotation) {
       el.style.transform = `rotate(${s.rotation}deg)`;
-    }
-
-    // Text background
-    if (s.textBackground?.enabled) {
-      el.style.backgroundColor = s.textBackground.color || "#ffffff";
-      el.style.backgroundOpacity = s.textBackground.opacity ?? 1;
-      el.style.borderRadius = `${s.textBackground.borderRadius ?? 0}px`;
-      if (s.textBackground.padding) {
-        el.style.paddingTop = `${s.textBackground.padding.top}px`;
-        el.style.paddingRight = `${s.textBackground.padding.right}px`;
-        el.style.paddingBottom = `${s.textBackground.padding.bottom}px`;
-        el.style.paddingLeft = `${s.textBackground.padding.left}px`;
-      }
     }
 
     // Base styles
