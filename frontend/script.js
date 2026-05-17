@@ -1,7 +1,7 @@
 window.addEventListener("DOMContentLoaded", () => {
-  const restored = StateUtils.restoreFromLocal();
-  if (!restored) StateUtils.ensureBootstrap();
-  else StateUtils.ensureBootstrap();
+  StateUtils.restoreFromLocal();
+  StateUtils.ensureBootstrap();
+  ComponentFactory.migrateApp(AppState.app);
   AppState.selectedType = "page";
 
   DragDrop.initLibrary();

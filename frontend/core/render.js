@@ -92,7 +92,9 @@ function renderComponent(component) {
   if (component.type === "input") return renderInputNode(component);
   if (component.type === "icon") return renderIconNode(component);
   if (component.type === "container") return renderContainerNode(component);
-  return renderContainerNode(component);
+  const unknown = document.createElement("div");
+  unknown.textContent = component.type;
+  return unknown;
 }
 
 function renderButton(component) {
@@ -301,7 +303,7 @@ window.renderPreview = function renderPreview() {
   const preview = document.getElementById("mobile-preview");
   const page = StateUtils.getCurrentPage();
   if (!page) {
-    preview.innerHTML = "<motion class='empty-state'>No pages available.</div>";
+    preview.innerHTML = "<div class='empty-state'>No pages available.</div>";
     return;
   }
 

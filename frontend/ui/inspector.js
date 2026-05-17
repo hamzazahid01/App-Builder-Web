@@ -236,9 +236,12 @@ function buildComponentAccordions(panel, node) {
     if (node.styles.width !== undefined) content.appendChild(createField("Width", createTextInput(node.styles.width, (v) => { node.styles.width = v; renderPreview(); })));
     if (node.styles.height !== undefined) content.appendChild(createField("Height", createStepper(node.styles.height, (v) => { node.styles.height = v; renderPreview(); })));
     if (node.styles.minHeight !== undefined) content.appendChild(createField("Min Height", createStepper(node.styles.minHeight, (v) => { node.styles.minHeight = v; renderPreview(); })));
-    if (node.styles.flexDirection !== undefined) content.appendChild(createField("Direction", createSelect([
-      { value: "row", label: "row" }, { value: "column", label: "column" }
-    ], node.styles.flexDirection, (v) => { node.styles.flexDirection = v; renderPreview(); })));
+    if (node.type === "container") {
+      const autoDir = ComponentFactory.detectFlexDirection(node);
+      const info = createTextInput(`Auto: ${autoDir === "row" ? "Row (wide)" : "Column (tall)"}`, () => {});
+      info.disabled = true;
+      content.appendChild(createField("Layout (auto)", info));
+    }
     if (node.styles.alignItems !== undefined) content.appendChild(createField("Align Items", createSelect([
       { value: "start", label: "start" }, { value: "center", label: "center" }, { value: "end", label: "end" }, { value: "stretch", label: "stretch" }
     ], node.styles.alignItems, (v) => { node.styles.alignItems = v; renderPreview(); })));

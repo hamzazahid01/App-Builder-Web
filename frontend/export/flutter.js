@@ -32,115 +32,76 @@ function renderAction(onClick) {
 
 function renderFlutterNodeInner(node, depth = 4) {
   const i = "  ".repeat(depth);
-  const childWidgets = (node.children || []).map((c) => renderFlutterNode(c, depth + 2)).join(",\n");
 
   if (node.type === "button") {
-    return `${i}Padding(
-${i}  padding: ${edgeInsets(node.styles.margin)},
-${i}  child: ElevatedButton(
-${i}    style: ElevatedButton.styleFrom(
-${i}      backgroundColor: ${flutterColor(node.styles.backgroundColor)},
-${i}      foregroundColor: ${flutterColor(node.styles.textColor)},
-${i}      padding: ${edgeInsets(node.styles.padding)},
-${i}      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(${node.styles.borderRadius})),
-${i}    ),
-${i}    onPressed: ${renderAction(node.props.onClick)},
-${i}    child: Text('${(node.props.text || "").replace(/'/g, "\\'")}'),
+    return `${i}ElevatedButton(
+${i}  style: ElevatedButton.styleFrom(
+${i}    backgroundColor: ${flutterColor(node.styles.backgroundColor)},
+${i}    foregroundColor: ${flutterColor(node.styles.textColor)},
+${i}    padding: ${edgeInsets(node.styles.padding)},
+${i}    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(${node.styles.borderRadius})),
 ${i}  ),
+${i}  onPressed: ${renderAction(node.props.onClick)},
+${i}  child: Text('${(node.props.text || "").replace(/'/g, "\\'")}'),
 ${i})`;
   }
 
   if (node.type === "text") {
-    return `${i}Padding(
-${i}  padding: ${edgeInsets(node.styles.margin)},
-${i}  child: Text(
-${i}    '${(node.props.value || "").replace(/'/g, "\\'")}',
-${i}    textAlign: TextAlign.${node.styles.textAlign},
-${i}    style: TextStyle(fontSize: ${node.styles.fontSize}, color: ${flutterColor(node.styles.color)}, fontWeight: FontWeight.w400),
-${i}  ),
+    return `${i}Text(
+${i}  '${(node.props.value || "").replace(/'/g, "\\'")}',
+${i}  textAlign: TextAlign.${node.styles.textAlign},
+${i}  overflow: TextOverflow.ellipsis,
+${i}  style: TextStyle(fontSize: ${node.styles.fontSize}, color: ${flutterColor(node.styles.color)}, fontWeight: FontWeight.w400),
 ${i})`;
   }
 
   if (node.type === "image") {
-    return `${i}Padding(
-${i}  padding: ${edgeInsets(node.styles.margin)},
-${i}  child: ClipRRect(
-${i}    borderRadius: BorderRadius.circular(${node.styles.borderRadius}),
-${i}    child: Image.network('${node.props.src}', height: ${node.styles.height}, width: double.infinity, fit: BoxFit.${node.styles.fit}),
-${i}  ),
+    return `${i}ClipRRect(
+${i}  borderRadius: BorderRadius.circular(${node.styles.borderRadius}),
+${i}  child: Image.network('${node.props.src}', width: double.infinity, height: double.infinity, fit: BoxFit.${node.styles.fit}),
 ${i})`;
   }
 
   if (node.type === "input") {
-    return `${i}Padding(
-${i}  padding: ${edgeInsets(node.styles.margin)},
-${i}  child: TextField(
-${i}    keyboardType: TextInputType.${node.props.inputType === "email" ? "emailAddress" : "text"},
-${i}    obscureText: ${node.props.inputType === "password"},
-${i}    decoration: InputDecoration(
-${i}      hintText: '${(node.props.placeholder || "").replace(/'/g, "\\'")}',
-${i}      contentPadding: ${edgeInsets(node.styles.padding)},
-${i}      border: OutlineInputBorder(
-${i}        borderRadius: BorderRadius.circular(${node.styles.borderRadius}),
-${i}        borderSide: BorderSide(color: ${flutterColor(node.styles.borderColor)}, width: ${node.styles.borderWidth}),
-${i}      ),
+    return `${i}TextField(
+${i}  keyboardType: TextInputType.${node.props.inputType === "email" ? "emailAddress" : "text"},
+${i}  obscureText: ${node.props.inputType === "password"},
+${i}  decoration: InputDecoration(
+${i}    hintText: '${(node.props.placeholder || "").replace(/'/g, "\\'")}',
+${i}    contentPadding: ${edgeInsets(node.styles.padding)},
+${i}    border: OutlineInputBorder(
+${i}      borderRadius: BorderRadius.circular(${node.styles.borderRadius}),
+${i}      borderSide: BorderSide(color: ${flutterColor(node.styles.borderColor)}, width: ${node.styles.borderWidth}),
 ${i}    ),
 ${i}  ),
 ${i})`;
   }
 
-  if (node.type === "spacer") return `${i}SizedBox(height: ${node.styles.height})`;
-  if (node.type === "icon") return `${i}Text('${(node.props.symbol || "").replace(/'/g, "\\'")}', style: TextStyle(fontSize: ${node.styles.fontSize}, color: ${flutterColor(node.styles.color)}))`;
+  if (node.type === "icon") {
+    return `${i}Center(child: Text('${(node.props.symbol || "").replace(/'/g, "\\'")}', style: TextStyle(fontSize: ${node.styles.fontSize}, color: ${flutterColor(node.styles.color)})))`;
+  }
 
-  if (node.type === "stack") {
-    return `${i}Padding(
-${i}  padding: ${edgeInsets(node.styles.margin)},
-${i}  child: Container(
-${i}    height: ${node.styles.height},
-${i}    decoration: BoxDecoration(color: ${flutterColor(node.styles.backgroundColor)}, borderRadius: BorderRadius.circular(${node.styles.borderRadius || 10})),
-${i}    child: Stack(children: [
-${childWidgets}
-${i}    ]),
+  if (node.type === "container") {
+    const flexDirection = node.styles.flexDirection || ComponentFactory.detectFlexDirection(node);
+    const childWidgets = (node.children || []).map((c) => renderFlutterNode(c, depth + 4)).join(",\n");
+    const flowWidget = flexDirection === "row" ? "Row" : "Column";
+    return `${i}Container(
+${i}  padding: ${edgeInsets(node.styles.padding)},
+${i}  decoration: BoxDecoration(
+${i}    color: ${flutterColor(node.styles.backgroundColor || "#f8fafc")},
+${i}    borderRadius: BorderRadius.circular(${node.styles.borderRadius || 10}),
+${i}    border: Border.all(color: ${flutterColor(node.styles.borderColor || "#d1d5db")}, width: ${node.styles.borderWidth || 1}),
 ${i}  ),
+${i}  child: ${childWidgets ? `Stack(
+${i}    clipBehavior: Clip.none,
+${i}    children: [
+${childWidgets}
+${i}    ],
+${i}  )` : "const SizedBox.expand()"},
 ${i})`;
   }
 
-  if (node.type === "center") {
-    return `${i}Padding(
-${i}  padding: ${edgeInsets(node.styles.margin)},
-${i}  child: Container(
-${i}    constraints: BoxConstraints(minHeight: ${node.styles.minHeight || 120}),
-${i}    child: Center(
-${i}      child: Column(mainAxisSize: MainAxisSize.min, children: [
-${childWidgets}
-${i}      ]),
-${i}    ),
-${i}  ),
-${i})`;
-  }
-
-  const isRow = node.type === "row";
-  const isColumn = node.type === "column" || node.type === "container" || node.type === "card";
-  const layoutWidget = isRow ? "Row" : isColumn ? "Column" : "Column";
-  return `${i}Padding(
-${i}  padding: ${edgeInsets(node.styles.margin)},
-${i}  child: Container(
-${i}    width: ${node.styles.width === "100%" ? "double.infinity" : node.styles.width === "auto" ? "null" : node.styles.width},
-${i}    padding: ${edgeInsets(node.styles.padding)},
-${i}    decoration: BoxDecoration(
-${i}      color: ${flutterColor(node.styles.backgroundColor || "#ffffff")},
-${i}      borderRadius: BorderRadius.circular(${node.styles.borderRadius || 0}),
-${i}      border: Border.all(color: ${flutterColor(node.styles.borderColor || "#ffffff")}, width: ${node.styles.borderWidth || 0}),
-${i}    ),
-${i}    child: ${layoutWidget}(
-${i}      mainAxisAlignment: ${mapMainAxis(node.styles.justifyContent)},
-${i}      crossAxisAlignment: ${mapCrossAxis(node.styles.alignItems)},
-${i}      children: [
-${childWidgets}
-${i}      ],
-${i}    ),
-${i}  ),
-${i})`;
+  return `${i}const SizedBox.shrink()`;
 }
 
 function renderFlutterNode(node, depth = 4) {
@@ -158,25 +119,7 @@ ${i})`;
 
 function renderPageWidget(page) {
   const widgets = page.components.map((node) => renderFlutterNode(node, 10)).join(",\n");
-  const usesCanvas = page.components.some((node) => node.layout);
-  const bodyChild = usesCanvas
-    ? `SizedBox(
-          width: double.infinity,
-          height: 640,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-${widgets}
-            ],
-          ),
-        )`
-    : `Column(
-          crossAxisAlignment: ${page.layout.alignment === "stretch" ? "CrossAxisAlignment.stretch" : page.layout.alignment === "center" ? "CrossAxisAlignment.center" : "CrossAxisAlignment.start"},
-          mainAxisAlignment: ${page.layout.alignment === "bottom" ? "MainAxisAlignment.end" : "MainAxisAlignment.start"},
-          children: [
-${widgets}
-          ],
-        )`;
+  const canvasHeight = AppState?.deviceMap?.["iphone-14"]?.height ? AppState.deviceMap["iphone-14"].height - 120 : 640;
   return `class ${page.id.replace(/[^a-zA-Z0-9]/g, "")}Page extends StatelessWidget {
   const ${page.id.replace(/[^a-zA-Z0-9]/g, "")}Page({super.key});
 
@@ -185,10 +128,19 @@ ${widgets}
     return Scaffold(
       backgroundColor: ${flutterColor(page.backgroundColor)},
       appBar: ${page.appBar.enabled ? `AppBar(backgroundColor: ${flutterColor(page.appBar.backgroundColor)}, title: Text('${(page.appBar.title || page.name).replace(/'/g, "\\'")}', style: TextStyle(color: ${flutterColor(page.appBar.textColor)})), iconTheme: IconThemeData(color: ${flutterColor(page.appBar.textColor)}))` : "null"},
-      body: ${page.layout.safeArea ? "SafeArea(" : ""}${page.layout.scrollBehavior === "scroll" && !usesCanvas ? "SingleChildScrollView(" : ""}Padding(
+      body: ${page.layout.safeArea ? "SafeArea(" : ""}Padding(
         padding: ${edgeInsets(page.layout.padding)},
-        child: ${bodyChild},
-      )${page.layout.scrollBehavior === "scroll" && !usesCanvas ? ")" : ""}${page.layout.safeArea ? ")" : ""},
+        child: SizedBox(
+          width: double.infinity,
+          height: ${canvasHeight},
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+${widgets}
+            ],
+          ),
+        ),
+      )${page.layout.safeArea ? ")" : ""},
     );
   }
 }

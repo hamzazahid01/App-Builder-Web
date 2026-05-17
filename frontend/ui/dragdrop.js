@@ -115,6 +115,7 @@ window.DragDrop = {
     e.stopPropagation();
     e.preventDefault();
 
+    document.body.classList.add("canvas-resizing");
     this.beginSession({
       mode: "resize",
       componentId: component.id,
@@ -282,7 +283,7 @@ window.DragDrop = {
   },
 
   finishSession(commitHistory) {
-    document.body.classList.remove("canvas-dragging", "canvas-placing");
+    document.body.classList.remove("canvas-dragging", "canvas-placing", "canvas-resizing");
     this.removeGhost();
     this.session = null;
     AppState.suppressCanvasClickUntil = Date.now() + 120;
@@ -292,7 +293,7 @@ window.DragDrop = {
   },
 
   cancelSession() {
-    document.body.classList.remove("canvas-dragging", "canvas-placing");
+    document.body.classList.remove("canvas-dragging", "canvas-placing", "canvas-resizing");
     this.removeGhost();
     this.session = null;
   },

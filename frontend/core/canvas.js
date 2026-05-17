@@ -48,10 +48,10 @@ window.CanvasUtils = {
     if (!page) return null;
 
     const containerCanvases = [...document.querySelectorAll(".container-canvas")]
-      .map((el) => ({
-        el,
-        z: Number(el.closest(".canvas-node")?.style.zIndex || 0)
-      }))
+      .map((el) => {
+        const comp = StateUtils.findById(page.components, el.dataset.containerId);
+        return { el, z: comp?.layout?.zIndex ?? 0 };
+      })
       .sort((a, b) => b.z - a.z);
 
     for (const { el } of containerCanvases) {
