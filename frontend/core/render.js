@@ -178,10 +178,16 @@ function renderTextNode(component) {
   const runtimeHandler = (e) => {
     if (!AppState.runtimeMode) return;
     if (document.activeElement === el) return;
+    const action = component.props.action || component.props.onClick;
+    if (action && action.type && action.type !== "none") {
+      executeAction(action);
+      return;
+    }
     if (component.styles.interaction?.copyable && !component.styles.interaction?.clickable) {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(component.props.value || "");
       }
+      return;
     }
     if (component.styles.interaction?.clickable && component.styles.interaction?.href) {
       window.open(component.styles.interaction.href, "_blank");
@@ -629,6 +635,11 @@ function renderIconNode(component) {
 
   const runtimeHandler = (e) => {
     if (!AppState.runtimeMode) return;
+    const action = component.props.action || component.props.onClick;
+    if (action && action.type && action.type !== "none") {
+      executeAction(action);
+      return;
+    }
     if (s.interaction?.clickable && s.interaction?.href) window.open(s.interaction.href, '_blank');
   };
 

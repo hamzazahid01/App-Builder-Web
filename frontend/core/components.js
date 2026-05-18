@@ -205,7 +205,16 @@ window.ComponentFactory = {
             copyable: false
           }
         },
-        props: { value: "Text" }
+        props: {
+          value: "Text",
+          action: {
+            type: "none",
+            targetPageId: AppState?.app?.initialPageId || "",
+            url: "",
+            dialogText: "Message",
+            customCode: ""
+          }
+        }
       };
       TextStyles.ensure(text);
       return text;
@@ -494,7 +503,14 @@ window.ComponentFactory = {
           svg: null,
           src: null,
           library: "builtin",
-          name: "star"
+          name: "star",
+          action: {
+            type: "none",
+            targetPageId: AppState?.app?.initialPageId || "",
+            url: "",
+            dialogText: "Message",
+            customCode: ""
+          }
         }
       };
     }

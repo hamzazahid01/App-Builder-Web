@@ -120,6 +120,42 @@ function createFontPicker(current, onChange) {
   return grid;
 }
 
+function appendActionSettings(content, node, action) {
+  const pages = (AppState.app.pages || []).map((p) => ({ value: p.id, label: p.name || "Untitled" }));
+  content.appendChild(createField("Action", createSelect([
+    { value: "none", label: "None" },
+    { value: "navigate", label: "Go to screen" },
+    { value: "openUrl", label: "Open website" },
+    { value: "showDialog", label: "Show message" },
+    { value: "back", label: "Go back" }
+  ], action.type || "none", (v) => {
+    action.type = v;
+    if (v === "navigate" && !action.targetPageId && pages.length) action.targetPageId = pages[0].value;
+    node.props.action = action;
+    renderPreview();
+    Inspector.render();
+  })));
+
+  if (action.type === "navigate" && pages.length) {
+    content.appendChild(createField("Target screen", createSelect(pages, action.targetPageId || pages[0].value, (v) => {
+      action.targetPageId = v;
+      renderPreview();
+    })));
+  }
+  if (action.type === "openUrl") {
+    content.appendChild(createField("Website URL", createTextInput(action.url || "", (v) => {
+      action.url = v;
+      renderPreview();
+    })));
+  }
+  if (action.type === "showDialog") {
+    content.appendChild(createField("Message", createTextInput(action.dialogText || "", (v) => {
+      action.dialogText = v;
+      renderPreview();
+    })));
+  }
+}
+
 function createSpacingEditor(title, spacingObj, onChange) {
   const wrap = document.createElement("div");
   const toggle = document.createElement("button");
@@ -194,6 +230,14 @@ function buildComponentAccordions(panel, node) {
 
   panel.appendChild(createAccordion("Basic", (content) => {
     if (node.type === "text") {
+      const action = node.props.action || {
+        type: "none",
+        targetPageId: AppState?.app?.initialPageId || "",
+        url: "",
+        dialogText: "Message",
+        customCode: ""
+      };
+      node.props.action = action;
       // Text content
       const textArea = document.createElement("textarea");
       textArea.value = node.props.value || "Text";
@@ -426,6 +470,14 @@ function buildComponentAccordions(panel, node) {
     if (node.type === "icon") {
       const iconStyles = node.styles;
       const iconProps = node.props;
+      const action = iconProps.action || {
+        type: "none",
+        targetPageId: AppState?.app?.initialPageId || "",
+        url: "",
+        dialogText: "Message",
+        customCode: ""
+      };
+      iconProps.action = action;
 
       // Source & Library
       panel.appendChild(createAccordion("Icon Source", (content) => {
@@ -515,6 +567,7 @@ function buildComponentAccordions(panel, node) {
 
       // Interaction & Animation
       panel.appendChild(createAccordion("Interaction & Animation", (content) => {
+        appendActionSettings(content, node, action);
         content.appendChild(createField("Clickable", createCheckbox(iconStyles.interaction?.clickable, (v) => { if (!iconStyles.interaction) iconStyles.interaction = {}; iconStyles.interaction.clickable = v; renderPreview(); })));
         if (iconStyles.interaction?.clickable) content.appendChild(createField("Link URL", createTextInput(iconStyles.interaction.href || '', (v) => { iconStyles.interaction.href = v; renderPreview(); })));
         content.appendChild(createField("Hover Effect", createSelect([{value:'none',label:'None'},{value:'scale',label:'Scale'},{value:'rotate',label:'Rotate'},{value:'glow',label:'Glow'},{value:'color',label:'Color Change'}], iconStyles.states?.hover?.effect || 'none', (v) => { if (!iconStyles.states) iconStyles.states = {}; if (!iconStyles.states.hover) iconStyles.states.hover = {}; iconStyles.states.hover.effect = v; renderPreview(); })));
@@ -981,6 +1034,8 @@ function buildComponentAccordions(panel, node) {
           renderPreview();
         })));
       }
+
+      appendActionSettings(content, node, action);
 
       // Interaction
       content.appendChild(createField("Clickable", createCheckbox(node.styles.interaction?.clickable, (v) => {
