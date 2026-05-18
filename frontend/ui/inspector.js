@@ -275,6 +275,13 @@ function buildComponentAccordions(panel, node) {
         }
         renderPreview();
       })));
+
+      const deleteTextButton = document.createElement("button");
+      deleteTextButton.type = "button";
+      deleteTextButton.className = "danger-btn";
+      deleteTextButton.textContent = "Delete Text";
+      deleteTextButton.addEventListener("click", deleteSelectedComponent);
+      content.appendChild(deleteTextButton);
     }
     if (node.type === "image") {
       const fileInput = document.createElement("input");
