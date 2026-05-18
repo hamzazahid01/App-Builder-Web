@@ -207,6 +207,13 @@ body.runtime-active .preview-app-btn {
 
 .preview-frame-wrap {
   transition: transform 0.15s ease;
+  padding: 18px;
+  border-radius: 40px;
+  background: rgba(255,255,255,0.96);
+  box-shadow: 0 25px 60px rgba(15,23,42,0.12);
+  border: 1px solid rgba(148,163,184,0.18);
+  width: min(420px, 100%);
+  margin: 0 auto;
 }
 
 .center-toolbar {
@@ -237,27 +244,70 @@ body.runtime-active .preview-app-btn {
   box-shadow: 0 4px 14px rgba(15,23,42,0.04);
 }
 
-.pages-dropdown { margin-top: 10px; display: none; }
+.pages-dropdown {
+  display: none;
+  margin: 0 auto;
+  width: min(420px, 100%);
+  padding: 18px;
+  background: #f8fbff;
+  border: 1px solid rgba(148,163,184,0.35);
+  border-radius: 28px;
+  box-shadow: 0 24px 48px rgba(15,23,42,0.08);
+}
 .pages-dropdown.open { display: block; }
 
-.page-item { display: inline-flex; align-items: center; gap: 10px; padding: 6px; border-radius: 8px; transition: background .12s ease, transform .08s ease; }
-.page-item:hover { background: rgba(14, 56, 150, 0.03); transform: translateY(-1px); }
+.page-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(219,226,241,0.85);
+  transition: background .12s ease, transform .08s ease, border-color .18s ease;
+}
+.page-item:hover { background: rgba(14, 56, 150, 0.03); transform: translateY(-1px); border-color: rgba(37,99,235,0.15); }
+
+.page-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
 
 .page-switch-btn {
   border: 0;
   background: transparent;
   padding: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text);
+  text-align: left;
+  width: 100%;
   cursor: pointer;
 }
 .page-switch-btn:hover { color: var(--primary); }
 .page-item.active .page-switch-btn { color: var(--primary); }
 
-.page-controls { display: flex; gap: 6px; align-items: center; }
-.page-mini-btn { border: 0; background: transparent; border-radius: 6px; padding: 6px; cursor: pointer; font-size: 13px; color: var(--muted); }
-.page-mini-btn:hover { background: rgba(14,56,150,0.04); color: var(--text); }
+.page-toggle-btn {
+  border: 0;
+  background: transparent;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  font-size: 16px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, transform .15s ease;
+}
+.page-toggle-btn:hover { background: rgba(14,56,150,0.06); color: var(--text); }
+.page-item.expanded .page-toggle-btn { transform: rotate(90deg); }
+
+.page-controls { display: none; flex-wrap: wrap; gap: 8px; align-items: center; }
+.page-item.expanded .page-controls { display: flex; }
+.page-mini-btn { border: 0; background: transparent; border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 13px; color: var(--muted); background: rgba(15,23,42,0.03); }
+.page-mini-btn:hover { background: rgba(14,56,150,0.12); color: var(--text); }
 .page-mini-btn.danger { color: var(--danger); }
 
 /* Confirmation modal */
@@ -536,42 +586,9 @@ body.runtime-active .canvas-node-inner button {
   margin-top: 7px;
 }
 
-.pages-panel {
-  max-height: 180px;
-  overflow-y: auto;
-  display: grid;
-  gap: 6px;
-}
-
-.page-item {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 6px;
-}
-
-.page-switch-btn,
-.page-delete-btn {
-  border: 1px solid var(--line);
-  background: #fff;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.page-switch-btn {
-  text-align: left;
-  padding: 8px;
-  font-size: 12px;
-}
-
-.page-delete-btn {
-  color: var(--danger);
-  font-size: 16px;
-}
-
+/* legacy page-list styles removed in favor of the new compact toggle layout */
 .page-controls {
-  display: grid;
-  grid-template-columns: repeat(4, 22px);
-  gap: 4px;
+  display: none;
 }
 
 .page-mini-btn {
@@ -614,9 +631,11 @@ body.runtime-active .canvas-node-inner button {
   flex: 1;
   overflow: auto;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 18px;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 18px 0;
+  gap: 12px;
+  position: relative;
 }
 
 .mobile-preview {
