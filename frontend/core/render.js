@@ -176,8 +176,7 @@ function renderTextNode(component) {
   wrapper.appendChild(backgroundWrapper);
 
   const runtimeHandler = (e) => {
-    if (!AppState.runtimeMode) return;
-    if (document.activeElement === el) return;
+    if (!AppState.runtimeMode && document.activeElement === el) return;
     const action = component.props.action || component.props.onClick;
     if (action && action.type && action.type !== "none") {
       executeAction(action);
