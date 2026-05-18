@@ -228,16 +228,20 @@ function buildComponentAccordions(panel, node) {
     return;
   }
 
+  let action;
+  if (node.type === "text") {
+    action = node.props.action || {
+      type: "none",
+      targetPageId: AppState?.app?.initialPageId || "",
+      url: "",
+      dialogText: "Message",
+      customCode: ""
+    };
+    node.props.action = action;
+  }
+
   panel.appendChild(createAccordion("Basic", (content) => {
     if (node.type === "text") {
-      const action = node.props.action || {
-        type: "none",
-        targetPageId: AppState?.app?.initialPageId || "",
-        url: "",
-        dialogText: "Message",
-        customCode: ""
-      };
-      node.props.action = action;
       // Text content
       const textArea = document.createElement("textarea");
       textArea.value = node.props.value || "Text";

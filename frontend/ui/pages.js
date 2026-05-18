@@ -36,7 +36,7 @@ window.PageManager = {
     });
 
     row.addEventListener('click', (e) => {
-      if (e.target.closest('.page-mini-btn') || e.target.closest('.page-rename-input')) return;
+      if (e.target.closest('.page-mini-btn') || e.target.closest('.page-rename-input') || e.target.closest('.page-toggle-btn')) return;
       StateUtils.setCurrentPage(page.id, false);
       AppState.selectedId = null;
       AppState.selectedType = 'page';
@@ -44,22 +44,34 @@ window.PageManager = {
       this.render();
     });
 
-    // thumbnail
-    const thumb = document.createElement('div');
-    thumb.className = 'page-thumb';
-    if (page.thumbnail) {
-      const img = document.createElement('img'); img.src = page.thumbnail; img.alt = page.name; thumb.appendChild(img);
-    } else {
-      const initials = document.createElement('div'); initials.className = 'page-initials';
-      const txt = (page.name || '').split(' ').slice(0,2).map(s=>s[0]).join('').toUpperCase();
-      initials.textContent = txt || (page.name || 'P').slice(0,2).toUpperCase(); thumb.appendChild(initials);
-    }
-    row.appendChild(thumb);
+    const header = document.createElement('div');
+    header.className = 'page-item-header';
 
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "page-switch-btn";
     btn.textContent = page.name + (page.id === AppState.app.initialPageId ? " (Initial)" : "");
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      StateUtils.setCurrentPage(page.id, false);
+      AppState.selectedId = null;
+      AppState.selectedType = "page";
+      Builder.refreshAll();
+      this.render();
+    });
+    header.appendChild(btn);
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = 'page-toggle-btn';
+    toggleBtn.title = 'Show page actions';
+    toggleBtn.textContent = '⚙';
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      row.classList.toggle('expanded');
+    });
+    header.appendChild(toggleBtn);
+    row.appendChild(header);
     btn.addEventListener("click", () => {
       StateUtils.setCurrentPage(page.id, false);
       AppState.selectedId = null;
@@ -90,11 +102,7 @@ window.PageManager = {
       this.showConfirm(`Delete page \"${page.name}\"?`, () => this.deletePage(page.id));
     });
 
-    const gear = document.createElement('button'); gear.type = 'button'; gear.className = 'page-mini-btn'; gear.textContent = '⚙';
-    gear.title = 'Edit screen properties';
-    gear.addEventListener('click', (e) => { e.stopPropagation(); StateUtils.setCurrentPage(page.id, false); AppState.selectedType = 'page'; AppState.selectedId = null; Builder.refreshAll(); });
-
-    controls.appendChild(up); controls.appendChild(down); controls.appendChild(copy); controls.appendChild(rename); controls.appendChild(gear); controls.appendChild(del);
+    controls.appendChild(up); controls.appendChild(down); controls.appendChild(copy); controls.appendChild(rename); controls.appendChild(del);
     row.appendChild(controls); panel.appendChild(row);
   },
 
