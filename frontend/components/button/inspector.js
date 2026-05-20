@@ -310,12 +310,12 @@ window.ButtonComponent.buildInspector = function(panel, node) {
     content.appendChild(createSpacingEditor("Padding", node.styles.padding, (k, v) => {
       node.styles.padding[k] = v;
       renderPreview();
-    })));
+    }));
     
     content.appendChild(createSpacingEditor("Margin", node.styles.margin, (k, v) => {
       node.styles.margin[k] = v;
       renderPreview();
-    })));
+    }));
     
     if (node.layout) {
       content.appendChild(createField("Position X", createStepper(node.layout.x, (v) => {
