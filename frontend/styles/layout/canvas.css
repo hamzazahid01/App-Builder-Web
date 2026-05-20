@@ -96,6 +96,20 @@
   border-radius: 28px;
 }
 
+/* Hide scrollbar while keeping scroll functionality */
+.device-screen::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.device-screen::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.device-screen::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
 .page-root {
   flex: 1;
   display: flex;
