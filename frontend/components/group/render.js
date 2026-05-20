@@ -1,6 +1,6 @@
 window.GroupComponent.render = function(component) {
   const el = document.createElement("div");
-  el.className = "group-shell";
+  el.className = "group-shell canvas-node-inner";
   el.dataset.componentId = component.id;
   el.dataset.componentType = "group";
 
