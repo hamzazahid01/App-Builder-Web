@@ -16,9 +16,9 @@
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
   margin: 0;
-  overflow: hidden;
+  overflow: auto;
 }
 
 body {
@@ -568,36 +568,94 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0;
-  gap: 14px;
+
+  /* changed */
+  justify-content: flex-start;
+  padding: 24px 0;
 }
 
 .preview-frame-wrap {
-  width: min(380px, 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* changed */
+  width: fit-content;
   max-width: 100%;
-  max-height: 100%;
-  min-height: 0;
+
+  /* removed restrictive sizing */
+  max-height: none;
+  height: auto;
+
   padding: 16px;
-  border-radius: 64px;
-  background: radial-gradient(circle at top, rgba(255,255,255,0.12), rgba(255,255,255,0) 58%), rgba(15,23,42,0.92);
-  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.24);
-  border: 1px solid rgba(255,255,255,0.12);
-  transition: transform 0.2s ease;
+  border-radius: 48px;
 }
 
 .mobile-preview {
-  width: 100%;
-  max-width: 360px;
-  aspect-ratio: 360 / 780;
+  width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: none;
   min-height: auto;
-  max-height: calc(100vh - 220px);
-  border-radius: 64px;
-  background: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(15,23,42,0.06), 0 24px 80px rgba(0,0,0,0.22);
+  padding: 18px;
+  border-radius: 62px;
+  background: rgba(13, 17, 29, 0.95);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.18);
   overflow: hidden;
   position: relative;
-  border: 16px solid rgba(15,23,42,0.18);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.device-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 40px;
+  background: #f8fbff;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08), inset 0 16px 30px rgba(15, 23, 42, 0.05);
+}
+
+.device-screen::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 104px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+  opacity: 0.9;
+}
+
+.device-screen::after {
+  content: '';
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.12);
+  opacity: 0.45;
+}
+
+.mobile-preview[data-device^="iphone"] .device-screen {
+  border-radius: 44px;
+}
+
+.mobile-preview[data-device^="android"] .device-screen {
+  border-radius: 34px;
+}
+
+.mobile-preview[data-device^="ipad"] .device-screen {
+  border-radius: 28px;
 }
 
 .confirm-modal {
@@ -654,45 +712,9 @@ button {
 }
 
 .confirm-card button.danger {
-  background: rgba(251,113,133,0.18);
-  border-color: rgba(251,113,133,0.35);
+  background: rgba(251, 113, 133, 0.18);
+  border-color: rgba(251, 113, 133, 0.35);
 }
-
-.mobile-preview::before {
-  content: '';
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 140px;
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(0,0,0,0.15);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
-  z-index: 2;
-}
-
-.mobile-preview::after {
-  content: '';
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 76px;
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(0,0,0,0.1);
-  opacity: 0.4;
-}
-
-.mobile-preview::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top center, rgba(255,255,255,0.18), transparent 30%);
-  pointer-events: none;
-}
-
 .page-root {
   flex: 1;
   display: flex;

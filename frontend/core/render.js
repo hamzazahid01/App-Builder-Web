@@ -793,12 +793,21 @@ function renderSplashScreen(preview) {
 
 function renderPage(preview, page) {
   preview.innerHTML = "";
-  preview.style.backgroundColor = page.backgroundColor;
+  preview.style.backgroundColor = "";
+
+  const frame = AppState.deviceMap[AppState.currentDeviceKey] || { width: 390, height: 844 };
+  const screen = document.createElement("div");
+  screen.className = "device-screen";
+  screen.style.width = `${frame.width}px`;
+  screen.style.maxWidth = "100%";
+  screen.style.height = "auto";
+  screen.style.aspectRatio = `${frame.width}/${frame.height}`;
 
   const root = document.createElement("div");
   root.className = "page-root";
   root.style.backgroundColor = page.backgroundColor;
-  root.style.minHeight = "100%";
+  root.style.height = "100%";
+  root.style.minHeight = "0";
   applySpacing(root, "padding", page.layout.padding);
   if (page.layout.safeArea) {
     root.style.paddingTop = `${(page.layout.padding.top ?? 0) + 20}px`;
@@ -814,16 +823,13 @@ function renderPage(preview, page) {
 
   StateUtils.ensurePageCanvasLayout(page);
 
-  const frame = AppState.deviceMap[AppState.currentDeviceKey] || { width: 390, height: 844 };
-  const canvasH = Math.max(400, frame.height - (AppState.runtimeMode && page.appBar.enabled ? 56 : 24));
-
   const body = document.createElement("div");
   body.className = "page-body page-canvas";
   body.style.position = "relative";
   body.style.flex = "1";
   body.style.width = "100%";
-  body.style.minHeight = `${canvasH}px`;
-  body.style.height = `${canvasH}px`;
+  body.style.minHeight = "0";
+  body.style.height = "100%";
 
   if (!AppState.runtimeMode && page.components.length === 0) {
     const hint = document.createElement("div");
@@ -835,7 +841,8 @@ function renderPage(preview, page) {
   }
 
   root.appendChild(body);
-  preview.appendChild(root);
+  screen.appendChild(root);
+  preview.appendChild(screen);
 }
 
 window.renderPreview = function renderPreview() {
@@ -857,10 +864,9 @@ window.renderPreview = function renderPreview() {
 
 window.applyDeviceFrame = function applyDeviceFrame(deviceKey) {
   AppState.currentDeviceKey = deviceKey;
-  const frame = AppState.deviceMap[deviceKey];
   const preview = document.getElementById("mobile-preview");
-  preview.style.width = `${frame.width}px`;
-  preview.style.height = `${frame.height}px`;
+  if (!preview) return;
+  preview.dataset.device = deviceKey;
   renderPreview();
 };
 
