@@ -1,6 +1,6 @@
 window.GroupComponent.render = function(component) {
   const el = document.createElement("div");
-  el.className = "group-shell canvas-node-inner";
+  el.className = "group-shell";
   el.dataset.componentId = component.id;
   el.dataset.componentType = "group";
 
@@ -15,7 +15,7 @@ window.GroupComponent.render = function(component) {
   el.style.boxSizing = "border-box";
   el.style.width = "100%";
   el.style.height = "100%";
-  el.style.position = "relative";
+  el.style.position = "absolute";
   el.style.pointerEvents = "auto";
 
   // Create inner canvas for children
