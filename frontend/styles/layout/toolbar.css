@@ -49,6 +49,11 @@
   transition: all 0.2s ease;
 }
 
+.device-switcher select option {
+  background: rgba(30, 41, 59, 0.95);
+  color: #e2e8f0;
+}
+
 .device-switcher select:hover {
   border-color: rgba(99, 102, 241, 0.3);
   background: rgba(99, 102, 241, 0.1);
