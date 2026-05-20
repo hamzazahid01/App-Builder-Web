@@ -4,6 +4,11 @@ window.ButtonComponent.buildInspector = function(panel, node) {
   node.props.action = action;
   node.props.onClick = action;
 
+  // Add preset dropdown at the top
+  if (window.InspectorPresets) {
+    panel.appendChild(InspectorPresets.createPresetDropdown(panel, node));
+  }
+
   // Content Section
   panel.appendChild(createAccordion("Content", (content) => {
     content.appendChild(createField("Button Text", createTextInput(node.props.text, (v) => {
