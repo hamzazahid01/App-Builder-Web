@@ -355,6 +355,8 @@ window.DragDrop = {
       if (AppState.runtimeMode) return;
       if (e.button !== 0) return;
       if (e.target.closest(".resize-handle")) return;
+      // Skip normal drag if shift key is held (handled by onPointerDown)
+      if (e.shiftKey) return;
       e.stopPropagation();
       e.preventDefault();
       this.startMoveComponent(component, wrapperEl, e);
