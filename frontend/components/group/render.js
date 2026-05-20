@@ -29,7 +29,7 @@ window.GroupComponent.render = function(component) {
   innerCanvas.style.right = "0";
   innerCanvas.style.bottom = "0";
   innerCanvas.style.overflow = "visible";
-  innerCanvas.style.pointerEvents = "auto";
+  innerCanvas.style.pointerEvents = "none";
   innerCanvas.style.zIndex = "1";
   el.appendChild(innerCanvas);
 
