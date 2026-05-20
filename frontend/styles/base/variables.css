@@ -1,0 +1,11 @@
+:root {
+  --bg: #0b1220;
+  --bg-surface: rgba(15, 23, 42, 0.92);
+  --bg-surface-soft: rgba(255,255,255,0.06);
+  --panel: rgba(255,255,255,0.08);
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --line: rgba(255,255,255,0.12);
+  --primary: #8b5cf6;
+  --danger: #fb7185;
+}

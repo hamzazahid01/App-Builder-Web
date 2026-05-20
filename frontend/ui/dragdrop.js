@@ -2,76 +2,17 @@ window.DragDrop = {
   session: null,
   ghostEl: null,
   DRAG_THRESHOLD: 4,
-  libraryGroups: [
-    { title: "Basic", icon: "🧩", types: ["text", "button", "input"] },
-    { title: "Layout", icon: "▢", types: ["container"] },
-    { title: "Media", icon: "🖼️", types: ["image", "icon"] },
-    { title: "Navigation", icon: "🧭", types: [] },
-    { title: "Advanced", icon: "⚙️", types: [] }
-  ],
 
   initLibrary() {
-    const search = document.getElementById("component-search");
-    if (search) {
-      search.addEventListener("input", (e) => this.renderLibrary(e.target.value));
-    }
-    this.renderLibrary("");
+    DragDropLibrary.init();
   },
 
   renderLibrary(filter = "") {
-    const container = document.getElementById("component-categories");
-    if (!container) return;
-    container.innerHTML = "";
-
-    const catalog = Array.isArray(window.ComponentCatalog) ? window.ComponentCatalog : [];
-    if (!catalog.length) {
-      container.innerHTML = `<div class="category-empty">Component library unavailable.<br/>Please check ` +
-        `that core/components.js is loaded.</div>`;
-      return;
-    }
-
-    const query = (filter || "").trim().toLowerCase();
-    const items = catalog
-      .filter((item) => !query || item.label.toLowerCase().includes(query));
-
-    const itemsWrapper = document.createElement("div");
-    itemsWrapper.className = "category-items";
-
-    if (items.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "category-empty";
-      empty.textContent = query ? "No components match your search." : "No components are available right now.";
-      itemsWrapper.appendChild(empty);
-    } else {
-      for (const item of items) {
-        const card = document.createElement("button");
-        card.type = "button";
-        card.className = "component-item";
-        card.innerHTML = `<span>${item.label}</span><span class="component-badge">${item.icon || '➕'}</span>`;
-        card.addEventListener("pointerdown", (e) => {
-          if (AppState.runtimeMode) return;
-          e.preventDefault();
-          this.startPlaceFromLibrary(item.type, e);
-        });
-        itemsWrapper.appendChild(card);
-      }
-    }
-
-    container.appendChild(itemsWrapper);
+    DragDropLibrary.render(filter);
   },
 
   initCanvasDropzone() {
-    const preview = document.getElementById("mobile-preview");
-    preview.addEventListener("click", (e) => {
-      if (AppState.runtimeMode) return;
-      if (e.target.closest(".canvas-node")) return;
-      if (e.target.closest(".resize-handle")) return;
-      if (!e.target.closest(".page-canvas")) return;
-      AppState.selectedId = null;
-      AppState.selectedType = "page";
-      Builder.refreshAll();
-    });
-
+    DragDropCanvas.init();
     document.addEventListener("pointermove", (e) => this.onPointerMove(e));
     document.addEventListener("pointerup", (e) => this.onPointerUp(e));
     document.addEventListener("pointercancel", (e) => this.onPointerUp(e));
@@ -189,26 +130,18 @@ window.DragDrop = {
   },
 
   updateGhost(x, y, w, h, label, canvasEl) {
-    if (!this.ghostEl) {
-      this.ghostEl = document.createElement("div");
-      this.ghostEl.className = "drag-ghost";
-      document.body.appendChild(this.ghostEl);
-    }
     const canvas = canvasEl || this.session?.canvasEl;
     if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    this.ghostEl.style.left = `${rect.left + x}px`;
-    this.ghostEl.style.top = `${rect.top + y}px`;
-    this.ghostEl.style.width = `${w}px`;
-    this.ghostEl.style.height = `${h}px`;
-    this.ghostEl.textContent = ComponentCatalog.find((c) => c.type === label)?.label || "";
+    if (!this.ghostEl) {
+      this.ghostEl = DragDropGhost.create(label, x, y, w, h, canvas);
+    } else {
+      DragDropGhost.update(this.ghostEl, x, y, w, h);
+    }
   },
 
   removeGhost() {
-    if (this.ghostEl) {
-      this.ghostEl.remove();
-      this.ghostEl = null;
-    }
+    DragDropGhost.remove(this.ghostEl);
+    this.ghostEl = null;
   },
 
   onPointerMove(e) {
@@ -393,14 +326,6 @@ window.DragDrop = {
 
     if (AppState.selectedId !== component.id || AppState.runtimeMode) return;
 
-    for (const handle of CanvasUtils.HANDLES) {
-      const handleEl = document.createElement("div");
-      handleEl.className = `resize-handle resize-${handle}`;
-      handleEl.dataset.handle = handle;
-      handleEl.addEventListener("pointerdown", (e) => {
-        this.startResize(component, wrapperEl, handle, e);
-      });
-      wrapperEl.appendChild(handleEl);
-    }
+    DragDropResize.createHandles(wrapperEl, component);
   }
 };

@@ -1,0 +1,99 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px;
+  background: rgba(7, 11, 22, 0.78);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  background: linear-gradient(180deg, #8b5cf6, #a78bfa);
+  color: #fff;
+  box-shadow: 0 18px 50px rgba(139,92,246,0.28);
+}
+
+.brand-copy strong {
+  display: block;
+  font-size: 18px;
+}
+
+.brand-copy span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.topbar-actions,
+.canvas-controls,
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-actions {
+  flex-wrap: wrap;
+}
+
+.topbar-btn,
+.secondary-btn,
+.icon-btn,
+.profile-btn,
+.topbar-icon-btn {
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  color: #f8fafc;
+  padding: 12px 16px;
+  transition: transform 0.16s ease, background 0.16s ease;
+  cursor: pointer;
+}
+
+.topbar-btn:hover,
+.secondary-btn:hover,
+.icon-btn:hover,
+.profile-btn:hover,
+.topbar-icon-btn:hover {
+  background: rgba(255,255,255,0.14);
+  transform: translateY(-1px);
+}
+
+.topbar-btn {
+  min-width: 84px;
+  font-weight: 700;
+}
+
+.secondary-btn {
+  background: rgba(255,255,255,0.06);
+}
+
+.topbar-icon-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  min-width: unset;
+}
+
+.profile-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
+}

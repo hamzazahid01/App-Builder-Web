@@ -1,0 +1,162 @@
+.preview-viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  /* changed */
+  justify-content: flex-start;
+  padding: 24px 0;
+}
+
+.preview-frame-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* changed */
+  width: fit-content;
+  max-width: 100%;
+
+  /* removed restrictive sizing */
+  max-height: none;
+  height: auto;
+
+  padding: 16px;
+  border-radius: 48px;
+}
+
+.mobile-preview {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: none;
+  min-height: auto;
+  padding: 18px;
+  border-radius: 62px;
+  background: rgba(13, 17, 29, 0.95);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.device-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 40px;
+  background: #f8fbff;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08), inset 0 16px 30px rgba(15, 23, 42, 0.05);
+}
+
+.device-screen::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 104px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+  opacity: 0.9;
+}
+
+.device-screen::after {
+  content: '';
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.12);
+  opacity: 0.45;
+}
+
+.mobile-preview[data-device^="iphone"] .device-screen {
+  border-radius: 44px;
+}
+
+.mobile-preview[data-device^="android"] .device-screen {
+  border-radius: 34px;
+}
+
+.mobile-preview[data-device^="ipad"] .device-screen {
+  border-radius: 28px;
+}
+
+.page-root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(circle at 0 0, rgba(139,92,246,0.06) 1px, transparent 0), radial-gradient(circle at 100% 100%, rgba(56,189,248,0.04) 1px, transparent 0);
+  background-size: 48px 48px;
+  overflow: hidden;
+}
+
+.canvas-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 22px;
+  font-size: 13px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.canvas-node {
+  cursor: grab;
+  touch-action: none;
+}
+
+.canvas-node.is-dragging,
+body.canvas-dragging .canvas-node {
+  cursor: grabbing;
+}
+
+.canvas-node.selected-node {
+  outline: 2px solid rgba(139,92,246,0.9);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(139,92,246,0.14);
+}
+
+.canvas-node-inner {
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.drag-ghost {
+.mobile-preview .page-canvas,
+.mobile-preview .container-canvas {
+  background-image: none !important;
+  background-size: auto !important;
+}
+
+.page-canvas .canvas-node,
+.container-canvas .canvas-node {
+  pointer-events: auto;
+  touch-action: none;
+}
+
