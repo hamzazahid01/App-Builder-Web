@@ -8,6 +8,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 4px;
+  align-items: flex-start;
 }
 
 .page-tabs::-webkit-scrollbar {
