@@ -70,22 +70,41 @@ window.CanvasUtils = {
       .map((el) => {
         const comp = StateUtils.findById(page.components, el.dataset.groupId);
         return { el, z: comp?.layout?.zIndex ?? 0, comp };
-      })
-      .sort((a, b) => b.z - a.z);
+      });
+
+    // Find the deepest nested canvas that contains the point
+    let bestMatch = null;
+    let maxDepth = 0;
 
     for (const { el, comp } of groupCanvases) {
       const rect = el.getBoundingClientRect();
       if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) continue;
       if (!comp) continue;
-      // Initialize children array if it doesn't exist
-      if (!comp.children) comp.children = [];
-      return {
-        kind: "group",
-        canvasEl: el,
-        parentComponent: comp,
-        list: comp.children
-      };
+
+      // Calculate nesting depth
+      let depth = 0;
+      let parent = el.parentElement;
+      while (parent) {
+        if (parent.classList.contains("group-inner-canvas")) {
+          depth++;
+        }
+        parent = parent.parentElement;
+      }
+
+      // Prefer deeper nested canvases
+      if (depth > maxDepth) {
+        maxDepth = depth;
+        if (!comp.children) comp.children = [];
+        bestMatch = {
+          kind: "group",
+          canvasEl: el,
+          parentComponent: comp,
+          list: comp.children
+        };
+      }
     }
+
+    if (bestMatch) return bestMatch;
 
     const pageCanvas = document.querySelector(".page-canvas");
     if (!pageCanvas) return null;
