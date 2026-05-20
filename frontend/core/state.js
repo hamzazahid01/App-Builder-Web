@@ -152,7 +152,6 @@ window.StateUtils = {
     list.forEach((component, index) => {
       this.ensureComponentLayout(component, index);
       if (component.children?.length) this.ensureListLayout(component.children);
-      if (component.type === "container") ComponentFactory.syncContainerFlexDirection(component);
     });
   },
 

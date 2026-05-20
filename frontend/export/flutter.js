@@ -81,26 +81,6 @@ ${i})`;
     return `${i}Center(child: Text('${(node.props.symbol || "").replace(/'/g, "\\'")}', style: TextStyle(fontSize: ${node.styles.fontSize}, color: ${flutterColor(node.styles.color)})))`;
   }
 
-  if (node.type === "container") {
-    const flexDirection = node.styles.flexDirection || ComponentFactory.detectFlexDirection(node);
-    const childWidgets = (node.children || []).map((c) => renderFlutterNode(c, depth + 4)).join(",\n");
-    const flowWidget = flexDirection === "row" ? "Row" : "Column";
-    return `${i}Container(
-${i}  padding: ${edgeInsets(node.styles.padding)},
-${i}  decoration: BoxDecoration(
-${i}    color: ${flutterColor(node.styles.backgroundColor || "#f8fafc")},
-${i}    borderRadius: BorderRadius.circular(${node.styles.borderRadius || 10}),
-${i}    border: Border.all(color: ${flutterColor(node.styles.borderColor || "#d1d5db")}, width: ${node.styles.borderWidth || 1}),
-${i}  ),
-${i}  child: ${childWidgets ? `Stack(
-${i}    clipBehavior: Clip.none,
-${i}    children: [
-${childWidgets}
-${i}    ],
-${i}  )` : "const SizedBox.expand()"},
-${i})`;
-  }
-
   return `${i}const SizedBox.shrink()`;
 }
 

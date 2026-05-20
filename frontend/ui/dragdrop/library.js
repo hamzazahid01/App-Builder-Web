@@ -1,7 +1,6 @@
 window.DragDropLibrary = {
   libraryGroups: [
     { title: "Basic", icon: "🧩", types: ["text", "button", "input"] },
-    { title: "Layout", icon: "▢", types: ["container"] },
     { title: "Media", icon: "🖼️", types: ["image", "icon"] },
     { title: "Navigation", icon: "🧭", types: [] },
     { title: "Advanced", icon: "⚙️", types: [] }

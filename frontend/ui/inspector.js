@@ -57,7 +57,6 @@ function buildComponentAccordions(panel, node) {
       })));
       content.appendChild(createField("Width", createStepper(node.layout.width, (v) => {
         node.layout.width = Math.max(24, v);
-        if (node.type === "container") ComponentFactory.syncContainerFlexDirection(node);
         renderPreview();
       })));
       content.appendChild(createField("Height Mode", createSelect([
@@ -69,7 +68,6 @@ function buildComponentAccordions(panel, node) {
       })));
       content.appendChild(createField("Height", createStepper(node.layout.height, (v) => {
         node.layout.height = Math.max(24, v);
-        if (node.type === "container") ComponentFactory.syncContainerFlexDirection(node);
         renderPreview();
       })));
     }

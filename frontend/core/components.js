@@ -2,7 +2,6 @@ window.ComponentCatalog = [
   { type: "button", label: "Button" },
   { type: "text", label: "Text" },
   { type: "image", label: "Image" },
-  { type: "container", label: "Container" },
   { type: "input", label: "Input" },
   { type: "icon", label: "Icon" }
 ];
@@ -10,7 +9,6 @@ window.ComponentCatalog = [
 window.ComponentRegistry = window.ComponentRegistry || {};
 
 const REMOVED_TYPES = new Set(["spacer", "center", "row", "column", "stack", "card"]);
-const CONVERT_TO_CONTAINER = new Set(["row", "column", "stack", "center", "card"]);
 
 function boxSpacing(top = 0, right = 0, bottom = 0, left = 0) {
   return { top, right, bottom, left };
@@ -21,8 +19,7 @@ const DEFAULT_CANVAS_LAYOUTS = {
   text: { width: 200, height: 36 },
   image: { width: 280, height: 150 },
   input: { width: 280, height: 44 },
-  icon: { width: 48, height: 48 },
-  container: { width: 300, height: 200 }
+  icon: { width: 48, height: 48 }
 };
 
 window.ComponentFactory = {
@@ -46,17 +43,6 @@ window.ComponentFactory = {
     };
   },
 
-  detectFlexDirection(component) {
-    const w = component.layout?.width ?? 300;
-    const h = component.layout?.height ?? 200;
-    return w >= h ? "row" : "column";
-  },
-
-  syncContainerFlexDirection(component) {
-    if (component.type !== "container" || !component.styles) return;
-    component.styles.flexDirection = this.detectFlexDirection(component);
-  },
-
   create(type) {
     const componentModule = window.ComponentRegistry?.[type];
     if (componentModule?.create) return componentModule.create();
@@ -73,20 +59,9 @@ window.ComponentFactory = {
     return common;
   },
 
-  supportsChildren(type) {
-    return type === "container";
-  },
-
   migrateComponent(node) {
     if (!node) return null;
-    if (REMOVED_TYPES.has(node.type) && !CONVERT_TO_CONTAINER.has(node.type)) return null;
-
-    if (CONVERT_TO_CONTAINER.has(node.type)) {
-      node.type = "container";
-      if (!node.children) node.children = [];
-      if (!node.props) node.props = { layoutMode: "auto" };
-      node.props.layoutMode = "auto";
-    }
+    if (REMOVED_TYPES.has(node.type)) return null;
 
     if (node.children?.length) {
       node.children = node.children.map((c) => this.migrateComponent(c)).filter(Boolean);
@@ -97,7 +72,6 @@ window.ComponentFactory = {
       node.layout = { x: 8, y: 8, width: size.width, height: size.height, zIndex: 1 };
     }
 
-    if (node.type === "container") this.syncContainerFlexDirection(node);
     if (node.type === "button") ButtonStyles.ensure(node);
     return node;
   },

@@ -21,10 +21,7 @@ window.DragDrop = {
   startPlaceFromLibrary(type, e) {
     const pageCanvas = document.querySelector(".page-canvas");
     let target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
-    if (type === "container") {
-      target = { kind: "page", canvasEl: pageCanvas, list: StateUtils.getCurrentPage()?.components };
-    }
-    let canvas = type === "container" ? pageCanvas : (target?.canvasEl ?? pageCanvas);
+    let canvas = target?.canvasEl ?? pageCanvas;
     if (!canvas) {
       renderPreview();
       canvas = document.querySelector(".page-canvas");
@@ -65,7 +62,7 @@ window.DragDrop = {
   startMoveComponent(component, wrapperEl, e) {
     if (AppState.runtimeMode) return;
     if (e.target.closest(".resize-handle")) return;
-    const canvas = wrapperEl.closest(".page-canvas, .container-canvas");
+    const canvas = wrapperEl.closest(".page-canvas");
     if (!canvas || !component.layout) return;
 
     e.stopPropagation();
@@ -93,7 +90,7 @@ window.DragDrop = {
 
   startResize(component, wrapperEl, handle, e) {
     if (AppState.runtimeMode) return;
-    const canvas = wrapperEl.closest(".page-canvas, .container-canvas");
+    const canvas = wrapperEl.closest(".page-canvas");
     if (!canvas || !component.layout) return;
 
     e.stopPropagation();
@@ -151,10 +148,7 @@ window.DragDrop = {
     if (session.mode === "place") {
       let target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
       const pageCanvas = document.querySelector(".page-canvas");
-      if (session.type === "container") {
-        target = { kind: "page", canvasEl: pageCanvas, list: StateUtils.getCurrentPage()?.components };
-      }
-      const canvas = session.type === "container" ? pageCanvas : (target?.canvasEl ?? session.canvasEl);
+      const canvas = target?.canvasEl ?? session.canvasEl;
       session.canvasEl = canvas;
       session.dropTarget = target;
       const pos = CanvasUtils.clientToCanvas(e.clientX, e.clientY, canvas);
@@ -194,7 +188,6 @@ window.DragDrop = {
         next.x, next.y, next.width, next.height, cs.width, cs.height
       );
       Object.assign(component.layout, clamped);
-      if (component.type === "container") ComponentFactory.syncContainerFlexDirection(component);
       if (session.wrapperEl) CanvasUtils.applyLayoutToWrapper(session.wrapperEl, component.layout);
       return;
     }
@@ -232,12 +225,7 @@ window.DragDrop = {
       if (session.moved) {
         const target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
         const ctx = StateUtils.findParentContext(session.component.id);
-        if (
-          target &&
-          ctx &&
-          target.list !== ctx.parentList &&
-          session.component.type !== "container"
-        ) {
+        if (target && ctx && target.list !== ctx.parentList) {
           StateUtils.reparentComponent(
             session.component.id,
             target.list,
@@ -277,10 +265,7 @@ window.DragDrop = {
 
     let list = page.components;
     let canvasEl = pageCanvas;
-    if (type === "container") {
-      list = page.components;
-      canvasEl = pageCanvas;
-    } else if (target?.kind === "container" && target.list) {
+    if (target?.kind === "page" && target.list) {
       list = target.list;
       canvasEl = target.canvasEl;
     }

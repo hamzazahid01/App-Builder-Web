@@ -147,15 +147,12 @@ body.canvas-dragging .canvas-node {
   border-radius: inherit;
 }
 
-.drag-ghost {
-.mobile-preview .page-canvas,
-.mobile-preview .container-canvas {
+.mobile-preview .page-canvas {
   background-image: none !important;
   background-size: auto !important;
 }
 
-.page-canvas .canvas-node,
-.container-canvas .canvas-node {
+.page-canvas .canvas-node {
   pointer-events: auto;
   touch-action: none;
 }

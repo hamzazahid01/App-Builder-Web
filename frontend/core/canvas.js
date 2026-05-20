@@ -66,26 +66,6 @@ window.CanvasUtils = {
     const page = StateUtils.getCurrentPage();
     if (!page) return null;
 
-    const containerCanvases = [...document.querySelectorAll(".container-canvas")]
-      .map((el) => {
-        const comp = StateUtils.findById(page.components, el.dataset.containerId);
-        return { el, z: comp?.layout?.zIndex ?? 0 };
-      })
-      .sort((a, b) => b.z - a.z);
-
-    for (const { el } of containerCanvases) {
-      const rect = el.getBoundingClientRect();
-      if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) continue;
-      const container = StateUtils.findById(page.components, el.dataset.containerId);
-      if (!container) continue;
-      return {
-        kind: "container",
-        canvasEl: el,
-        parentComponent: container,
-        list: container.children
-      };
-    }
-
     const pageCanvas = document.querySelector(".page-canvas");
     if (!pageCanvas) return null;
     const rect = pageCanvas.getBoundingClientRect();

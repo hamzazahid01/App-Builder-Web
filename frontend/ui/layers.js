@@ -35,19 +35,7 @@ window.LayersPanel = {
       Builder.refreshAll();
     });
 
-    const wrap = document.createElement("div");
-    wrap.className = "layer-group";
-    wrap.appendChild(row);
-
-    if (node.type === "container" && node.children?.length) {
-      const kids = [...node.children].sort(
-        (a, b) => (b.layout?.zIndex ?? 0) - (a.layout?.zIndex ?? 0)
-      );
-      for (const child of kids) {
-        wrap.appendChild(this.buildRow(child, depth + 1));
-      }
-    }
-    return wrap;
+    return row;
   },
 
   label(node) {
@@ -56,7 +44,6 @@ window.LayersPanel = {
     if (node.type === "input") return node.props.placeholder || "Input";
     if (node.type === "image") return "Image";
     if (node.type === "icon") return node.props.symbol || "Icon";
-    if (node.type === "container") return `Container (${node.children?.length || 0})`;
     return node.type;
   }
 };
