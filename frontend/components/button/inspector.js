@@ -302,7 +302,7 @@ window.ButtonComponent.buildInspector = function(panel, node) {
         node.styles.states.disabled.grayscale = false;
       }
       renderPreview();
-    }
+    })));
   }, false, "states"));
 
   // Layout Section
