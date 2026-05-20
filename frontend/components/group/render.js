@@ -15,7 +15,6 @@ window.GroupComponent.render = function(component) {
   el.style.boxSizing = "border-box";
   el.style.width = "100%";
   el.style.height = "100%";
-  el.style.pointerEvents = "none";
 
   // Create inner canvas for children
   const innerCanvas = document.createElement("div");
@@ -31,6 +30,24 @@ window.GroupComponent.render = function(component) {
   innerCanvas.style.pointerEvents = "auto";
   innerCanvas.style.zIndex = "0";
   el.appendChild(innerCanvas);
+
+  // Group shell click handler - only if not clicking on child
+  el.addEventListener("pointerdown", (e) => {
+    if (AppState.runtimeMode) return;
+    if (e.button !== 0) return;
+    // Don't handle if clicking on child component
+    if (e.target.closest(".group-nested-node") || e.target.closest(".canvas-node-inner")) {
+      return;
+    }
+    if (e.target.closest(".resize-handle")) {
+      return;
+    }
+    // Select group
+    AppState.selectedId = component.id;
+    AppState.selectedType = "component";
+    StateUtils.bringToFront(component);
+    Builder.refreshAll();
+  });
 
   // Render children if GroupChildren module exists
   if (window.GroupChildren) {

@@ -71,6 +71,8 @@ window.GroupChildren = {
     }
 
     if (!AppState.runtimeMode) {
+      // Pass group context for nested drag/drop
+      wrapper.dataset.groupId = group.id;
       DragDrop.attachNode(wrapper, child);
     }
 
