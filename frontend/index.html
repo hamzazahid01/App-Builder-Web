@@ -10,52 +10,81 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="app-toolbar">
-    <div class="toolbar-brand">
-      <strong id="app-title-label">App Builder</strong>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-mark">AB</div>
+      <div class="brand-copy">
+        <strong>App Builder</strong>
+        <span id="project-name">Untitled project</span>
+      </div>
     </div>
-    <button id="run-app-btn" class="preview-app-btn" type="button">▶ App Preview</button>
+
+    <div class="topbar-actions">
+      <button id="save-btn" class="topbar-btn">Save</button>
+      <button id="undo-btn" class="topbar-icon-btn" title="Undo">↶</button>
+      <button id="redo-btn" class="topbar-icon-btn" title="Redo">↷</button>
+      <button id="run-app-btn" class="topbar-btn preview-toggle" type="button">Preview</button>
+      <button id="export-btn" class="topbar-btn secondary" type="button">Export</button>
+      <button id="theme-toggle-btn" class="topbar-icon-btn" type="button" title="Toggle theme">🌙</button>
+    </div>
+
+    <div class="topbar-user">
+      <button id="profile-menu-btn" class="profile-btn" title="Profile menu">HZ</button>
+    </div>
   </header>
 
   <div class="app-shell">
     <aside class="left-panel">
-      <div class="panel-header">
-        <h2>Components</h2>
-        <p>Screen par click karke rakhein, kheench kar move karein</p>
+      <div class="sidebar-header">
+        <div>
+          <h2>Component library</h2>
+          <p>Drag, drop, and build screen layouts quickly.</p>
+        </div>
+        <button id="add-template-btn" class="icon-btn" type="button" title="Templates">★</button>
       </div>
-      <div id="component-library" class="component-library"></div>
-      <div class="left-panel-footer">
-        <button id="undo-btn" class="footer-btn" type="button" title="Undo">↶</button>
-        <button id="redo-btn" class="footer-btn" type="button" title="Redo">↷</button>
+      <div class="sidebar-search">
+        <input id="component-search" type="search" placeholder="Search components" aria-label="Search components" />
+      </div>
+      <div id="component-categories" class="component-categories"></div>
+      <div class="sidebar-footer">
+        <button id="add-page-btn" class="secondary-btn" type="button">+ New screen</button>
       </div>
     </aside>
 
     <main class="center-panel">
       <div class="center-toolbar">
-        <div class="center-toolbar-title">
-          <h2>Mobile Preview</h2>
-          <span id="screen-label" class="screen-label">Screen</span>
-        </div>
-        <div class="center-toolbar-controls">
-          <div id="pages-panel-container" class="pages-panel-container">
-            <button id="add-page-btn" type="button" class="toolbar-btn">+ Add Page</button>
-            <button id="toggle-pages-btn" type="button" class="toolbar-btn">▾</button>
+        <div class="canvas-title">
+          <div>
+            <h2>Mobile canvas</h2>
+            <p id="screen-label" class="screen-label">Preview your app design in real time</p>
           </div>
-          <select id="device-select" class="device-select"></select>
+        </div>
+        <div class="canvas-controls">
+          <div class="device-switcher">
+            <label for="device-select">Device</label>
+            <select id="device-select" class="device-select"></select>
+          </div>
+          <div class="zoom-control">
+            <button id="zoom-out-btn" type="button">−</button>
+            <span id="zoom-value">100%</span>
+            <button id="zoom-in-btn" type="button">+</button>
+          </div>
         </div>
       </div>
+
+      <div id="page-tabs" class="page-tabs" role="tablist"></div>
+
       <div class="preview-viewport">
         <div class="preview-frame-wrap">
           <div id="mobile-preview" class="mobile-preview"></div>
         </div>
-        <div id="pages-dropdown" class="pages-dropdown" aria-hidden="true"></div>
       </div>
     </main>
 
     <aside class="right-panel">
       <div class="panel-header">
-        <h2>Settings</h2>
-        <p>Jo cheez select ho uski settings</p>
+        <h2>Inspector</h2>
+        <p>Only relevant settings, grouped by purpose.</p>
       </div>
       <div id="properties-panel" class="properties-panel"></div>
     </aside>

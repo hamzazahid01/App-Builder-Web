@@ -18,7 +18,10 @@ window.addEventListener("DOMContentLoaded", () => {
   AppState.selectedType = "page";
 
   const titleLabel = document.getElementById("app-title-label");
-  if (titleLabel) titleLabel.textContent = AppState.app.appName || "App Builder";
+  const projectName = document.getElementById("project-name");
+  const appName = AppState.app.appName || "Untitled project";
+  if (titleLabel) titleLabel.textContent = appName;
+  if (projectName) projectName.textContent = appName;
 
   populateDeviceSelect();
   DragDrop.initLibrary();
@@ -30,20 +33,50 @@ window.addEventListener("DOMContentLoaded", () => {
   deviceSelect.addEventListener("change", (e) => applyDeviceFrame(e.target.value));
   updateScreenLabel();
 
+  const themeToggle = document.getElementById("theme-toggle-btn");
+  const saveButton = document.getElementById("save-btn");
+  const exportButton = document.getElementById("export-btn");
+  const profileButton = document.getElementById("profile-menu-btn");
+  const zoomInBtn = document.getElementById("zoom-in-btn");
+  const zoomOutBtn = document.getElementById("zoom-out-btn");
+  const zoomValue = document.getElementById("zoom-value");
+  let zoomLevel = 1;
+
+  function applyZoom(value) {
+    zoomLevel = Math.min(1.4, Math.max(0.65, value));
+    const wrapper = document.querySelector(".preview-frame-wrap");
+    if (wrapper) wrapper.style.transform = `scale(${zoomLevel})`;
+    if (zoomValue) zoomValue.textContent = `${Math.round(zoomLevel * 100)}%`;
+  }
+
+  applyZoom(1);
+
+  zoomInBtn?.addEventListener("click", () => applyZoom(zoomLevel + 0.1));
+  zoomOutBtn?.addEventListener("click", () => applyZoom(zoomLevel - 0.1));
+
+  themeToggle?.addEventListener("click", () => {
+    const isLight = document.body.classList.toggle("theme-light");
+    themeToggle.textContent = isLight ? "☀️" : "🌙";
+  });
+
+  saveButton?.addEventListener("click", () => {
+    StateUtils.saveToLocal();
+    Toast.show("Project saved");
+  });
+
+  exportButton?.addEventListener("click", () => {
+    Toast.show("Export coming soon", "info");
+  });
+
+  profileButton?.addEventListener("click", () => {
+    Toast.show("Profile menu not available in preview", "info");
+  });
+
   // Pages UI
   // Ensure PageManager is available before wiring buttons. If not, dynamically load the script.
   function bindPagesUI() {
     const addPageBtn = document.getElementById('add-page-btn');
     if (addPageBtn && window.PageManager) addPageBtn.addEventListener('click', () => { PageManager.addPage(); PageManager.render(); });
-
-    const togglePagesBtn = document.getElementById('toggle-pages-btn');
-    if (togglePagesBtn) togglePagesBtn.addEventListener('click', () => {
-      const panel = document.getElementById('pages-dropdown');
-      if (!panel) return;
-      const open = panel.classList.toggle('open');
-      panel.setAttribute('aria-hidden', open ? 'false' : 'true');
-      if (open && window.PageManager && typeof PageManager.render === 'function') PageManager.render();
-    });
     if (window.PageManager && typeof PageManager.render === 'function') PageManager.render();
   }
 

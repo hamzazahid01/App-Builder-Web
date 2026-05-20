@@ -1,6 +1,6 @@
 window.PageManager = {
   render() {
-    const panel = document.getElementById("pages-dropdown");
+    const panel = document.getElementById("page-tabs");
     if (!panel) return;
     panel.innerHTML = "";
     // render flat list of pages (no groups)
@@ -68,18 +68,17 @@ window.PageManager = {
     toggleBtn.textContent = '⚙';
     toggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      const panel = row.parentElement;
+      if (panel) {
+        panel.querySelectorAll('.page-item.expanded').forEach((item) => {
+          if (item !== row) item.classList.remove('expanded');
+        });
+      }
       row.classList.toggle('expanded');
     });
     header.appendChild(toggleBtn);
     row.appendChild(header);
-    btn.addEventListener("click", () => {
-      StateUtils.setCurrentPage(page.id, false);
-      AppState.selectedId = null;
-      AppState.selectedType = "page";
-      Builder.refreshAll();
-    });
     btn.addEventListener('dblclick', (e) => { e.stopPropagation(); this._startRename(page, btn, row); });
-    row.appendChild(btn);
 
     const controls = document.createElement("div"); controls.className = "page-controls";
 

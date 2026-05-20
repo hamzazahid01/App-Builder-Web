@@ -190,6 +190,22 @@ function createAccordion(title, buildContentFn, openByDefault = false) {
   return root;
 }
 
+function createInspectorHeader(title, subtitle) {
+  const header = document.createElement("div");
+  header.className = "inspector-selected-header";
+  header.innerHTML = `
+    <div class="inspector-selected-copy">
+      <div class="inspector-selected-title">${title}</div>
+      <p class="inspector-selected-subtitle">${subtitle}</p>
+    </div>
+    <div class="inspector-selected-actions">
+      <button type="button" class="topbar-icon-btn" title="Duplicate">⎘</button>
+      <button type="button" class="topbar-icon-btn" title="Delete">×</button>
+    </div>
+  `;
+  return header;
+}
+
 function deleteSelectedComponent() {
   StateUtils.deleteSelected();
 }
@@ -1781,11 +1797,17 @@ window.Inspector = {
     }
 
     if (AppState.selectedType !== "component" || !AppState.selectedId) {
+      panel.appendChild(createInspectorHeader("Screen settings", "Edit page layout, background, and navigation."));
       buildSimplePagePanel(panel, page);
       return;
     }
 
     const node = StateUtils.findById(page.components, AppState.selectedId);
+    if (node) {
+      const title = `${node.type.charAt(0).toUpperCase() + node.type.slice(1)} settings`;
+      const subtitle = node.props?.text || node.props?.value || node.props?.placeholder || `${node.type} component`;
+      panel.appendChild(createInspectorHeader(title, subtitle));
+    }
     if (!node) {
       AppState.selectedId = null;
       AppState.selectedType = "page";
