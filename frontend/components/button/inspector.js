@@ -1,39 +1,4 @@
-function createRange(value, min, max, step, onChange) {
-  const input = document.createElement("input");
-  input.type = "range";
-  input.min = `${min}`;
-  input.max = `${max}`;
-  input.step = `${step}`;
-  input.value = value;
-  input.addEventListener("input", (e) => onChange(Number(e.target.value)));
-  return input;
-}
-
-function createFontGrid(value, onChange) {
-  const grid = document.createElement("div");
-  grid.className = "font-grid";
-  for (const font of ButtonStyles.FONT_OPTIONS) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = `font-chip ${font === value ? "active" : ""}`;
-    btn.textContent = font;
-    btn.style.fontFamily = font;
-    btn.addEventListener("click", () => onChange(font));
-    grid.appendChild(btn);
-  }
-  return grid;
-}
-
-function createStyleToggle(label, checked, onChange) {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = `style-chip ${checked ? "active" : ""}`;
-  btn.textContent = label;
-  btn.addEventListener("click", () => onChange(!checked));
-  return btn;
-}
-
-function buildButtonInspector(panel, node) {
+window.ButtonComponent.buildInspector = function(panel, node) {
   ButtonStyles.ensure(node);
   const action = node.props.action || node.props.onClick;
   node.props.action = action;
@@ -204,4 +169,4 @@ function buildButtonInspector(panel, node) {
       content.appendChild(note);
     }
   }, false));
-}
+};

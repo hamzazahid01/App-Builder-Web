@@ -25,17 +25,6 @@ function buildSimplePagePanel(panel, page) {
 }
 
 function buildComponentAccordions(panel, node) {
-  if (node.type === "button") {
-    buildButtonInspector(panel, node);
-    const deleteBtn = document.createElement("button");
-    deleteBtn.type = "button";
-    deleteBtn.className = "danger-btn";
-    deleteBtn.textContent = "Remove";
-    deleteBtn.addEventListener("click", deleteSelectedComponent);
-    panel.appendChild(deleteBtn);
-    return;
-  }
-
   const componentModule = window.ComponentRegistry?.[node.type];
   if (componentModule?.buildInspector) {
     componentModule.buildInspector(panel, node);
