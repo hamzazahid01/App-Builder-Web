@@ -1,6 +1,6 @@
 window.GroupComponent.render = function(component) {
   const el = document.createElement("div");
-  el.className = "group-shell canvas-node app-node";
+  el.className = "group-shell";
   el.dataset.componentId = component.id;
   el.dataset.componentType = "group";
 
@@ -12,26 +12,9 @@ window.GroupComponent.render = function(component) {
   el.style.borderColor = styles.borderColor || "#d1d5db";
   el.style.borderRadius = `${styles.borderRadius || 8}px`;
   el.style.padding = `${styles.padding?.top || 8}px ${styles.padding?.right || 8}px ${styles.padding?.bottom || 8}px ${styles.padding?.left || 8}px`;
-
-  // Apply layout
-  if (component.layout) {
-    el.style.position = "absolute";
-    el.style.left = `${component.layout.x}px`;
-    el.style.top = `${component.layout.y}px`;
-    el.style.width = `${component.layout.width}px`;
-    el.style.height = `${component.layout.height}px`;
-    el.style.zIndex = component.layout.zIndex || 1;
-  }
-
-  // Selection state
-  if (AppState.selectedId === component.id) {
-    el.classList.add("selected-node");
-  }
-
-  // Attach drag/drop to group shell
-  if (!AppState.runtimeMode) {
-    DragDrop.attachNode(el, component);
-  }
+  el.style.boxSizing = "border-box";
+  el.style.width = "100%";
+  el.style.height = "100%";
 
   // Create inner canvas for children
   const innerCanvas = document.createElement("div");
@@ -45,7 +28,7 @@ window.GroupComponent.render = function(component) {
   innerCanvas.style.bottom = "0";
   innerCanvas.style.overflow = "visible";
   innerCanvas.style.pointerEvents = "auto";
-  innerCanvas.style.zIndex = "1";
+  innerCanvas.style.zIndex = "10";
   el.appendChild(innerCanvas);
 
   // Render children if GroupChildren module exists
