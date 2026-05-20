@@ -14,10 +14,12 @@ function buildSimplePagePanel(panel, page) {
       Inspector.render();
     })));
     
-    content.appendChild(createField("Background Color", createColorInput(page.backgroundColor, (v) => {
-      page.backgroundColor = v;
-      renderPreview();
-    })));
+    if (page.backgroundType !== "image") {
+      content.appendChild(createField("Background Color", createColorInput(page.backgroundColor, (v) => {
+        page.backgroundColor = v;
+        renderPreview();
+      })));
+    }
     
     // Gradient settings
     if (page.backgroundType === "gradient") {
