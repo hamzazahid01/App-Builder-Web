@@ -228,7 +228,8 @@ window.DragDrop = {
       if (session.moved) {
         const target = CanvasUtils.findDropTarget(e.clientX, e.clientY);
         const ctx = StateUtils.findParentContext(session.component.id);
-        if (target && ctx && target.list !== ctx.parentList) {
+        // Prevent groups from being reparented during move operations
+        if (target && ctx && target.list !== ctx.parentList && session.component.type !== "group") {
           StateUtils.reparentComponent(
             session.component.id,
             target.list,
