@@ -119,3 +119,23 @@ function createFontPicker(current, onChange) {
   }
   return grid;
 }
+
+function createStyleToggle(label, value, onChange) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  button.className = value ? "style-toggle active" : "style-toggle";
+  button.addEventListener("click", () => onChange(!value));
+  return button;
+}
+
+function createRange(value, min, max, step, onChange) {
+  const input = document.createElement("input");
+  input.type = "range";
+  input.min = `${min}`;
+  input.max = `${max}`;
+  input.step = `${step}`;
+  input.value = Number(value ?? min);
+  input.addEventListener("input", (e) => onChange(parseFloat(e.target.value)));
+  return input;
+}
