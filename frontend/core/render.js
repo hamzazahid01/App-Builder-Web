@@ -206,9 +206,24 @@ function renderPage(preview, page) {
     root.style.background = `linear-gradient(${gradientDirection}, ${page.gradientStart || "#2563eb"}, ${page.gradientEnd || "#7c3aed"})`;
   } else if (bgType === "image" && page.backgroundImage) {
     root.style.backgroundImage = `url(${page.backgroundImage})`;
-    root.style.backgroundSize = page.backgroundFit || "cover";
+    
+    // Handle background fit options
+    const fit = page.backgroundFit || "cover";
+    if (fit === "contain") {
+      root.style.backgroundSize = "contain";
+      root.style.backgroundPosition = "center";
+    } else if (fit === "cover") {
+      root.style.backgroundSize = "cover";
+      root.style.backgroundPosition = "center";
+    } else if (fit === "fill") {
+      root.style.backgroundSize = "100% 100%";
+      root.style.backgroundPosition = "center";
+    } else if (fit === "auto") {
+      root.style.backgroundSize = "auto";
+      root.style.backgroundPosition = "center";
+    }
+    
     root.style.backgroundRepeat = "no-repeat";
-    root.style.backgroundPosition = "center";
     if (page.backgroundOpacity !== undefined) {
       root.style.opacity = page.backgroundOpacity;
     }

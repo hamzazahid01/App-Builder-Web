@@ -43,16 +43,30 @@ function buildSimplePagePanel(panel, page) {
     
     // Image settings
     if (page.backgroundType === "image") {
-      content.appendChild(createField("Image URL", createTextInput(page.backgroundImage || "", (v) => {
-        page.backgroundImage = v;
-        renderPreview();
-      })));
+      content.appendChild(createField("Background Image", createFileUpload(
+        page.backgroundImageData?.dataUrl || page.backgroundImage, 
+        (result) => {
+          if (result) {
+            page.backgroundImageData = {
+              dataUrl: result.dataUrl,
+              width: result.width,
+              height: result.height,
+              aspectRatio: result.aspectRatio
+            };
+            page.backgroundImage = result.dataUrl;
+          } else {
+            page.backgroundImageData = null;
+            page.backgroundImage = "";
+          }
+          renderPreview();
+        }
+      )));
       
       content.appendChild(createField("Background Fit", createSelect([
-        { value: "cover", label: "Cover" },
-        { value: "contain", label: "Contain" },
-        { value: "fill", label: "Fill" },
-        { value: "stretch", label: "Stretch" }
+        { value: "contain", label: "Scale to Fit" },
+        { value: "cover", label: "Scale to Fill" },
+        { value: "fill", label: "Stretch to Fill" },
+        { value: "auto", label: "Original Size" }
       ], page.backgroundFit || "cover", (v) => {
         page.backgroundFit = v;
         renderPreview();

@@ -80,6 +80,7 @@ window.StateUtils = {
       gradientEnd: "#7c3aed",
       gradientDirection: "horizontal",
       backgroundImage: "",
+      backgroundImageData: null,
       backgroundFit: "cover",
       backgroundOpacity: 1,
       backgroundBlur: 0,

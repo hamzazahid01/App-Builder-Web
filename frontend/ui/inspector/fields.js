@@ -139,3 +139,117 @@ function createRange(value, min, max, step, onChange) {
   input.addEventListener("input", (e) => onChange(parseFloat(e.target.value)));
   return input;
 }
+
+function createFileUpload(currentValue, onChange, accept = "image/*") {
+  const wrapper = document.createElement("div");
+  wrapper.className = "file-upload-wrapper";
+
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = accept;
+  fileInput.style.display = "none";
+
+  const uploadBtn = document.createElement("button");
+  uploadBtn.type = "button";
+  uploadBtn.className = "file-upload-btn";
+  uploadBtn.textContent = currentValue ? "Change Image" : "Upload Image";
+  uploadBtn.style.padding = "8px 12px";
+  uploadBtn.style.borderRadius = "6px";
+  uploadBtn.style.border = "1px solid var(--inspector-field-border)";
+  uploadBtn.style.background = "rgba(99, 102, 241, 0.2)";
+  uploadBtn.style.color = "#818cf8";
+  uploadBtn.style.cursor = "pointer";
+  uploadBtn.style.fontSize = "12px";
+  uploadBtn.style.fontWeight = "500";
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "file-remove-btn";
+  removeBtn.textContent = "Remove";
+  removeBtn.style.padding = "8px 12px";
+  removeBtn.style.borderRadius = "6px";
+  removeBtn.style.border = "1px solid var(--inspector-field-border)";
+  removeBtn.style.background = "rgba(239, 68, 68, 0.15)";
+  removeBtn.style.color = "#f87171";
+  removeBtn.style.cursor = "pointer";
+  removeBtn.style.fontSize = "12px";
+  removeBtn.style.fontWeight = "500";
+  removeBtn.style.display = currentValue ? "inline-block" : "none";
+
+  const preview = document.createElement("div");
+  preview.className = "image-preview";
+  preview.style.marginTop = "8px";
+  preview.style.borderRadius = "6px";
+  preview.style.overflow = "hidden";
+  preview.style.display = currentValue ? "block" : "none";
+  preview.style.maxHeight = "120px";
+
+  if (currentValue) {
+    const img = document.createElement("img");
+    img.src = currentValue;
+    img.style.width = "100%";
+    img.style.height = "auto";
+    img.style.objectFit = "cover";
+    preview.appendChild(img);
+  }
+
+  uploadBtn.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // File size limit (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be less than 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+
+      // Extract image dimensions
+      const img = new Image();
+      img.onload = () => {
+        const result = {
+          dataUrl: dataUrl,
+          width: img.width,
+          height: img.height,
+          aspectRatio: img.width / img.height
+        };
+        onChange(result);
+
+        // Update preview
+        preview.innerHTML = "";
+        const previewImg = document.createElement("img");
+        previewImg.src = dataUrl;
+        previewImg.style.width = "100%";
+        previewImg.style.height = "auto";
+        previewImg.style.objectFit = "cover";
+        preview.appendChild(previewImg);
+        preview.style.display = "block";
+        uploadBtn.textContent = "Change Image";
+        removeBtn.style.display = "inline-block";
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  removeBtn.addEventListener("click", () => {
+    onChange(null);
+    preview.innerHTML = "";
+    preview.style.display = "none";
+    uploadBtn.textContent = "Upload Image";
+    removeBtn.style.display = "none";
+    fileInput.value = "";
+  });
+
+  wrapper.appendChild(uploadBtn);
+  wrapper.appendChild(removeBtn);
+  wrapper.appendChild(fileInput);
+  wrapper.appendChild(preview);
+
+  return wrapper;
+}
