@@ -51,15 +51,18 @@
   align-items: center;
   gap: 8px;
   padding: 8px;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  color: #e2e8f0;
 }
 
 .component-item:hover {
-  background: #e5e7eb;
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #ffffff;
 }
 
 .component-type {
