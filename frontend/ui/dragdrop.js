@@ -148,7 +148,7 @@ window.DragDrop = {
 
   onPointerDown(e) {
     if (AppState.runtimeMode) return;
-    if (e.button !== 2) return; // Right-click only
+    if (e.button !== 2 && !e.shiftKey) return; // Right-click or shift+left-click only
     if (this.session) return;
 
     // Check if clicking on a selected component
@@ -161,7 +161,7 @@ window.DragDrop = {
     const component = StateUtils.findById(StateUtils.getCurrentPage().components, componentId);
     if (!component || !component.layout) return;
 
-    // Start move operation for selected component with right-click
+    // Start move operation for selected component with right-click or shift+left-click
     const canvas = wrapperEl.closest(".page-canvas, .group-inner-canvas");
     if (!canvas) return;
 
