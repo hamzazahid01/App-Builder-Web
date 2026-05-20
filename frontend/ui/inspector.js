@@ -12,10 +12,6 @@ function buildSimplePagePanel(panel, page) {
       page.name = v;
       updateScreenLabel();
     })));
-    content.appendChild(createField("Top bar title (App Preview)", createTextInput(page.appBar.title || page.name, (v) => {
-      page.appBar.title = v;
-      page.appBar.enabled = true;
-    })));
   }, true));
 
   const hint = document.createElement("p");
