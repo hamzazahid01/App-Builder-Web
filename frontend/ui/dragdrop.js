@@ -62,7 +62,10 @@ window.DragDrop = {
   startMoveComponent(component, wrapperEl, e) {
     if (AppState.runtimeMode) return;
     if (e.target.closest(".resize-handle")) return;
-    const canvas = wrapperEl.closest(".page-canvas, .group-inner-canvas");
+    // For group components, always use page-canvas as the canvas
+    const canvas = component.type === "group" 
+      ? wrapperEl.closest(".page-canvas")
+      : wrapperEl.closest(".page-canvas, .group-inner-canvas");
     if (!canvas || !component.layout) return;
 
     e.stopPropagation();
