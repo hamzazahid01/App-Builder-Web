@@ -3,16 +3,98 @@ function deleteSelectedComponent() {
 }
 
 function buildSimplePagePanel(panel, page) {
-  panel.appendChild(createAccordion("Screen", (content) => {
-    content.appendChild(createField("Background color", createColorInput(page.backgroundColor, (v) => {
+  panel.appendChild(createAccordion("Background", (content) => {
+    content.appendChild(createField("Background Type", createSelect([
+      { value: "solid", label: "Solid Color" },
+      { value: "gradient", label: "Gradient" },
+      { value: "image", label: "Image" }
+    ], page.backgroundType || "solid", (v) => {
+      page.backgroundType = v;
+      renderPreview();
+      Inspector.render();
+    })));
+    
+    content.appendChild(createField("Background Color", createColorInput(page.backgroundColor, (v) => {
       page.backgroundColor = v;
       renderPreview();
     })));
+    
+    // Gradient settings
+    if (page.backgroundType === "gradient") {
+      content.appendChild(createField("Gradient Start", createColorInput(page.gradientStart || "#2563eb", (v) => {
+        page.gradientStart = v;
+        renderPreview();
+      })));
+      
+      content.appendChild(createField("Gradient End", createColorInput(page.gradientEnd || "#7c3aed", (v) => {
+        page.gradientEnd = v;
+        renderPreview();
+      })));
+      
+      content.appendChild(createField("Gradient Direction", createSelect([
+        { value: "horizontal", label: "Horizontal" },
+        { value: "vertical", label: "Vertical" },
+        { value: "diagonal", label: "Diagonal" }
+      ], page.gradientDirection || "horizontal", (v) => {
+        page.gradientDirection = v;
+        renderPreview();
+      })));
+    }
+    
+    // Image settings
+    if (page.backgroundType === "image") {
+      content.appendChild(createField("Image URL", createTextInput(page.backgroundImage || "", (v) => {
+        page.backgroundImage = v;
+        renderPreview();
+      })));
+      
+      content.appendChild(createField("Background Fit", createSelect([
+        { value: "cover", label: "Cover" },
+        { value: "contain", label: "Contain" },
+        { value: "fill", label: "Fill" },
+        { value: "stretch", label: "Stretch" }
+      ], page.backgroundFit || "cover", (v) => {
+        page.backgroundFit = v;
+        renderPreview();
+      })));
+      
+      content.appendChild(createField("Background Opacity", createRange(page.backgroundOpacity || 1, 0, 1, 0.1, (v) => {
+        page.backgroundOpacity = v;
+        renderPreview();
+      })));
+      
+      content.appendChild(createField("Background Blur", createRange(page.backgroundBlur || 0, 0, 20, 1, (v) => {
+        page.backgroundBlur = v;
+        renderPreview();
+      })));
+    }
+  }, true));
+
+  panel.appendChild(createAccordion("Screen Settings", (content) => {
     content.appendChild(createField("Screen name", createTextInput(page.name, (v) => {
       page.name = v;
       updateScreenLabel();
     })));
-  }, true));
+    
+    content.appendChild(createField("Orientation", createSelect([
+      { value: "portrait", label: "Portrait" },
+      { value: "landscape", label: "Landscape" },
+      { value: "auto", label: "Auto" }
+    ], page.orientation || "portrait", (v) => {
+      page.orientation = v;
+      renderPreview();
+    })));
+    
+    content.appendChild(createField("Safe Area Padding", createCheckbox(page.safeAreaPadding !== false, (v) => {
+      page.safeAreaPadding = v;
+      renderPreview();
+    })));
+    
+    content.appendChild(createField("Scroll", createCheckbox(page.scroll !== false, (v) => {
+      page.scroll = v;
+      renderPreview();
+    })));
+  }, false));
 
   const hint = document.createElement("p");
   hint.className = "inspector-hint";

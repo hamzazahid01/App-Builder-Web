@@ -193,17 +193,51 @@ function renderPage(preview, page) {
 
   const root = document.createElement("div");
   root.className = "page-root";
-  root.style.backgroundColor = page.backgroundColor;
+  
+  // Handle background type
+  const bgType = page.backgroundType || "solid";
+  if (bgType === "solid") {
+    root.style.backgroundColor = page.backgroundColor;
+  } else if (bgType === "gradient") {
+    const direction = page.gradientDirection || "horizontal";
+    let gradientDirection = "to right";
+    if (direction === "vertical") gradientDirection = "to bottom";
+    else if (direction === "diagonal") gradientDirection = "to bottom right";
+    root.style.background = `linear-gradient(${gradientDirection}, ${page.gradientStart || "#2563eb"}, ${page.gradientEnd || "#7c3aed"})`;
+  } else if (bgType === "image" && page.backgroundImage) {
+    root.style.backgroundImage = `url(${page.backgroundImage})`;
+    root.style.backgroundSize = page.backgroundFit || "cover";
+    root.style.backgroundRepeat = "no-repeat";
+    root.style.backgroundPosition = "center";
+    if (page.backgroundOpacity !== undefined) {
+      root.style.opacity = page.backgroundOpacity;
+    }
+    if (page.backgroundBlur) {
+      root.style.filter = `blur(${page.backgroundBlur}px)`;
+    }
+  } else {
+    root.style.backgroundColor = page.backgroundColor;
+  }
+  
   root.style.height = "100%";
   root.style.minHeight = "0";
   applySpacing(root, "padding", page.layout.padding);
-  if (page.layout.safeArea) {
+  
+  // Handle safe area padding
+  if (page.safeAreaPadding !== false) {
     root.style.paddingTop = `${(page.layout.padding.top ?? 0) + 20}px`;
     root.style.paddingBottom = `${(page.layout.padding.bottom ?? 0) + 14}px`;
   }
+  
   root.style.display = "flex";
   root.style.flexDirection = "column";
-  root.style.overflow = "hidden";
+  
+  // Handle scroll
+  if (page.scroll !== false) {
+    root.style.overflow = "auto";
+  } else {
+    root.style.overflow = "hidden";
+  }
 
   // Do not render the in-app appBar inside the mobile preview to keep
   // the preview clean. The appBar was previously shown when
