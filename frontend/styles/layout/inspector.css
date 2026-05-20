@@ -225,7 +225,7 @@
 }
 
 .accordion-content {
-  padding: 0 16px 16px;
+  padding: 0;
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
