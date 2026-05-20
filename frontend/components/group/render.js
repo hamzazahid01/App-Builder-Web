@@ -1,0 +1,84 @@
+window.GroupComponent.render = function(component) {
+  const el = document.createElement("div");
+  el.className = "group-shell canvas-node app-node";
+  el.dataset.componentId = component.id;
+  el.dataset.componentType = "group";
+
+  // Apply group styles
+  const styles = component.styles || {};
+  el.style.backgroundColor = styles.backgroundColor || "#f9fafb";
+  el.style.borderWidth = `${styles.borderWidth || 2}px`;
+  el.style.borderStyle = "solid";
+  el.style.borderColor = styles.borderColor || "#d1d5db";
+  el.style.borderRadius = `${styles.borderRadius || 8}px`;
+  el.style.padding = `${styles.padding?.top || 8}px ${styles.padding?.right || 8}px ${styles.padding?.bottom || 8}px ${styles.padding?.left || 8}px`;
+
+  // Apply layout
+  if (component.layout) {
+    el.style.position = "absolute";
+    el.style.left = `${component.layout.x}px`;
+    el.style.top = `${component.layout.y}px`;
+    el.style.width = `${component.layout.width}px`;
+    el.style.height = `${component.layout.height}px`;
+    el.style.zIndex = component.layout.zIndex || 1;
+  }
+
+  // Selection state
+  if (AppState.selectedId === component.id) {
+    el.classList.add("selected-node");
+  }
+
+  // Create inner canvas for children
+  const innerCanvas = document.createElement("div");
+  innerCanvas.className = "group-inner-canvas";
+  innerCanvas.dataset.groupCanvas = "true";
+  innerCanvas.dataset.groupId = component.id;
+  innerCanvas.style.position = "absolute";
+  innerCanvas.style.left = "0";
+  innerCanvas.style.top = "0";
+  innerCanvas.style.right = "0";
+  innerCanvas.style.bottom = "0";
+  innerCanvas.style.overflow = "visible";
+  innerCanvas.style.pointerEvents = "auto";
+  el.appendChild(innerCanvas);
+
+  // Render children if GroupChildren module exists
+  if (window.GroupChildren) {
+    GroupChildren.render(component, innerCanvas);
+  } else if (!AppState.runtimeMode && (!component.children || component.children.length === 0)) {
+    const hint = document.createElement("div");
+    hint.className = "group-hint";
+    hint.textContent = "Drag components here";
+    hint.style.pointerEvents = "none";
+    innerCanvas.appendChild(hint);
+  }
+
+  // Group shell click - only if not clicking on nested component
+  el.addEventListener("pointerdown", (e) => {
+    if (AppState.runtimeMode) return;
+    if (e.button !== 0) return;
+    if (e.target.closest(".canvas-node") || e.target.closest(".canvas-node-inner")) {
+      return;
+    }
+    if (e.target.closest(".resize-handle")) {
+      return;
+    }
+    e.stopPropagation();
+    selectNode(component, e);
+  });
+
+  el.addEventListener("click", (e) => {
+    if (AppState.runtimeMode) return;
+    if (AppState.suppressCanvasClickUntil && Date.now() < AppState.suppressCanvasClickUntil) return;
+    if (e.target.closest(".canvas-node") || e.target.closest(".canvas-node-inner")) {
+      return;
+    }
+    if (e.target.closest(".resize-handle")) {
+      return;
+    }
+    e.stopPropagation();
+    selectNode(component, e);
+  });
+
+  return el;
+};

@@ -28,14 +28,57 @@ window.LayersPanel = {
     row.type = "button";
     row.className = `layer-row depth-${depth} ${node.id === AppState.selectedId ? "active" : ""}`;
     row.style.paddingLeft = `${10 + depth * 14}px`;
-    row.innerHTML = `<span class="layer-type">${node.type}</span><span class="layer-label">${this.label(node)}</span>`;
+    
+    // Add expand/collapse for groups
+    const isGroup = node.type === "group";
+    const hasChildren = node.children && node.children.length > 0;
+    
+    if (isGroup && hasChildren) {
+      const expandIcon = document.createElement("span");
+      expandIcon.className = "layer-expand-icon";
+      expandIcon.textContent = "▼";
+      expandIcon.style.fontSize = "10px";
+      expandIcon.style.marginRight = "4px";
+      expandIcon.dataset.expanded = "true";
+      expandIcon.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isExpanded = expandIcon.dataset.expanded === "true";
+        expandIcon.dataset.expanded = isExpanded ? "false" : "true";
+        expandIcon.textContent = isExpanded ? "▶" : "▼";
+        const childrenContainer = row.nextElementSibling;
+        if (childrenContainer && childrenContainer.classList.contains("layer-children")) {
+          childrenContainer.style.display = isExpanded ? "none" : "flex";
+        }
+      });
+      row.appendChild(expandIcon);
+    }
+    
+    row.innerHTML += `<span class="layer-type">${node.type}</span><span class="layer-label">${this.label(node)}</span>`;
     row.addEventListener("click", () => {
       AppState.selectedId = node.id;
       AppState.selectedType = "component";
       Builder.refreshAll();
     });
 
-    return row;
+    const wrap = document.createElement("div");
+    wrap.className = "layer-group";
+    wrap.appendChild(row);
+
+    if (isGroup && hasChildren) {
+      const childrenContainer = document.createElement("div");
+      childrenContainer.className = "layer-children";
+      childrenContainer.style.display = "flex";
+      childrenContainer.style.flexDirection = "column";
+      
+      const kids = [...node.children].sort(
+        (a, b) => (b.layout?.zIndex ?? 0) - (a.layout?.zIndex ?? 0)
+      );
+      for (const child of kids) {
+        wrap.appendChild(this.buildRow(child, depth + 1));
+      }
+    }
+
+    return wrap;
   },
 
   label(node) {
@@ -44,6 +87,7 @@ window.LayersPanel = {
     if (node.type === "input") return node.props.placeholder || "Input";
     if (node.type === "image") return "Image";
     if (node.type === "icon") return node.props.symbol || "Icon";
+    if (node.type === "group") return node.props.name || "Group";
     return node.type;
   }
 };

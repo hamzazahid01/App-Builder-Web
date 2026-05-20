@@ -15,7 +15,7 @@
 @import "./components/image.css";
 @import "./components/input.css";
 @import "./components/icon.css";
-@import "./components/container.css";
+@import "./components/group.css";
 
 @import "./ui/modals.css";
 @import "./ui/toast.css";

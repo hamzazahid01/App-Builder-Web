@@ -81,6 +81,24 @@ ${i})`;
     return `${i}Center(child: Text('${(node.props.symbol || "").replace(/'/g, "\\'")}', style: TextStyle(fontSize: ${node.styles.fontSize}, color: ${flutterColor(node.styles.color)})))`;
   }
 
+  if (node.type === "group") {
+    const childWidgets = (node.children || []).map((c) => renderFlutterNode(c, depth + 4)).join(",\n");
+    return `${i}Container(
+${i}  padding: ${edgeInsets(node.styles.padding)},
+${i}  decoration: BoxDecoration(
+${i}    color: ${flutterColor(node.styles.backgroundColor || "#f9fafb")},
+${i}    borderRadius: BorderRadius.circular(${node.styles.borderRadius || 8}),
+${i}    border: Border.all(color: ${flutterColor(node.styles.borderColor || "#d1d5db")}, width: ${node.styles.borderWidth || 2}),
+${i}  ),
+${i}  child: ${childWidgets ? `Stack(
+${i}    clipBehavior: Clip.none,
+${i}    children: [
+${childWidgets}
+${i}    ],
+${i}  )` : "const SizedBox.expand()"},
+${i})`;
+  }
+
   return `${i}const SizedBox.shrink()`;
 }
 

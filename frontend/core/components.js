@@ -3,7 +3,8 @@ window.ComponentCatalog = [
   { type: "text", label: "Text" },
   { type: "image", label: "Image" },
   { type: "input", label: "Input" },
-  { type: "icon", label: "Icon" }
+  { type: "icon", label: "Icon" },
+  { type: "group", label: "Group" }
 ];
 
 window.ComponentRegistry = window.ComponentRegistry || {};
@@ -19,7 +20,8 @@ const DEFAULT_CANVAS_LAYOUTS = {
   text: { width: 200, height: 36 },
   image: { width: 280, height: 150 },
   input: { width: 280, height: 44 },
-  icon: { width: 48, height: 48 }
+  icon: { width: 48, height: 48 },
+  group: { width: 300, height: 200 }
 };
 
 window.ComponentFactory = {

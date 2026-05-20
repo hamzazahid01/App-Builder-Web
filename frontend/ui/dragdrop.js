@@ -62,7 +62,7 @@ window.DragDrop = {
   startMoveComponent(component, wrapperEl, e) {
     if (AppState.runtimeMode) return;
     if (e.target.closest(".resize-handle")) return;
-    const canvas = wrapperEl.closest(".page-canvas");
+    const canvas = wrapperEl.closest(".page-canvas, .group-inner-canvas");
     if (!canvas || !component.layout) return;
 
     e.stopPropagation();
@@ -90,7 +90,7 @@ window.DragDrop = {
 
   startResize(component, wrapperEl, handle, e) {
     if (AppState.runtimeMode) return;
-    const canvas = wrapperEl.closest(".page-canvas");
+    const canvas = wrapperEl.closest(".page-canvas, .group-inner-canvas");
     if (!canvas || !component.layout) return;
 
     e.stopPropagation();
@@ -266,6 +266,9 @@ window.DragDrop = {
     let list = page.components;
     let canvasEl = pageCanvas;
     if (target?.kind === "page" && target.list) {
+      list = target.list;
+      canvasEl = target.canvasEl;
+    } else if (target?.kind === "group" && target.list) {
       list = target.list;
       canvasEl = target.canvasEl;
     }
