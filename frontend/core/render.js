@@ -381,19 +381,26 @@ function renderPage(preview, page) {
     
     // Calculate body height based on component positions when scroll is enabled
     if (page.scroll !== false && page.components.length > 0) {
-      let maxBottom = 0;
-      page.components.forEach(component => {
-        if (component.layout) {
-          const bottom = component.layout.y + component.layout.height;
-          if (bottom > maxBottom) {
-            maxBottom = bottom;
+      // In runtime mode, always use dynamic height (auto-expand for dynamic content)
+      // In preview mode, use manual height if set, otherwise use dynamic
+      if (AppState.runtimeMode || !page.scrollManualHeight) {
+        let maxBottom = 0;
+        page.components.forEach(component => {
+          if (component.layout) {
+            const bottom = component.layout.y + component.layout.height;
+            if (bottom > maxBottom) {
+              maxBottom = bottom;
+            }
           }
+        });
+        
+        // Set body height to accommodate all components with some extra space
+        if (maxBottom > 0) {
+          body.style.height = `${maxBottom + 200}px`;
         }
-      });
-      
-      // Set body height to accommodate all components with some extra space
-      if (maxBottom > 0) {
-        body.style.height = `${maxBottom + 200}px`;
+      } else {
+        // Use manual height in preview mode only
+        body.style.height = `${page.scrollManualHeight}px`;
       }
     }
   }
