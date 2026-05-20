@@ -71,10 +71,15 @@ window.PageManager = {
       const panel = row.parentElement;
       if (panel) {
         panel.querySelectorAll('.page-item.expanded').forEach((item) => {
-          if (item !== row) item.classList.remove('expanded');
+          if (item !== row) {
+            item.classList.remove('expanded');
+            const otherToggle = item.querySelector('.page-toggle-btn');
+            if (otherToggle) otherToggle.textContent = '▼';
+          }
         });
       }
       row.classList.toggle('expanded');
+      toggleBtn.textContent = row.classList.contains('expanded') ? '▲' : '▼';
     });
     header.appendChild(toggleBtn);
     row.appendChild(header);
