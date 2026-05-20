@@ -115,6 +115,61 @@ window.Inspector = {
       this.render();
       return;
     }
+    
+    // Add search bar
+    panel.appendChild(createInspectorSearch());
+    
     buildComponentAccordions(panel, node);
   }
 };
+
+function createInspectorSearch() {
+  const searchContainer = document.createElement("div");
+  searchContainer.className = "inspector-search";
+  
+  const searchIcon = document.createElement("span");
+  searchIcon.className = "inspector-search-icon";
+  searchIcon.textContent = "🔍";
+  
+  const searchInput = document.createElement("input");
+  searchInput.type = "text";
+  searchInput.placeholder = "Search properties...";
+  searchInput.addEventListener("input", (e) => {
+    const query = e.target.value.toLowerCase();
+    filterInspectorProperties(query);
+  });
+  
+  searchContainer.appendChild(searchIcon);
+  searchContainer.appendChild(searchInput);
+  return searchContainer;
+}
+
+function filterInspectorProperties(query) {
+  const panel = document.getElementById("properties-panel");
+  const accordions = panel.querySelectorAll(".accordion");
+  
+  accordions.forEach(accordion => {
+    const title = accordion.querySelector(".accordion-title")?.textContent?.toLowerCase() || "";
+    const fields = accordion.querySelectorAll(".field label");
+    
+    let hasMatch = title.includes(query);
+    
+    if (!hasMatch) {
+      fields.forEach(field => {
+        const labelText = field.textContent?.toLowerCase() || "";
+        if (labelText.includes(query)) {
+          hasMatch = true;
+        }
+      });
+    }
+    
+    if (hasMatch || query === "") {
+      accordion.style.display = "block";
+      if (query !== "" && hasMatch) {
+        accordion.classList.add("open");
+      }
+    } else {
+      accordion.style.display = "none";
+    }
+  });
+}
