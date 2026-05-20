@@ -82,19 +82,19 @@ window.PageManager = {
 
     const controls = document.createElement("div"); controls.className = "page-controls";
 
-    const up = document.createElement("button"); up.type = "button"; up.className = "page-mini-btn"; up.textContent = "◀";
+    const up = document.createElement("button"); up.type = "button"; up.className = "page-mini-btn"; up.textContent = "◀"; up.title = "Move page left";
     up.addEventListener("click", (e) => { e.stopPropagation(); this.reorderPage(page.id, -1); });
 
-    const down = document.createElement("button"); down.type = "button"; down.className = "page-mini-btn"; down.textContent = "▶";
+    const down = document.createElement("button"); down.type = "button"; down.className = "page-mini-btn"; down.textContent = "▶"; down.title = "Move page right";
     down.addEventListener("click", (e) => { e.stopPropagation(); this.reorderPage(page.id, 1); });
 
-    const copy = document.createElement("button"); copy.type = "button"; copy.className = "page-mini-btn"; copy.textContent = "📋";
+    const copy = document.createElement("button"); copy.type = "button"; copy.className = "page-mini-btn"; copy.textContent = "📋"; copy.title = "Duplicate page";
     copy.addEventListener("click", (e) => { e.stopPropagation(); this.duplicatePage(page.id); });
 
-    const rename = document.createElement('button'); rename.type = 'button'; rename.className = 'page-mini-btn'; rename.textContent = '✎';
+    const rename = document.createElement('button'); rename.type = 'button'; rename.className = 'page-mini-btn'; rename.textContent = '✎'; rename.title = "Rename page";
     rename.addEventListener('click', (e) => { e.stopPropagation(); this._startRename(page, btn, row); });
 
-    const del = document.createElement("button"); del.type = "button"; del.className = "page-mini-btn danger"; del.textContent = "🗑";
+    const del = document.createElement("button"); del.type = "button"; del.className = "page-mini-btn danger"; del.textContent = "🗑"; del.title = "Delete page";
     del.addEventListener("click", (e) => {
       e.stopPropagation();
       if (AppState.app.pages.length <= 1) { this.showConfirm('Deleting this page will remove your only page. Are you sure?', () => {} , 'OK', 'Cancel'); return; }
