@@ -36,7 +36,7 @@ window.GroupChildren = {
    * @returns {HTMLElement} The wrapped child element
    */
   renderChild(child, group) {
-    const inner = renderComponent(child);
+    const inner = window.renderComponent ? window.renderComponent(child) : null;
     if (!inner) return null;
 
     const wrapper = this.wrapChild(inner, child, group);

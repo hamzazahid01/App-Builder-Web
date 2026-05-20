@@ -28,6 +28,11 @@ window.GroupComponent.render = function(component) {
     el.classList.add("selected-node");
   }
 
+  // Attach drag/drop to group shell
+  if (!AppState.runtimeMode) {
+    DragDrop.attachNode(el, component);
+  }
+
   // Create inner canvas for children
   const innerCanvas = document.createElement("div");
   innerCanvas.className = "group-inner-canvas";
@@ -40,6 +45,7 @@ window.GroupComponent.render = function(component) {
   innerCanvas.style.bottom = "0";
   innerCanvas.style.overflow = "visible";
   innerCanvas.style.pointerEvents = "auto";
+  innerCanvas.style.zIndex = "1";
   el.appendChild(innerCanvas);
 
   // Render children if GroupChildren module exists
@@ -63,8 +69,11 @@ window.GroupComponent.render = function(component) {
     if (e.target.closest(".resize-handle")) {
       return;
     }
-    e.stopPropagation();
-    selectNode(component, e);
+    // Don't stop propagation - allow drag/drop to work
+    AppState.selectedId = component.id;
+    AppState.selectedType = "component";
+    StateUtils.bringToFront(component);
+    Builder.refreshAll();
   });
 
   el.addEventListener("click", (e) => {
@@ -76,8 +85,11 @@ window.GroupComponent.render = function(component) {
     if (e.target.closest(".resize-handle")) {
       return;
     }
-    e.stopPropagation();
-    selectNode(component, e);
+    // Don't stop propagation
+    AppState.selectedId = component.id;
+    AppState.selectedType = "component";
+    StateUtils.bringToFront(component);
+    Builder.refreshAll();
   });
 
   return el;

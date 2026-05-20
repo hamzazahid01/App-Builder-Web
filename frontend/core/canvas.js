@@ -69,20 +69,21 @@ window.CanvasUtils = {
     const groupCanvases = [...document.querySelectorAll(".group-inner-canvas")]
       .map((el) => {
         const comp = StateUtils.findById(page.components, el.dataset.groupId);
-        return { el, z: comp?.layout?.zIndex ?? 0 };
+        return { el, z: comp?.layout?.zIndex ?? 0, comp };
       })
       .sort((a, b) => b.z - a.z);
 
-    for (const { el } of groupCanvases) {
+    for (const { el, comp } of groupCanvases) {
       const rect = el.getBoundingClientRect();
       if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) continue;
-      const group = StateUtils.findById(page.components, el.dataset.groupId);
-      if (!group) continue;
+      if (!comp) continue;
+      // Initialize children array if it doesn't exist
+      if (!comp.children) comp.children = [];
       return {
         kind: "group",
         canvasEl: el,
-        parentComponent: group,
-        list: group.children
+        parentComponent: comp,
+        list: comp.children
       };
     }
 

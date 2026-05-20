@@ -1,0 +1,92 @@
+.group-shell {
+  position: relative;
+  border: 2px dashed #d1d5db;
+  background: #f9fafb;
+  border-radius: 8px;
+  transition: all 0.2s;
+  pointer-events: auto;
+}
+
+.group-shell.selected-node {
+  border-color: #8b5cf6;
+  background: #f5f3ff;
+}
+
+.group-inner-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: visible;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.group-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #9ca3af;
+  pointer-events: none;
+  text-align: center;
+  padding: 8px;
+}
+
+.group-nested-node {
+  position: absolute;
+}
+
+.component-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.component-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.component-item:hover {
+  background: #e5e7eb;
+}
+
+.component-type {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.component-name {
+  flex: 1;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.component-select-btn {
+  padding: 4px 8px;
+  font-size: 12px;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.component-select-btn:hover {
+  background: #7c3aed;
+}
