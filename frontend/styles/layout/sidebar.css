@@ -153,10 +153,10 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
-  border-radius: 18px;
+  border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
-  color: #f8fafc;
+  background: rgba(30, 41, 59, 0.6);
+  color: #e2e8f0;
   font-size: 14px;
   font-weight: 600;
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
@@ -164,8 +164,9 @@
 
 .component-item:hover {
   transform: translateY(-1px);
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(139,92,246,0.25);
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #ffffff;
 }
 
 .component-badge {
