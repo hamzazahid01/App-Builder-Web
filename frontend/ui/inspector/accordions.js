@@ -20,16 +20,77 @@ function createSpacingEditor(title, spacingObj, onChange) {
   return wrap;
 }
 
-function createAccordion(title, buildContentFn, openByDefault = false) {
+function createAccordion(title, buildContentFn, openByDefault = false, section = null) {
   const tpl = document.getElementById("accordion-template");
   const root = tpl.content.firstElementChild.cloneNode(true);
-  root.querySelector(".accordion-title").textContent = title;
+  
+  // Set section attribute for color coding
+  if (section) {
+    root.dataset.section = section;
+  }
+  
+  const trigger = root.querySelector(".accordion-trigger");
+  
+  // Create header content with icon
+  const headerContent = document.createElement("div");
+  headerContent.className = "accordion-header-content";
+  
+  // Add icon wrapper
+  const iconWrapper = document.createElement("div");
+  iconWrapper.className = "accordion-icon-wrapper";
+  iconWrapper.textContent = getSectionIcon(section);
+  headerContent.appendChild(iconWrapper);
+  
+  // Add title
+  const titleEl = document.createElement("span");
+  titleEl.className = "accordion-title";
+  titleEl.textContent = title;
+  headerContent.appendChild(titleEl);
+  
+  trigger.innerHTML = "";
+  trigger.appendChild(headerContent);
+  
+  // Add chevron
+  const chevron = document.createElement("span");
+  chevron.className = "accordion-chevron";
+  chevron.textContent = "▼";
+  chevron.style.fontSize = "10px";
+  trigger.appendChild(chevron);
+  
   const content = root.querySelector(".accordion-content");
   buildContentFn(content);
-  const trigger = root.querySelector(".accordion-trigger");
-  trigger.addEventListener("click", () => root.classList.toggle("open"));
+  
+  trigger.addEventListener("click", () => {
+    root.classList.toggle("open");
+  });
+  
+  // Keyboard navigation
+  trigger.setAttribute("tabindex", "0");
+  trigger.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      root.classList.toggle("open");
+    }
+  });
+  
   if (openByDefault) root.classList.add("open");
   return root;
+}
+
+function getSectionIcon(section) {
+  const icons = {
+    content: "📝",
+    typography: "Aa",
+    colors: "🎨",
+    states: "⚡",
+    layout: "📐",
+    animation: "✨",
+    interaction: "👆",
+    responsive: "📱",
+    action: "🔗",
+    default: "▸"
+  };
+  return icons[section] || icons.default;
 }
 
 function createInspectorHeader(title, subtitle) {

@@ -38,7 +38,7 @@ window.ButtonComponent.buildInspector = function(panel, node) {
         renderPreview();
       })));
     }
-  }, true));
+  }, true, "content"));
 
   // Typography Section
   panel.appendChild(createAccordion("Typography", (content) => {
@@ -132,7 +132,7 @@ window.ButtonComponent.buildInspector = function(panel, node) {
         renderPreview();
       }, 0.5)));
     }
-  }, false));
+  }, false, "typography"));
 
   // Colors Section
   panel.appendChild(createAccordion("Colors", (content) => {
@@ -254,7 +254,7 @@ window.ButtonComponent.buildInspector = function(panel, node) {
         renderPreview();
       })));
     }
-  }, false));
+  }, false, "colors"));
 
   // States Section
   panel.appendChild(createAccordion("States", (content) => {
@@ -297,8 +297,8 @@ window.ButtonComponent.buildInspector = function(panel, node) {
         node.styles.states.disabled.grayscale = false;
       }
       renderPreview();
-    })));
-  }, false));
+    }
+  }, false, "states"));
 
   // Layout Section
   panel.appendChild(createAccordion("Layout", (content) => {
@@ -348,7 +348,7 @@ window.ButtonComponent.buildInspector = function(panel, node) {
       node.styles.heightMode = v;
       renderPreview();
     })));
-  }, false));
+  }, false, "layout"));
 
   // Animation Section
   panel.appendChild(createAccordion("Animation", (content) => {
@@ -413,7 +413,7 @@ window.ButtonComponent.buildInspector = function(panel, node) {
         renderPreview();
       })));
     }
-  }, false));
+  }, false, "animation"));
 
   // Interaction Section
   panel.appendChild(createAccordion("Interaction", (content) => {
@@ -452,7 +452,7 @@ window.ButtonComponent.buildInspector = function(panel, node) {
       node.styles.ariaLabel = v;
       renderPreview();
     })));
-  }, false));
+  }, false, "interaction"));
 
   // Responsive Section
   panel.appendChild(createAccordion("Responsive", (content) => {
@@ -491,7 +491,7 @@ window.ButtonComponent.buildInspector = function(panel, node) {
       node.styles.responsive.hideOn.desktop = v;
       renderPreview();
     })));
-  }, false));
+  }, false, "responsive"));
 
   // Action Section
   panel.appendChild(createAccordion("Action", (content) => {
@@ -525,5 +525,5 @@ window.ButtonComponent.buildInspector = function(panel, node) {
         })));
       }
     }
-  }, false));
+  }, false, "action"));
 };
