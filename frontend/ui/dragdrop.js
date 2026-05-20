@@ -16,6 +16,8 @@ window.DragDrop = {
     document.addEventListener("pointermove", (e) => this.onPointerMove(e));
     document.addEventListener("pointerup", (e) => this.onPointerUp(e));
     document.addEventListener("pointercancel", (e) => this.onPointerUp(e));
+    // Add right-click handler for selected components
+    document.addEventListener("pointerdown", (e) => this.onPointerDown(e));
   },
 
   startPlaceFromLibrary(type, e) {
@@ -142,6 +144,48 @@ window.DragDrop = {
   removeGhost() {
     DragDropGhost.remove(this.ghostEl);
     this.ghostEl = null;
+  },
+
+  onPointerDown(e) {
+    if (AppState.runtimeMode) return;
+    if (e.button !== 2) return; // Right-click only
+    if (this.session) return;
+
+    // Check if clicking on a selected component
+    const wrapperEl = e.target.closest(".canvas-node");
+    if (!wrapperEl) return;
+
+    const componentId = wrapperEl.dataset.componentId;
+    if (!componentId || componentId !== AppState.selectedId) return;
+
+    const component = StateUtils.findById(StateUtils.getCurrentPage().components, componentId);
+    if (!component || !component.layout) return;
+
+    // Start move operation for selected component with right-click
+    const canvas = wrapperEl.closest(".page-canvas, .group-inner-canvas");
+    if (!canvas) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const pos = CanvasUtils.clientToCanvas(e.clientX, e.clientY, canvas);
+    this.beginSession({
+      mode: "move",
+      componentId: component.id,
+      component,
+      pointerId: e.pointerId,
+      canvasEl: canvas,
+      wrapperEl,
+      offsetX: pos.x - component.layout.x,
+      offsetY: pos.y - component.layout.y,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      moved: false
+    });
+
+    try {
+      wrapperEl.setPointerCapture(e.pointerId);
+    } catch (_) {}
   },
 
   onPointerMove(e) {
