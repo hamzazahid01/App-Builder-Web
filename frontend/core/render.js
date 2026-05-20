@@ -194,64 +194,81 @@ function renderPage(preview, page) {
   const root = document.createElement("div");
   root.className = "page-root";
   
+  // Create background layer
+  const backgroundLayer = document.createElement("div");
+  backgroundLayer.className = "page-background-layer";
+  backgroundLayer.style.position = "absolute";
+  backgroundLayer.style.top = "0";
+  backgroundLayer.style.left = "0";
+  backgroundLayer.style.right = "0";
+  backgroundLayer.style.bottom = "0";
+  backgroundLayer.style.zIndex = "0";
+  
   // Handle background type
   const bgType = page.backgroundType || "solid";
   if (bgType === "solid") {
-    root.style.backgroundColor = page.backgroundColor;
+    backgroundLayer.style.backgroundColor = page.backgroundColor;
   } else if (bgType === "gradient") {
     const direction = page.gradientDirection || "horizontal";
     let gradientDirection = "to right";
     if (direction === "vertical") gradientDirection = "to bottom";
     else if (direction === "diagonal") gradientDirection = "to bottom right";
-    root.style.background = `linear-gradient(${gradientDirection}, ${page.gradientStart || "#2563eb"}, ${page.gradientEnd || "#7c3aed"})`;
+    backgroundLayer.style.background = `linear-gradient(${gradientDirection}, ${page.gradientStart || "#2563eb"}, ${page.gradientEnd || "#7c3aed"})`;
   } else if (bgType === "image" && page.backgroundImage) {
-    root.style.backgroundImage = `url(${page.backgroundImage})`;
+    backgroundLayer.style.backgroundImage = `url(${page.backgroundImage})`;
     
     // Handle background fit options
     const fit = page.backgroundFit || "cover";
     if (fit === "contain") {
-      root.style.backgroundSize = "contain";
-      root.style.backgroundPosition = "center";
+      backgroundLayer.style.backgroundSize = "contain";
+      backgroundLayer.style.backgroundPosition = "center";
     } else if (fit === "cover") {
-      root.style.backgroundSize = "cover";
-      root.style.backgroundPosition = "center";
+      backgroundLayer.style.backgroundSize = "cover";
+      backgroundLayer.style.backgroundPosition = "center";
     } else if (fit === "fill") {
-      root.style.backgroundSize = "100% 100%";
-      root.style.backgroundPosition = "center";
+      backgroundLayer.style.backgroundSize = "100% 100%";
+      backgroundLayer.style.backgroundPosition = "center";
     } else if (fit === "auto") {
-      root.style.backgroundSize = "auto";
-      root.style.backgroundPosition = "center";
+      backgroundLayer.style.backgroundSize = "auto";
+      backgroundLayer.style.backgroundPosition = "center";
     }
     
-    root.style.backgroundRepeat = "no-repeat";
+    backgroundLayer.style.backgroundRepeat = "no-repeat";
     if (page.backgroundOpacity !== undefined) {
-      root.style.opacity = page.backgroundOpacity;
+      backgroundLayer.style.opacity = page.backgroundOpacity;
     }
     if (page.backgroundBlur) {
-      root.style.filter = `blur(${page.backgroundBlur}px)`;
+      backgroundLayer.style.filter = `blur(${page.backgroundBlur}px)`;
     }
   } else {
-    root.style.backgroundColor = page.backgroundColor;
+    backgroundLayer.style.backgroundColor = page.backgroundColor;
   }
   
-  root.style.height = "100%";
-  root.style.minHeight = "0";
-  applySpacing(root, "padding", page.layout.padding);
+  root.appendChild(backgroundLayer);
+  
+  // Create content layer
+  const contentLayer = document.createElement("div");
+  contentLayer.className = "page-content-layer";
+  contentLayer.style.position = "relative";
+  contentLayer.style.zIndex = "1";
+  contentLayer.style.height = "100%";
+  contentLayer.style.minHeight = "0";
+  applySpacing(contentLayer, "padding", page.layout.padding);
   
   // Handle safe area padding
   if (page.safeAreaPadding !== false) {
-    root.style.paddingTop = `${(page.layout.padding.top ?? 0) + 20}px`;
-    root.style.paddingBottom = `${(page.layout.padding.bottom ?? 0) + 14}px`;
+    contentLayer.style.paddingTop = `${(page.layout.padding.top ?? 0) + 20}px`;
+    contentLayer.style.paddingBottom = `${(page.layout.padding.bottom ?? 0) + 14}px`;
   }
   
-  root.style.display = "flex";
-  root.style.flexDirection = "column";
+  contentLayer.style.display = "flex";
+  contentLayer.style.flexDirection = "column";
   
   // Handle scroll
   if (page.scroll !== false) {
-    root.style.overflow = "auto";
+    contentLayer.style.overflow = "auto";
   } else {
-    root.style.overflow = "hidden";
+    contentLayer.style.overflow = "hidden";
   }
 
   // Do not render the in-app appBar inside the mobile preview to keep
@@ -277,7 +294,8 @@ function renderPage(preview, page) {
     renderComponentsOnCanvas(page.components, body);
   }
 
-  root.appendChild(body);
+  contentLayer.appendChild(body);
+  root.appendChild(contentLayer);
   screen.appendChild(root);
   preview.appendChild(screen);
 }
