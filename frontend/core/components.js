@@ -7,6 +7,8 @@ window.ComponentCatalog = [
   { type: "icon", label: "Icon" }
 ];
 
+window.ComponentRegistry = window.ComponentRegistry || {};
+
 const REMOVED_TYPES = new Set(["spacer", "center", "row", "column", "stack", "card"]);
 const CONVERT_TO_CONTAINER = new Set(["row", "column", "stack", "center", "card"]);
 
@@ -33,6 +35,17 @@ window.ComponentFactory = {
     return { x, y, width: size.width, height: size.height, zIndex };
   },
 
+  createBase(type) {
+    return {
+      id: StateUtils.makeId(type),
+      type,
+      styles: {},
+      props: {},
+      children: [],
+      layout: this.createLayout(type)
+    };
+  },
+
   detectFlexDirection(component) {
     const w = component.layout?.width ?? 300;
     const h = component.layout?.height ?? 200;
@@ -45,6 +58,9 @@ window.ComponentFactory = {
   },
 
   create(type) {
+    const componentModule = window.ComponentRegistry?.[type];
+    if (componentModule?.create) return componentModule.create();
+
     const common = {
       id: StateUtils.makeId(type),
       type,

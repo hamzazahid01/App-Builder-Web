@@ -228,7 +228,7 @@ function buildSimplePagePanel(panel, page) {
 
   const hint = document.createElement("p");
   hint.className = "inspector-hint";
-  hint.textContent = "Left se component utha kar screen par rakhein. Kisi cheez par click karke settings badlein.";
+  hint.textContent = "Drag components from the left and place them on the screen. Click on any element to change its settings.";
   panel.appendChild(hint);
 }
 

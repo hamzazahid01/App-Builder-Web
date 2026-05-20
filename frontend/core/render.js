@@ -97,6 +97,9 @@ function executeAction(onClickAction) {
 }
 
 function renderComponent(component) {
+  const componentModule = window.ComponentRegistry?.[component.type];
+  if (componentModule?.render) return componentModule.render(component);
+
   if (component.type === "button") return renderButton(component);
   if (component.type === "text") return renderTextNode(component);
   if (component.type === "image") return renderImageNode(component);
