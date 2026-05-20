@@ -118,6 +118,11 @@
   box-sizing: border-box;
 }
 
+.field select option {
+  background: var(--inspector-field-bg);
+  color: var(--inspector-text-primary);
+}
+
 .field input:focus,
 .field textarea:focus,
 .field select:focus {
