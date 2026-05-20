@@ -83,6 +83,7 @@ window.StateUtils = {
       backgroundImageData: null,
       backgroundFit: "cover",
       backgroundOpacity: 1,
+      backgroundFadeColor: "#ffffff",
       backgroundBlur: 0,
       orientation: "portrait",
       safeAreaPadding: true,

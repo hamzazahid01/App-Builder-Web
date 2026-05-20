@@ -179,6 +179,40 @@ function renderSplashScreen(preview) {
   preview.appendChild(screen);
 }
 
+function hexToRgba(hex, alpha = 1) {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  // Parse hex values
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function blendColors(hex1, hex2, opacity) {
+  // Remove # if present
+  hex1 = hex1.replace('#', '');
+  hex2 = hex2.replace('#', '');
+  
+  // Parse hex values
+  const r1 = parseInt(hex1.substring(0, 2), 16);
+  const g1 = parseInt(hex1.substring(2, 4), 16);
+  const b1 = parseInt(hex1.substring(4, 6), 16);
+  
+  const r2 = parseInt(hex2.substring(0, 2), 16);
+  const g2 = parseInt(hex2.substring(2, 4), 16);
+  const b2 = parseInt(hex2.substring(4, 6), 16);
+  
+  // Blend colors based on opacity
+  const r = Math.round(r1 * opacity + r2 * (1 - opacity));
+  const g = Math.round(g1 * opacity + g2 * (1 - opacity));
+  const b = Math.round(b1 * opacity + b2 * (1 - opacity));
+  
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 function renderPage(preview, page) {
   preview.innerHTML = "";
   preview.style.backgroundColor = "";
@@ -190,9 +224,13 @@ function renderPage(preview, page) {
   screen.style.maxWidth = "100%";
   screen.style.height = "auto";
   screen.style.aspectRatio = `${frame.width}/${frame.height}`;
+  screen.style.backgroundColor = "transparent";
 
   const root = document.createElement("div");
   root.className = "page-root";
+  root.style.position = "relative";
+  root.style.height = "100%";
+  root.style.minHeight = "0";
   
   // Create background layer
   const backgroundLayer = document.createElement("div");
@@ -206,14 +244,41 @@ function renderPage(preview, page) {
   
   // Handle background type
   const bgType = page.backgroundType || "solid";
+  const fadeColor = page.backgroundFadeColor || "#ffffff";
+  const opacity = page.backgroundOpacity !== undefined ? page.backgroundOpacity : 1;
+  
   if (bgType === "solid") {
-    backgroundLayer.style.backgroundColor = page.backgroundColor;
+    // Use layered approach: fade-to color at bottom, original color on top with opacity
+    backgroundLayer.style.backgroundColor = fadeColor;
+    
+    const colorOverlay = document.createElement("div");
+    colorOverlay.style.position = "absolute";
+    colorOverlay.style.top = "0";
+    colorOverlay.style.left = "0";
+    colorOverlay.style.right = "0";
+    colorOverlay.style.bottom = "0";
+    colorOverlay.style.backgroundColor = page.backgroundColor;
+    colorOverlay.style.opacity = opacity;
+    
+    backgroundLayer.appendChild(colorOverlay);
   } else if (bgType === "gradient") {
     const direction = page.gradientDirection || "horizontal";
     let gradientDirection = "to right";
     if (direction === "vertical") gradientDirection = "to bottom";
     else if (direction === "diagonal") gradientDirection = "to bottom right";
-    backgroundLayer.style.background = `linear-gradient(${gradientDirection}, ${page.gradientStart || "#2563eb"}, ${page.gradientEnd || "#7c3aed"})`;
+    
+    backgroundLayer.style.backgroundColor = fadeColor;
+    
+    const gradientOverlay = document.createElement("div");
+    gradientOverlay.style.position = "absolute";
+    gradientOverlay.style.top = "0";
+    gradientOverlay.style.left = "0";
+    gradientOverlay.style.right = "0";
+    gradientOverlay.style.bottom = "0";
+    gradientOverlay.style.background = `linear-gradient(${gradientDirection}, ${page.gradientStart || "#2563eb"}, ${page.gradientEnd || "#7c3aed"})`;
+    gradientOverlay.style.opacity = opacity;
+    
+    backgroundLayer.appendChild(gradientOverlay);
   } else if (bgType === "image" && page.backgroundImage) {
     backgroundLayer.style.backgroundImage = `url(${page.backgroundImage})`;
     
@@ -234,14 +299,23 @@ function renderPage(preview, page) {
     }
     
     backgroundLayer.style.backgroundRepeat = "no-repeat";
-    if (page.backgroundOpacity !== undefined) {
-      backgroundLayer.style.opacity = page.backgroundOpacity;
-    }
+    backgroundLayer.style.opacity = opacity;
     if (page.backgroundBlur) {
       backgroundLayer.style.filter = `blur(${page.backgroundBlur}px)`;
     }
   } else {
-    backgroundLayer.style.backgroundColor = page.backgroundColor;
+    backgroundLayer.style.backgroundColor = fadeColor;
+    
+    const colorOverlay = document.createElement("div");
+    colorOverlay.style.position = "absolute";
+    colorOverlay.style.top = "0";
+    colorOverlay.style.left = "0";
+    colorOverlay.style.right = "0";
+    colorOverlay.style.bottom = "0";
+    colorOverlay.style.backgroundColor = page.backgroundColor;
+    colorOverlay.style.opacity = opacity;
+    
+    backgroundLayer.appendChild(colorOverlay);
   }
   
   root.appendChild(backgroundLayer);

@@ -72,16 +72,25 @@ function buildSimplePagePanel(panel, page) {
         renderPreview();
       })));
       
-      content.appendChild(createField("Background Opacity", createRange(page.backgroundOpacity || 1, 0, 1, 0.1, (v) => {
-        page.backgroundOpacity = v;
-        renderPreview();
-      })));
-      
       content.appendChild(createField("Background Blur", createRange(page.backgroundBlur || 0, 0, 20, 1, (v) => {
         page.backgroundBlur = v;
         renderPreview();
       })));
     }
+    
+    // Opacity and fade-to color (available for all background types)
+    content.appendChild(createField("Background Opacity", createRange(page.backgroundOpacity || 1, 0, 1, 0.1, (v) => {
+      page.backgroundOpacity = v;
+      renderPreview();
+    })));
+    
+    content.appendChild(createField("Fade to Color", createSelect([
+      { value: "#ffffff", label: "White" },
+      { value: "#000000", label: "Black" }
+    ], page.backgroundFadeColor || "#ffffff", (v) => {
+      page.backgroundFadeColor = v;
+      renderPreview();
+    })));
   }, true));
 
   panel.appendChild(createAccordion("Screen Settings", (content) => {
