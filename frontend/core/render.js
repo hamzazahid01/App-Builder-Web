@@ -356,8 +356,9 @@ function renderPage(preview, page) {
   // Handle scroll - set height based on scroll setting
   if (page.scroll !== false) {
     // When scroll is enabled, don't constrain height to allow content to grow
+    // Set minimum height to 200% of screen height to ensure scrollable space
     body.style.height = "auto";
-    body.style.minHeight = "0";
+    body.style.minHeight = "200%";
   } else {
     // When scroll is disabled, constrain height to fit within container
     body.style.height = "100%";
