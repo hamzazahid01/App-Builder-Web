@@ -118,7 +118,16 @@ function buildSimplePagePanel(panel, page) {
     content.appendChild(createField("Scroll", createCheckbox(page.scroll !== false, (v) => {
       page.scroll = v;
       renderPreview();
+      Builder.refreshAll();
     })));
+    
+    // Show manual height option only when scroll is enabled
+    if (page.scroll !== false) {
+      content.appendChild(createField("Manual Height (Preview Only)", createStepper(page.scrollManualHeight || 0, (v) => {
+        page.scrollManualHeight = v > 0 ? v : null;
+        renderPreview();
+      })));
+    }
   }, false));
 
   const hint = document.createElement("p");
