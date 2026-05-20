@@ -29,7 +29,7 @@ window.GroupComponent.render = function(component) {
   innerCanvas.style.right = "0";
   innerCanvas.style.bottom = "0";
   innerCanvas.style.overflow = "visible";
-  innerCanvas.style.pointerEvents = "none";
+  innerCanvas.style.pointerEvents = "auto";
   innerCanvas.style.zIndex = "0";
   el.appendChild(innerCanvas);
 
@@ -43,39 +43,6 @@ window.GroupComponent.render = function(component) {
     hint.style.pointerEvents = "none";
     innerCanvas.appendChild(hint);
   }
-
-  // Group shell click - only if not clicking on nested component
-  el.addEventListener("pointerdown", (e) => {
-    if (AppState.runtimeMode) return;
-    if (e.button !== 0) return;
-    if (e.target.closest(".canvas-node") || e.target.closest(".canvas-node-inner")) {
-      return;
-    }
-    if (e.target.closest(".resize-handle")) {
-      return;
-    }
-    // Don't stop propagation - allow drag/drop to work
-    AppState.selectedId = component.id;
-    AppState.selectedType = "component";
-    StateUtils.bringToFront(component);
-    Builder.refreshAll();
-  });
-
-  el.addEventListener("click", (e) => {
-    if (AppState.runtimeMode) return;
-    if (AppState.suppressCanvasClickUntil && Date.now() < AppState.suppressCanvasClickUntil) return;
-    if (e.target.closest(".canvas-node") || e.target.closest(".canvas-node-inner")) {
-      return;
-    }
-    if (e.target.closest(".resize-handle")) {
-      return;
-    }
-    // Don't stop propagation
-    AppState.selectedId = component.id;
-    AppState.selectedType = "component";
-    StateUtils.bringToFront(component);
-    Builder.refreshAll();
-  });
 
   return el;
 };
