@@ -110,6 +110,16 @@
   background: transparent;
 }
 
+/* Hide scrollbar in runtime mode */
+.device-screen.runtime-mode-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.device-screen.runtime-mode-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 .page-root {
   flex: 1;
   display: flex;

@@ -220,6 +220,12 @@ function renderPage(preview, page) {
   const frame = AppState.deviceMap[AppState.currentDeviceKey] || { width: 390, height: 844 };
   const screen = document.createElement("div");
   screen.className = "device-screen";
+  
+  // Add runtime-mode-scroll class to hide scrollbar in runtime mode
+  if (AppState.runtimeMode) {
+    screen.classList.add('runtime-mode-scroll');
+  }
+  
   screen.style.width = `${frame.width}px`;
   screen.style.maxWidth = "100%";
   screen.style.height = "auto";
