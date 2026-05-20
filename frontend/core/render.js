@@ -224,13 +224,19 @@ function renderPage(preview, page) {
   screen.style.maxWidth = "100%";
   screen.style.height = "auto";
   screen.style.aspectRatio = `${frame.width}/${frame.height}`;
-  screen.style.backgroundColor = "transparent";
+  
+  // Set screen background to fade-to color
+  const fadeColor = page.backgroundFadeColor || "#ffffff";
+  screen.style.backgroundColor = fadeColor;
 
   const root = document.createElement("div");
   root.className = "page-root";
   root.style.position = "relative";
   root.style.height = "100%";
   root.style.minHeight = "0";
+  
+  // Set root background to fade-to color so it shows through when background layer is transparent
+  root.style.backgroundColor = fadeColor;
   
   // Create background layer
   const backgroundLayer = document.createElement("div");
@@ -244,41 +250,29 @@ function renderPage(preview, page) {
   
   // Handle background type
   const bgType = page.backgroundType || "solid";
-  const fadeColor = page.backgroundFadeColor || "#ffffff";
   const opacity = page.backgroundOpacity !== undefined ? page.backgroundOpacity : 1;
   
   if (bgType === "solid") {
-    // Use layered approach: fade-to color at bottom, original color on top with opacity
-    backgroundLayer.style.backgroundColor = fadeColor;
-    
-    const colorOverlay = document.createElement("div");
-    colorOverlay.style.position = "absolute";
-    colorOverlay.style.top = "0";
-    colorOverlay.style.left = "0";
-    colorOverlay.style.right = "0";
-    colorOverlay.style.bottom = "0";
-    colorOverlay.style.backgroundColor = page.backgroundColor;
-    colorOverlay.style.opacity = opacity;
-    
-    backgroundLayer.appendChild(colorOverlay);
+    // Simple approach: background color with opacity
+    const r = parseInt(page.backgroundColor.substring(1, 3), 16);
+    const g = parseInt(page.backgroundColor.substring(3, 5), 16);
+    const b = parseInt(page.backgroundColor.substring(5, 7), 16);
+    backgroundLayer.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
   } else if (bgType === "gradient") {
     const direction = page.gradientDirection || "horizontal";
     let gradientDirection = "to right";
     if (direction === "vertical") gradientDirection = "to bottom";
     else if (direction === "diagonal") gradientDirection = "to bottom right";
     
-    backgroundLayer.style.backgroundColor = fadeColor;
+    const r1 = parseInt((page.gradientStart || "#2563eb").substring(1, 3), 16);
+    const g1 = parseInt((page.gradientStart || "#2563eb").substring(3, 5), 16);
+    const b1 = parseInt((page.gradientStart || "#2563eb").substring(5, 7), 16);
     
-    const gradientOverlay = document.createElement("div");
-    gradientOverlay.style.position = "absolute";
-    gradientOverlay.style.top = "0";
-    gradientOverlay.style.left = "0";
-    gradientOverlay.style.right = "0";
-    gradientOverlay.style.bottom = "0";
-    gradientOverlay.style.background = `linear-gradient(${gradientDirection}, ${page.gradientStart || "#2563eb"}, ${page.gradientEnd || "#7c3aed"})`;
-    gradientOverlay.style.opacity = opacity;
+    const r2 = parseInt((page.gradientEnd || "#7c3aed").substring(1, 3), 16);
+    const g2 = parseInt((page.gradientEnd || "#7c3aed").substring(3, 5), 16);
+    const b2 = parseInt((page.gradientEnd || "#7c3aed").substring(5, 7), 16);
     
-    backgroundLayer.appendChild(gradientOverlay);
+    backgroundLayer.style.background = `linear-gradient(${gradientDirection}, rgba(${r1}, ${g1}, ${b1}, ${opacity}), rgba(${r2}, ${g2}, ${b2}, ${opacity}))`;
   } else if (bgType === "image" && page.backgroundImage) {
     backgroundLayer.style.backgroundImage = `url(${page.backgroundImage})`;
     
@@ -304,18 +298,10 @@ function renderPage(preview, page) {
       backgroundLayer.style.filter = `blur(${page.backgroundBlur}px)`;
     }
   } else {
-    backgroundLayer.style.backgroundColor = fadeColor;
-    
-    const colorOverlay = document.createElement("div");
-    colorOverlay.style.position = "absolute";
-    colorOverlay.style.top = "0";
-    colorOverlay.style.left = "0";
-    colorOverlay.style.right = "0";
-    colorOverlay.style.bottom = "0";
-    colorOverlay.style.backgroundColor = page.backgroundColor;
-    colorOverlay.style.opacity = opacity;
-    
-    backgroundLayer.appendChild(colorOverlay);
+    const r = parseInt(page.backgroundColor.substring(1, 3), 16);
+    const g = parseInt(page.backgroundColor.substring(3, 5), 16);
+    const b = parseInt(page.backgroundColor.substring(5, 7), 16);
+    backgroundLayer.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
   }
   
   root.appendChild(backgroundLayer);
