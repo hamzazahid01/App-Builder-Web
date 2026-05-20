@@ -65,7 +65,7 @@ window.PageManager = {
     toggleBtn.type = 'button';
     toggleBtn.className = 'page-toggle-btn';
     toggleBtn.title = 'Show page actions';
-    toggleBtn.textContent = '⚙';
+    toggleBtn.textContent = '▼';
     toggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       const panel = row.parentElement;
@@ -82,19 +82,19 @@ window.PageManager = {
 
     const controls = document.createElement("div"); controls.className = "page-controls";
 
-    const up = document.createElement("button"); up.type = "button"; up.className = "page-mini-btn"; up.textContent = "↑";
+    const up = document.createElement("button"); up.type = "button"; up.className = "page-mini-btn"; up.textContent = "◀";
     up.addEventListener("click", (e) => { e.stopPropagation(); this.reorderPage(page.id, -1); });
 
-    const down = document.createElement("button"); down.type = "button"; down.className = "page-mini-btn"; down.textContent = "↓";
+    const down = document.createElement("button"); down.type = "button"; down.className = "page-mini-btn"; down.textContent = "▶";
     down.addEventListener("click", (e) => { e.stopPropagation(); this.reorderPage(page.id, 1); });
 
-    const copy = document.createElement("button"); copy.type = "button"; copy.className = "page-mini-btn"; copy.textContent = "⎘";
+    const copy = document.createElement("button"); copy.type = "button"; copy.className = "page-mini-btn"; copy.textContent = "📋";
     copy.addEventListener("click", (e) => { e.stopPropagation(); this.duplicatePage(page.id); });
 
     const rename = document.createElement('button'); rename.type = 'button'; rename.className = 'page-mini-btn'; rename.textContent = '✎';
     rename.addEventListener('click', (e) => { e.stopPropagation(); this._startRename(page, btn, row); });
 
-    const del = document.createElement("button"); del.type = "button"; del.className = "page-mini-btn danger"; del.textContent = "×";
+    const del = document.createElement("button"); del.type = "button"; del.className = "page-mini-btn danger"; del.textContent = "🗑";
     del.addEventListener("click", (e) => {
       e.stopPropagation();
       if (AppState.app.pages.length <= 1) { this.showConfirm('Deleting this page will remove your only page. Are you sure?', () => {} , 'OK', 'Cancel'); return; }
