@@ -311,8 +311,18 @@ function renderPage(preview, page) {
   contentLayer.className = "page-content-layer";
   contentLayer.style.position = "relative";
   contentLayer.style.zIndex = "1";
-  contentLayer.style.height = "100%";
-  contentLayer.style.minHeight = "0";
+  
+  // Handle scroll - set height based on scroll setting
+  if (page.scroll !== false) {
+    // When scroll is enabled, don't constrain height to allow content to grow
+    contentLayer.style.height = "auto";
+    contentLayer.style.minHeight = "100%";
+  } else {
+    // When scroll is disabled, constrain height to fit within container
+    contentLayer.style.height = "100%";
+    contentLayer.style.minHeight = "0";
+  }
+  
   applySpacing(contentLayer, "padding", page.layout.padding);
   
   // Handle safe area padding
@@ -342,8 +352,17 @@ function renderPage(preview, page) {
   body.style.position = "relative";
   body.style.flex = "1";
   body.style.width = "100%";
-  body.style.minHeight = "0";
-  body.style.height = "100%";
+  
+  // Handle scroll - set height based on scroll setting
+  if (page.scroll !== false) {
+    // When scroll is enabled, don't constrain height to allow content to grow
+    body.style.height = "auto";
+    body.style.minHeight = "0";
+  } else {
+    // When scroll is disabled, constrain height to fit within container
+    body.style.height = "100%";
+    body.style.minHeight = "0";
+  }
 
   if (!AppState.runtimeMode && page.components.length === 0) {
     const hint = document.createElement("div");
