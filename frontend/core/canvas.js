@@ -66,46 +66,41 @@ window.CanvasUtils = {
     const page = StateUtils.getCurrentPage();
     if (!page) return null;
 
-    const groupCanvases = [...document.querySelectorAll(".group-inner-canvas")]
-      .map((el) => {
-        const comp = StateUtils.findById(page.components, el.dataset.groupId);
-        return { el, z: comp?.layout?.zIndex ?? 0, comp };
-      });
+    // Use elementFromPoint to find the actual element under cursor
+    const element = document.elementFromPoint(clientX, clientY);
+    if (!element) {
+      return this.getFallbackTarget(clientX, clientY, page);
+    }
 
-    // Find the deepest nested canvas that contains the point
-    let bestMatch = null;
-    let maxDepth = 0;
+    // Traverse up to find the closest group-inner-canvas
+    let current = element;
+    let closestGroupCanvas = null;
 
-    for (const { el, comp } of groupCanvases) {
-      const rect = el.getBoundingClientRect();
-      if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) continue;
-      if (!comp) continue;
-
-      // Calculate nesting depth
-      let depth = 0;
-      let parent = el.parentElement;
-      while (parent) {
-        if (parent.classList.contains("group-inner-canvas")) {
-          depth++;
-        }
-        parent = parent.parentElement;
+    while (current && current !== document.body) {
+      if (current.classList.contains("group-inner-canvas")) {
+        closestGroupCanvas = current;
+        break;
       }
+      current = current.parentElement;
+    }
 
-      // Prefer deeper nested canvases
-      if (depth > maxDepth) {
-        maxDepth = depth;
+    if (closestGroupCanvas) {
+      const comp = StateUtils.findById(page.components, closestGroupCanvas.dataset.groupId);
+      if (comp) {
         if (!comp.children) comp.children = [];
-        bestMatch = {
+        return {
           kind: "group",
-          canvasEl: el,
+          canvasEl: closestGroupCanvas,
           parentComponent: comp,
           list: comp.children
         };
       }
     }
 
-    if (bestMatch) return bestMatch;
+    return this.getFallbackTarget(clientX, clientY, page);
+  },
 
+  getFallbackTarget(clientX, clientY, page) {
     const pageCanvas = document.querySelector(".page-canvas");
     if (!pageCanvas) return null;
     const rect = pageCanvas.getBoundingClientRect();
