@@ -30,7 +30,7 @@ window.GroupComponent.render = function(component) {
   innerCanvas.style.bottom = "0";
   innerCanvas.style.overflow = "visible";
   innerCanvas.style.pointerEvents = "none";
-  innerCanvas.style.zIndex = "1";
+  innerCanvas.style.zIndex = "0";
   el.appendChild(innerCanvas);
 
   // Render children if GroupChildren module exists
