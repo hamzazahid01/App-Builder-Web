@@ -15,7 +15,7 @@ window.GroupComponent.render = function(component) {
   el.style.boxSizing = "border-box";
   el.style.width = "100%";
   el.style.height = "100%";
-  el.style.position = "relative";
+  el.style.pointerEvents = "none";
 
   // Create inner canvas for children
   const innerCanvas = document.createElement("div");
@@ -28,7 +28,7 @@ window.GroupComponent.render = function(component) {
   innerCanvas.style.right = "0";
   innerCanvas.style.bottom = "0";
   innerCanvas.style.overflow = "visible";
-  innerCanvas.style.pointerEvents = "none";
+  innerCanvas.style.pointerEvents = "auto";
   innerCanvas.style.zIndex = "0";
   el.appendChild(innerCanvas);
 
