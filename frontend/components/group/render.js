@@ -31,24 +31,6 @@ window.GroupComponent.render = function(component) {
   innerCanvas.style.zIndex = "0";
   el.appendChild(innerCanvas);
 
-  // Handle pointer events for drag/drop
-  el.addEventListener("pointerdown", (e) => {
-    if (AppState.runtimeMode) return;
-    if (e.button !== 0) return;
-    // Disable inner canvas pointer events during drag
-    innerCanvas.style.pointerEvents = "none";
-  });
-
-  el.addEventListener("pointerup", (e) => {
-    // Re-enable inner canvas pointer events after drag
-    innerCanvas.style.pointerEvents = "auto";
-  });
-
-  el.addEventListener("pointercancel", (e) => {
-    // Re-enable inner canvas pointer events on cancel
-    innerCanvas.style.pointerEvents = "auto";
-  });
-
   // Render children if GroupChildren module exists
   if (window.GroupChildren) {
     GroupChildren.render(component, innerCanvas);
