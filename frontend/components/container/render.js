@@ -46,6 +46,7 @@ window.ContainerComponent.render = function(component) {
   innerCanvas.addEventListener("pointerdown", (e) => {
     if (AppState.runtimeMode) return;
     if (e.target.closest(".canvas-node")) return;
+    if (e.target.closest(".canvas-node-inner")) return;
     e.stopPropagation();
     selectNode(component, e);
   });
@@ -54,6 +55,7 @@ window.ContainerComponent.render = function(component) {
     if (AppState.runtimeMode) return;
     if (AppState.suppressCanvasClickUntil && Date.now() < AppState.suppressCanvasClickUntil) return;
     if (e.target.closest(".canvas-node")) return;
+    if (e.target.closest(".canvas-node-inner")) return;
     e.stopPropagation();
     selectNode(component, e);
   });
