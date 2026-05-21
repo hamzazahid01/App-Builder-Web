@@ -401,10 +401,10 @@ function renderPage(preview, page) {
     body.style.height = "auto";
     body.style.minHeight = "100%";
     
-    // If manual height is set in preview mode, use it
+    // If manual height is set in preview mode, use it and clear minHeight
     if (!AppState.runtimeMode && page.scrollManualHeight) {
       body.style.height = `${page.scrollManualHeight}px`;
-      body.style.minHeight = `${page.scrollManualHeight}px`;
+      body.style.minHeight = "auto";
     }
   } else {
     // When scroll is disabled, constrain height to fit within container
