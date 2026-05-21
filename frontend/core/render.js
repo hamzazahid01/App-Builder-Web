@@ -250,6 +250,7 @@ function renderPage(preview, page) {
     // If manual height is set in preview mode, use it
     if (!AppState.runtimeMode && page.scrollManualHeight) {
       screen.style.height = `${page.scrollManualHeight}px`;
+      screen.style.minHeight = `${page.scrollManualHeight}px`;
     }
   } else {
     // When scroll is disabled, use aspect ratio to constrain height
