@@ -284,10 +284,9 @@ function renderPage(preview, page) {
   root.style.height = "100%";
   root.style.minHeight = "0";
   
-  // If manual height is set in preview mode, allow root to expand
+  // Add manual-height class when manual height is set
   if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
-    root.style.height = "auto";
-    root.style.minHeight = "0";
+    root.classList.add('manual-height');
   }
   
   // Set root background to fade-to color so it shows through when background layer is transparent

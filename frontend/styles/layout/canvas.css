@@ -148,6 +148,11 @@
   overflow: hidden;
 }
 
+/* Allow page-root to expand when manual height is set */
+.page-root.manual-height {
+  overflow: visible;
+}
+
 .page-canvas {
   position: relative;
   width: 100%;
