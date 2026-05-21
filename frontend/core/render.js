@@ -413,6 +413,11 @@ function renderPage(preview, page) {
   body.style.flex = "1";
   body.style.width = "100%";
   
+  // Add manual-height class when manual height is set
+  if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
+    body.classList.add('manual-height');
+  }
+  
   // Handle scroll - set height based on scroll setting
   if (page.scroll !== false) {
     // When scroll is enabled, don't constrain height to allow content to grow

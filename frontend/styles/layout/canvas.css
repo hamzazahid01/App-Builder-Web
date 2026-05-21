@@ -162,6 +162,11 @@
   overflow: hidden;
 }
 
+/* Allow page-canvas to expand when manual height is set */
+.page-canvas.manual-height {
+  overflow: visible;
+}
+
 .canvas-hint {
   position: absolute;
   inset: 0;
