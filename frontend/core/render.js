@@ -221,6 +221,11 @@ function renderPage(preview, page) {
   const screen = document.createElement("div");
   screen.className = "device-screen";
   
+  // Add scroll-enabled class when scroll is enabled
+  if (page.scroll !== false) {
+    screen.classList.add('scroll-enabled');
+  }
+  
   // Add runtime-mode-scroll class to hide scrollbar in runtime mode
   if (AppState.runtimeMode) {
     screen.classList.add('runtime-mode-scroll');
@@ -228,13 +233,21 @@ function renderPage(preview, page) {
   
   screen.style.width = `${frame.width}px`;
   screen.style.maxWidth = "100%";
-  screen.style.height = "auto";
-  screen.style.aspectRatio = `${frame.width}/${frame.height}`;
   
-  // If manual height is set in preview mode, override aspectRatio
-  if (!AppState.runtimeMode && page.scrollManualHeight) {
+  // Set screen height based on scroll and manual height settings
+  if (page.scroll !== false) {
+    // When scroll is enabled, let content determine height
+    screen.style.height = "auto";
     screen.style.aspectRatio = "none";
-    screen.style.height = `${page.scrollManualHeight}px`;
+    
+    // If manual height is set in preview mode, use it
+    if (!AppState.runtimeMode && page.scrollManualHeight) {
+      screen.style.height = `${page.scrollManualHeight}px`;
+    }
+  } else {
+    // When scroll is disabled, use aspect ratio to constrain height
+    screen.style.height = "auto";
+    screen.style.aspectRatio = `${frame.width}/${frame.height}`;
   }
   
   // Set screen background to fade-to color
@@ -406,7 +419,8 @@ function renderPage(preview, page) {
       } else {
         // Use manual height in preview mode only
         body.style.height = `${page.scrollManualHeight}px`;
-        body.style.minHeight = "0"; // Clear minHeight to allow manual height to work
+        body.style.minHeight = `${page.scrollManualHeight}px`; // Ensure minimum height matches
+        body.style.maxHeight = `${page.scrollManualHeight}px`; // Also set max height
       }
     }
   }
