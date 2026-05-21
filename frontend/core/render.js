@@ -359,6 +359,11 @@ function renderPage(preview, page) {
     // When scroll is enabled, don't constrain height to allow content to grow
     contentLayer.style.height = "auto";
     contentLayer.style.minHeight = "100%";
+    
+    // If manual height is set in preview mode, clear minHeight to allow manual height
+    if (!AppState.runtimeMode && page.scrollManualHeight) {
+      contentLayer.style.minHeight = "auto";
+    }
   } else {
     // When scroll is disabled, constrain height to fit within container
     contentLayer.style.height = "100%";
