@@ -224,14 +224,7 @@ function renderPage(preview, page) {
     preview.classList.remove('scroll-enabled');
   }
   
-  // If manual height is set in preview mode, set it on preview
-  if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
-    preview.style.height = `${page.scrollManualHeight}px`;
-    preview.style.minHeight = `${page.scrollManualHeight}px`;
-  } else {
-    preview.style.height = "";
-    preview.style.minHeight = "";
-  }
+  // Don't set height on preview when manual height is set - let screen determine height
 
   const frame = AppState.deviceMap[AppState.currentDeviceKey] || { width: 390, height: 844 };
   const screen = document.createElement("div");
@@ -255,6 +248,11 @@ function renderPage(preview, page) {
     // When scroll is enabled, let content determine height
     screen.style.height = "auto";
     screen.style.aspectRatio = "none";
+    
+    // If manual height is set in preview mode, set it on screen
+    if (!AppState.runtimeMode && page.scrollManualHeight) {
+      screen.style.height = `${page.scrollManualHeight}px`;
+    }
   } else {
     // When scroll is disabled, use aspect ratio to constrain height
     screen.style.height = "auto";
