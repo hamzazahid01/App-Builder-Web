@@ -29,6 +29,11 @@
   border-radius: 48px;
 }
 
+/* Allow preview-frame-wrap to expand when manual height is set */
+.preview-frame-wrap.scroll-enabled {
+  align-items: flex-start;
+}
+
 .mobile-preview {
   width: auto;
   height: auto;

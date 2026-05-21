@@ -224,6 +224,16 @@ function renderPage(preview, page) {
     preview.classList.remove('scroll-enabled');
   }
   
+  // Add scroll-enabled class to preview-frame-wrap when scroll is enabled
+  const frameWrap = preview.closest('.preview-frame-wrap');
+  if (frameWrap) {
+    if (page.scroll !== false) {
+      frameWrap.classList.add('scroll-enabled');
+    } else {
+      frameWrap.classList.remove('scroll-enabled');
+    }
+  }
+  
   // Don't set height on preview when manual height is set - let screen determine height
 
   const frame = AppState.deviceMap[AppState.currentDeviceKey] || { width: 390, height: 844 };
@@ -363,8 +373,9 @@ function renderPage(preview, page) {
     contentLayer.style.height = "auto";
     contentLayer.style.minHeight = "100%";
     
-    // If manual height is set in preview mode, clear minHeight to allow manual height
+    // If manual height is set in preview mode, use it on contentLayer
     if (!AppState.runtimeMode && page.scrollManualHeight) {
+      contentLayer.style.height = `${page.scrollManualHeight}px`;
       contentLayer.style.minHeight = "auto";
     }
   } else {
@@ -427,31 +438,6 @@ function renderPage(preview, page) {
     body.appendChild(hint);
   } else {
     renderComponentsOnCanvas(page.components, body);
-    
-    // Calculate body height based on component positions when scroll is enabled
-    if (page.scroll !== false && page.components.length > 0) {
-      // In runtime mode, always use dynamic height (auto-expand for dynamic content)
-      // In preview mode, use manual height if set, otherwise use dynamic
-      if (AppState.runtimeMode || !page.scrollManualHeight) {
-        let maxBottom = 0;
-        page.components.forEach(component => {
-          if (component.layout) {
-            const bottom = component.layout.y + component.layout.height;
-            if (bottom > maxBottom) {
-              maxBottom = bottom;
-            }
-          }
-        });
-        
-        // Set body height to accommodate all components with some extra space
-        if (maxBottom > 0) {
-          body.style.height = `${maxBottom + 200}px`;
-        }
-      } else {
-        // Use manual height in preview mode only
-        body.style.height = `${page.scrollManualHeight}px`;
-      }
-    }
   }
 
   contentLayer.appendChild(body);
