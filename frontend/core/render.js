@@ -216,6 +216,13 @@ function blendColors(hex1, hex2, opacity) {
 function renderPage(preview, page) {
   preview.innerHTML = "";
   preview.style.backgroundColor = "";
+  
+  // Add scroll-enabled class to preview when scroll is enabled
+  if (page.scroll !== false) {
+    preview.classList.add('scroll-enabled');
+  } else {
+    preview.classList.remove('scroll-enabled');
+  }
 
   const frame = AppState.deviceMap[AppState.currentDeviceKey] || { width: 390, height: 844 };
   const screen = document.createElement("div");
@@ -259,6 +266,12 @@ function renderPage(preview, page) {
   root.style.position = "relative";
   root.style.height = "100%";
   root.style.minHeight = "0";
+  
+  // If manual height is set in preview mode, allow root to expand
+  if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
+    root.style.height = "auto";
+    root.style.minHeight = "0";
+  }
   
   // Set root background to fade-to color so it shows through when background layer is transparent
   root.style.backgroundColor = fadeColor;
@@ -342,6 +355,12 @@ function renderPage(preview, page) {
     // When scroll is enabled, don't constrain height to allow content to grow
     contentLayer.style.height = "auto";
     contentLayer.style.minHeight = "100%";
+    
+    // If manual height is set in preview mode, use it
+    if (!AppState.runtimeMode && page.scrollManualHeight) {
+      contentLayer.style.height = `${page.scrollManualHeight}px`;
+      contentLayer.style.minHeight = "0";
+    }
   } else {
     // When scroll is disabled, constrain height to fit within container
     contentLayer.style.height = "100%";

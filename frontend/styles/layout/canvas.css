@@ -44,6 +44,11 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* Allow mobile-preview to expand when scroll is enabled */
+.mobile-preview.scroll-enabled {
+  overflow: visible;
+}
+
 .device-screen {
   position: relative;
   display: flex;
