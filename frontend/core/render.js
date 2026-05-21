@@ -223,6 +223,15 @@ function renderPage(preview, page) {
   } else {
     preview.classList.remove('scroll-enabled');
   }
+  
+  // If manual height is set in preview mode, set it on preview
+  if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
+    preview.style.height = `${page.scrollManualHeight}px`;
+    preview.style.minHeight = `${page.scrollManualHeight}px`;
+  } else {
+    preview.style.height = "";
+    preview.style.minHeight = "";
+  }
 
   const frame = AppState.deviceMap[AppState.currentDeviceKey] || { width: 390, height: 844 };
   const screen = document.createElement("div");
@@ -251,6 +260,7 @@ function renderPage(preview, page) {
     if (!AppState.runtimeMode && page.scrollManualHeight) {
       screen.style.height = `${page.scrollManualHeight}px`;
       screen.style.minHeight = `${page.scrollManualHeight}px`;
+      screen.style.maxHeight = `${page.scrollManualHeight}px`;
     }
   } else {
     // When scroll is disabled, use aspect ratio to constrain height
