@@ -231,6 +231,12 @@ function renderPage(preview, page) {
   screen.style.height = "auto";
   screen.style.aspectRatio = `${frame.width}/${frame.height}`;
   
+  // If manual height is set in preview mode, override aspectRatio
+  if (!AppState.runtimeMode && page.scrollManualHeight) {
+    screen.style.aspectRatio = "none";
+    screen.style.height = `${page.scrollManualHeight}px`;
+  }
+  
   // Set screen background to fade-to color
   const fadeColor = page.backgroundFadeColor || "#ffffff";
   screen.style.backgroundColor = fadeColor;
