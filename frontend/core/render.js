@@ -235,6 +235,11 @@ function renderPage(preview, page) {
     screen.classList.add('scroll-enabled');
   }
   
+  // Add manual-height class when manual height is set in preview mode
+  if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
+    screen.classList.add('manual-height');
+  }
+  
   // Add runtime-mode-scroll class to hide scrollbar in runtime mode
   if (AppState.runtimeMode) {
     screen.classList.add('runtime-mode-scroll');

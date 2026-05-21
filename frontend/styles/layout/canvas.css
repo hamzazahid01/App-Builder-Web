@@ -67,6 +67,11 @@
   overflow: auto;
 }
 
+/* Allow screen to expand when manual height is set */
+.device-screen.manual-height {
+  overflow: visible;
+}
+
 .device-screen::before {
   content: '';
   position: absolute;
