@@ -255,13 +255,6 @@ function renderPage(preview, page) {
     // When scroll is enabled, let content determine height
     screen.style.height = "auto";
     screen.style.aspectRatio = "none";
-    
-    // If manual height is set in preview mode, use it
-    if (!AppState.runtimeMode && page.scrollManualHeight) {
-      screen.style.height = `${page.scrollManualHeight}px`;
-      screen.style.minHeight = `${page.scrollManualHeight}px`;
-      screen.style.maxHeight = `${page.scrollManualHeight}px`;
-    }
   } else {
     // When scroll is disabled, use aspect ratio to constrain height
     screen.style.height = "auto";
@@ -366,12 +359,6 @@ function renderPage(preview, page) {
     // When scroll is enabled, don't constrain height to allow content to grow
     contentLayer.style.height = "auto";
     contentLayer.style.minHeight = "100%";
-    
-    // If manual height is set in preview mode, use it
-    if (!AppState.runtimeMode && page.scrollManualHeight) {
-      contentLayer.style.height = `${page.scrollManualHeight}px`;
-      contentLayer.style.minHeight = "0";
-    }
   } else {
     // When scroll is disabled, constrain height to fit within container
     contentLayer.style.height = "100%";
@@ -413,6 +400,12 @@ function renderPage(preview, page) {
     // When scroll is enabled, don't constrain height to allow content to grow
     body.style.height = "auto";
     body.style.minHeight = "100%";
+    
+    // If manual height is set in preview mode, use it
+    if (!AppState.runtimeMode && page.scrollManualHeight) {
+      body.style.height = `${page.scrollManualHeight}px`;
+      body.style.minHeight = `${page.scrollManualHeight}px`;
+    }
   } else {
     // When scroll is disabled, constrain height to fit within container
     body.style.height = "100%";
@@ -449,8 +442,6 @@ function renderPage(preview, page) {
       } else {
         // Use manual height in preview mode only
         body.style.height = `${page.scrollManualHeight}px`;
-        body.style.minHeight = `${page.scrollManualHeight}px`; // Ensure minimum height matches
-        body.style.maxHeight = `${page.scrollManualHeight}px`; // Also set max height
       }
     }
   }
