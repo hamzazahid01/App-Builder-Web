@@ -350,7 +350,6 @@ function renderPage(preview, page) {
   contentLayer.className = "page-content-layer";
   contentLayer.style.position = "relative";
   contentLayer.style.zIndex = "1";
-  contentLayer.style.overflow = "auto";
   
   // Handle scroll - set height based on scroll setting
   if (page.scroll !== false) {
@@ -423,6 +422,11 @@ function renderPage(preview, page) {
     body.appendChild(hint);
   } else {
     renderComponentsOnCanvas(page.components, body);
+    
+    // When manual height is set in preview mode, ensure body has that height
+    if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
+      body.style.height = `${page.scrollManualHeight}px`;
+    }
   }
 
   contentLayer.appendChild(body);
