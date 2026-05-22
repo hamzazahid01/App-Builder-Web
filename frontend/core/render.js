@@ -485,9 +485,6 @@ window.applyDeviceFrame = function applyDeviceFrame(deviceKey) {
     const device = AppState.deviceMap[deviceKey] || AppState.deviceMap["iphone-14"];
     const deviceSize = { width: device.width - 24, height: device.height - 100 };
     
-    // Calculate scale factor for styles
-    const scaleFactor = CanvasUtils.getScaleFactor(deviceKey);
-    
     function updateComponentLayouts(components) {
       components.forEach(comp => {
         if (comp.layout?.layoutPercent) {
@@ -500,7 +497,10 @@ window.applyDeviceFrame = function applyDeviceFrame(deviceKey) {
           }
         }
         
-        // Scale styles based on device change
+        // Scale styles based on device change using component's createdOnDevice
+        const createdOnDevice = comp.layout?.createdOnDevice || AppState.app.baseDevice || "iphone-14";
+        const scaleFactor = CanvasUtils.getScaleFactor(deviceKey, createdOnDevice);
+        
         if (comp.styles && comp.originalStyles) {
           comp.styles = CanvasUtils.scaleStyles(comp.originalStyles, scaleFactor);
         } else if (comp.styles && !comp.originalStyles) {

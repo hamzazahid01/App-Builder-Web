@@ -120,6 +120,10 @@ window.StateUtils = {
             height: Math.max(0.01, Math.min(1, comp.layout.height / baseDevice.height))
           };
         }
+        // Store createdOnDevice for existing components (default to iphone-14)
+        if (comp.layout && !comp.layout.createdOnDevice) {
+          comp.layout.createdOnDevice = "iphone-14";
+        }
         // Store original styles for responsive scaling
         if (comp.styles && !comp.originalStyles) {
           comp.originalStyles = { ...comp.styles };

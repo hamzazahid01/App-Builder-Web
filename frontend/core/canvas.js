@@ -42,8 +42,8 @@ window.CanvasUtils = {
   },
 
   // Calculate scale factor between devices
-  getScaleFactor(targetDeviceKey, baseDeviceKey = null) {
-    const baseKey = baseDeviceKey || AppState.app.baseDevice || "iphone-14";
+  getScaleFactor(targetDeviceKey, createdOnDeviceKey = null) {
+    const baseKey = createdOnDeviceKey || AppState.app.baseDevice || "iphone-14";
     const baseDevice = AppState.deviceMap[baseKey];
     const targetDevice = AppState.deviceMap[targetDeviceKey];
     

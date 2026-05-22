@@ -33,6 +33,9 @@ window.ComponentFactory = {
     const size = this.getDefaultLayout(type);
     const layout = { x, y, width: size.width, height: size.height, zIndex };
     
+    // Store the device this component was created on
+    layout.createdOnDevice = AppState.currentDeviceKey || "iphone-14";
+    
     // Calculate percentages if device size is provided
     if (deviceSize) {
       layout.layoutPercent = {
