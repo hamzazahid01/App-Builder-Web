@@ -76,21 +76,23 @@ window.SnapGuide = {
         left: ${Math.min(x1, x2)}px;
         top: ${y1}px;
         width: ${Math.abs(x2 - x1)}px;
-        height: ${isCenter ? 2 : 1}px;
-        background-color: ${isCenter ? '#818cf8' : '#6366f1'};
-        opacity: ${isCenter ? 0.9 : 0.8};
+        height: ${isCenter ? 1 : 1}px;
+        background: linear-gradient(90deg, transparent, ${isCenter ? '#818cf8' : '#6366f1'} 20%, ${isCenter ? '#818cf8' : '#6366f1'} 80%, transparent);
+        opacity: ${isCenter ? 0.7 : 0.5};
         pointer-events: none;
+        box-shadow: 0 0 4px rgba(99, 102, 241, 0.3);
       `;
     } else {
       line.style.cssText = `
         position: absolute;
         left: ${x1}px;
         top: ${Math.min(y1, y2)}px;
-        width: ${isCenter ? 2 : 1}px;
+        width: ${isCenter ? 1 : 1}px;
         height: ${Math.abs(y2 - y1)}px;
-        background-color: ${isCenter ? '#818cf8' : '#6366f1'};
-        opacity: ${isCenter ? 0.9 : 0.8};
+        background: linear-gradient(180deg, transparent, ${isCenter ? '#818cf8' : '#6366f1'} 20%, ${isCenter ? '#818cf8' : '#6366f1'} 80%, transparent);
+        opacity: ${isCenter ? 0.7 : 0.5};
         pointer-events: none;
+        box-shadow: 0 0 4px rgba(99, 102, 241, 0.3);
       `;
     }
     
