@@ -253,32 +253,22 @@ window.SnapGuide = {
     components.forEach(comp => {
       if (comp.id === excludeId || !comp.layout) return;
 
-      // Width snapping - only compare with components above/below (vertically aligned)
-      if (currentLayout && Math.abs(width - comp.layout.width) <= this.SNAP_THRESHOLD) {
-        // Check if components are vertically aligned (overlap in Y axis)
-        const verticalOverlap = !(comp.layout.y + comp.layout.height < currentLayout.y || 
-                                 comp.layout.y > currentLayout.y + currentLayout.height);
-        if (verticalOverlap) {
-          snaps.push({ 
-            type: "width", 
-            value: comp.layout.width,
-            line: { x1: comp.layout.x, y1: comp.layout.y, x2: comp.layout.x + comp.layout.width, y2: comp.layout.y }
-          });
-        }
+      // Width snapping - compare with all components regardless of alignment
+      if (Math.abs(width - comp.layout.width) <= this.SNAP_THRESHOLD) {
+        snaps.push({ 
+          type: "width", 
+          value: comp.layout.width,
+          line: { x1: comp.layout.x, y1: comp.layout.y, x2: comp.layout.x + comp.layout.width, y2: comp.layout.y }
+        });
       }
 
-      // Height snapping - only compare with components left/right (horizontally aligned)
-      if (currentLayout && Math.abs(height - comp.layout.height) <= this.SNAP_THRESHOLD) {
-        // Check if components are horizontally aligned (overlap in X axis)
-        const horizontalOverlap = !(comp.layout.x + comp.layout.width < currentLayout.x || 
-                                   comp.layout.x > currentLayout.x + currentLayout.width);
-        if (horizontalOverlap) {
-          snaps.push({ 
-            type: "height", 
-            value: comp.layout.height,
-            line: { x1: comp.layout.x, y1: comp.layout.y, x2: comp.layout.x, y2: comp.layout.y + comp.layout.height }
-          });
-        }
+      // Height snapping - compare with all components regardless of alignment
+      if (Math.abs(height - comp.layout.height) <= this.SNAP_THRESHOLD) {
+        snaps.push({ 
+          type: "height", 
+          value: comp.layout.height,
+          line: { x1: comp.layout.x, y1: comp.layout.y, x2: comp.layout.x, y2: comp.layout.y + comp.layout.height }
+        });
       }
     });
 

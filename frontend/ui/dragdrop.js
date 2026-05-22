@@ -265,7 +265,7 @@ window.DragDrop = {
       
       let sizeSnaps = [];
       if (AppState.snapEnabled) {
-        sizeSnaps = SnapGuide.calculateSizeSnaps(next.width, next.height, page.components, component.id, next);
+        sizeSnaps = SnapGuide.calculateSizeSnaps(next.width, next.height, page.components, component.id);
       }
       
       if (sizeSnaps.length > 0) {
