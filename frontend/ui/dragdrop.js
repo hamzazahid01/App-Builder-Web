@@ -216,9 +216,13 @@ window.DragDrop = {
       // Calculate snaps for placement
       const layout = { x: clamped.x, y: clamped.y, width: session.layout.width, height: session.layout.height };
       const page = StateUtils.getCurrentPage();
-      const centerSnaps = SnapGuide.calculateCenterSnap(layout, cs);
-      const elementSnaps = SnapGuide.calculateElementSnaps(layout, page.components);
-      const allSnaps = [...centerSnaps, ...elementSnaps];
+      
+      let allSnaps = [];
+      if (AppState.snapEnabled) {
+        const centerSnaps = SnapGuide.calculateCenterSnap(layout, cs);
+        const elementSnaps = SnapGuide.calculateElementSnaps(layout, page.components);
+        allSnaps = [...centerSnaps, ...elementSnaps];
+      }
       
       if (allSnaps.length > 0) {
         const snapped = SnapGuide.applySnaps(layout, allSnaps, cs);
@@ -258,7 +262,11 @@ window.DragDrop = {
       
       // Calculate size snaps
       const page = StateUtils.getCurrentPage();
-      const sizeSnaps = SnapGuide.calculateSizeSnaps(next.width, next.height, page.components, component.id, next);
+      
+      let sizeSnaps = [];
+      if (AppState.snapEnabled) {
+        sizeSnaps = SnapGuide.calculateSizeSnaps(next.width, next.height, page.components, component.id, next);
+      }
       
       if (sizeSnaps.length > 0) {
         sizeSnaps.forEach(snap => {
@@ -293,9 +301,13 @@ window.DragDrop = {
       // Calculate snaps for move
       const layout = { x: clamped.x, y: clamped.y, width: component.layout.width, height: component.layout.height };
       const page = StateUtils.getCurrentPage();
-      const centerSnaps = SnapGuide.calculateCenterSnap(layout, cs);
-      const elementSnaps = SnapGuide.calculateElementSnaps(layout, page.components, component.id);
-      const allSnaps = [...centerSnaps, ...elementSnaps];
+      
+      let allSnaps = [];
+      if (AppState.snapEnabled) {
+        const centerSnaps = SnapGuide.calculateCenterSnap(layout, cs);
+        const elementSnaps = SnapGuide.calculateElementSnaps(layout, page.components, component.id);
+        allSnaps = [...centerSnaps, ...elementSnaps];
+      }
       
       if (allSnaps.length > 0) {
         const snapped = SnapGuide.applySnaps(layout, allSnaps, cs);

@@ -40,6 +40,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const zoomInBtn = document.getElementById("zoom-in-btn");
   const zoomOutBtn = document.getElementById("zoom-out-btn");
   const zoomValue = document.getElementById("zoom-value");
+  const snapToggleBtn = document.getElementById("snap-toggle-btn");
   let zoomLevel = 1;
 
   function applyZoom(value) {
@@ -53,6 +54,17 @@ window.addEventListener("DOMContentLoaded", () => {
 
   zoomInBtn?.addEventListener("click", () => applyZoom(zoomLevel + 0.1));
   zoomOutBtn?.addEventListener("click", () => applyZoom(zoomLevel - 0.1));
+
+  snapToggleBtn?.addEventListener("click", () => {
+    AppState.snapEnabled = !AppState.snapEnabled;
+    snapToggleBtn.style.opacity = AppState.snapEnabled ? "1" : "0.4";
+    Toast.show(AppState.snapEnabled ? "Snapping enabled" : "Snapping disabled");
+  });
+
+  // Set initial button state
+  if (snapToggleBtn) {
+    snapToggleBtn.style.opacity = AppState.snapEnabled ? "1" : "0.4";
+  }
 
   themeToggle?.addEventListener("click", () => {
     const isLight = document.body.classList.toggle("theme-light");

@@ -26,6 +26,7 @@ window.AppState = {
   clipboard: null,
   previewZoom: 1,
   snapToGrid: true,
+  snapEnabled: true,
   currentDeviceKey: "iphone-14",
   runtimeMode: false,
   runtimeSplashTimer: null,
