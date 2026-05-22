@@ -107,6 +107,56 @@ function renderFlutterNode(node, depth = 4) {
   if (!node.layout) return inner;
   const i = "  ".repeat(depth);
   
+  // Use constraint-based layout if available
+  if (node.layout.constraints) {
+    const c = node.layout.constraints;
+    const lp = node.layout.layoutPercent;
+    
+    let width = `width: ${node.layout.width}`;
+    let height = `height: ${node.layout.height}`;
+    
+    // Use FractionallySizedBox for flexible sizing
+    if (!c.fixedWidth && lp) {
+      width = `widthFactor: ${lp.width.toFixed(2)}`;
+    }
+    if (!c.fixedHeight && lp) {
+      height = `heightFactor: ${lp.height.toFixed(2)}`;
+    }
+    
+    // Center alignment
+    if (c.centerX) {
+      return `${i}Center(
+${i}  child: SizedBox(
+${i}    ${width},
+${i}    ${height},
+${i}    child: ${inner.trim()},
+${i}  ),
+${i})`;
+    }
+    
+    // Use FractionallySizedBox for responsive sizing
+    if (lp && (!c.fixedWidth || !c.fixedHeight)) {
+      return `${i}Positioned(
+${i}  left: ${node.layout.x},
+${i}  top: ${node.layout.y},
+${i}  child: FractionallySizedBox(
+${i}    ${!c.fixedWidth ? `widthFactor: ${lp.width.toFixed(2)},` : `width: ${node.layout.width},`}
+${i}    ${!c.fixedHeight ? `heightFactor: ${lp.height.toFixed(2)},` : `height: ${node.layout.height},`}
+${i}    child: ${inner.trim()},
+${i}  ),
+${i})`;
+    }
+    
+    // Fallback to fixed pixel layout
+    return `${i}Positioned(
+${i}  left: ${node.layout.x},
+${i}  top: ${node.layout.y},
+${i}  width: ${node.layout.width},
+${i}  height: ${node.layout.height},
+${i}  child: ${inner.trim()},
+${i})`;
+  }
+  
   // Use FractionallySizedBox for percentage-based responsive layout
   if (node.layout.layoutPercent) {
     const lp = node.layout.layoutPercent;

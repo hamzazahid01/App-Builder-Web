@@ -53,7 +53,53 @@ window.CanvasUtils = {
     return targetDevice.width / baseDevice.width;
   },
 
-  // Scale style values based on device change
+  // Calculate layout based on constraints when device changes
+  applyConstraints(layout, originalDeviceSize, newDeviceSize) {
+    if (!layout || !layout.constraints) return layout;
+    
+    const c = layout.constraints;
+    const newLayout = { ...layout };
+    
+    // Calculate scale factor
+    const scaleX = newDeviceSize.width / originalDeviceSize.width;
+    const scaleY = newDeviceSize.height / originalDeviceSize.height;
+    
+    // Handle horizontal positioning
+    if (c.centerX) {
+      newLayout.x = Math.round((newDeviceSize.width - layout.width) / 2);
+    } else if (c.pinRight) {
+      // Calculate distance from right edge
+      const rightDistance = originalDeviceSize.width - layout.x - layout.width;
+      newLayout.x = Math.round(newDeviceSize.width - (rightDistance * scaleX) - layout.width);
+    } else if (c.pinLeft) {
+      // Scale x position proportionally
+      newLayout.x = Math.round(layout.x * scaleX);
+    }
+    
+    // Handle vertical positioning
+    if (c.centerY) {
+      newLayout.y = Math.round((newDeviceSize.height - layout.height) / 2);
+    } else if (c.pinBottom) {
+      // Calculate distance from bottom edge
+      const bottomDistance = originalDeviceSize.height - layout.y - layout.height;
+      newLayout.y = Math.round(newDeviceSize.height - (bottomDistance * scaleY) - layout.height);
+    } else if (c.pinTop) {
+      // Scale y position proportionally
+      newLayout.y = Math.round(layout.y * scaleY);
+    }
+    
+    // Handle width
+    if (!c.fixedWidth) {
+      newLayout.width = Math.max(this.MIN_SIZE, Math.round(layout.width * scaleX));
+    }
+    
+    // Handle height
+    if (!c.fixedHeight) {
+      newLayout.height = Math.max(this.MIN_SIZE, Math.round(layout.height * scaleY));
+    }
+    
+    return newLayout;
+  },
   scaleStyles(styles, scaleFactor) {
     if (!styles || scaleFactor === 1) return styles;
     

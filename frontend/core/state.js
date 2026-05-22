@@ -124,6 +124,19 @@ window.StateUtils = {
         if (comp.layout && !comp.layout.createdOnDevice) {
           comp.layout.createdOnDevice = "iphone-14";
         }
+        // Add constraints for existing components (default: pin to top-left with fixed size)
+        if (comp.layout && !comp.layout.constraints) {
+          comp.layout.constraints = {
+            pinLeft: true,
+            pinRight: false,
+            pinTop: true,
+            pinBottom: false,
+            fixedWidth: true,
+            fixedHeight: true,
+            centerX: false,
+            centerY: false
+          };
+        }
         // Store original styles for responsive scaling
         if (comp.styles && !comp.originalStyles) {
           comp.originalStyles = { ...comp.styles };

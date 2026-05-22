@@ -36,6 +36,18 @@ window.ComponentFactory = {
     // Store the device this component was created on
     layout.createdOnDevice = AppState.currentDeviceKey || "iphone-14";
     
+    // Add constraints (default: pin to top-left with fixed size)
+    layout.constraints = {
+      pinLeft: true,
+      pinRight: false,
+      pinTop: true,
+      pinBottom: false,
+      fixedWidth: true,
+      fixedHeight: true,
+      centerX: false,
+      centerY: false
+    };
+    
     // Calculate percentages if device size is provided
     if (deviceSize) {
       layout.layoutPercent = {
