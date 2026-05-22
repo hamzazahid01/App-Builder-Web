@@ -13,6 +13,7 @@ window.DragDrop = {
 
   initCanvasDropzone() {
     DragDropCanvas.init();
+    SnapGuide.init();
     document.addEventListener("pointermove", (e) => this.onPointerMove(e));
     document.addEventListener("pointerup", (e) => this.onPointerUp(e));
     document.addEventListener("pointercancel", (e) => this.onPointerUp(e));
@@ -129,6 +130,12 @@ window.DragDrop = {
     if (this.session) this.cancelSession();
     this.session = session;
     document.body.classList.add("canvas-dragging");
+    
+    // Attach snap guide overlay to canvas
+    if (session.canvasEl) {
+      SnapGuide.attachToCanvas(session.canvasEl);
+      SnapGuide.show();
+    }
   },
 
   updateGhost(x, y, w, h, label, canvasEl) {
@@ -205,9 +212,26 @@ window.DragDrop = {
       const clamped = CanvasUtils.clampToBounds(
         x, y, session.layout.width, session.layout.height, cs.width, cs.height
       );
-      session.pendingX = clamped.x;
-      session.pendingY = clamped.y;
-      this.updateGhost(clamped.x, clamped.y, session.layout.width, session.layout.height, session.type, canvas);
+      
+      // Calculate snaps for placement
+      const layout = { x: clamped.x, y: clamped.y, width: session.layout.width, height: session.layout.height };
+      const page = StateUtils.getCurrentPage();
+      const centerSnaps = SnapGuide.calculateCenterSnap(layout, cs);
+      const elementSnaps = SnapGuide.calculateElementSnaps(layout, page.components);
+      const allSnaps = [...centerSnaps, ...elementSnaps];
+      
+      if (allSnaps.length > 0) {
+        const snapped = SnapGuide.applySnaps(layout, allSnaps, cs);
+        session.pendingX = snapped.x;
+        session.pendingY = snapped.y;
+        SnapGuide.renderGuides(allSnaps, cs);
+      } else {
+        session.pendingX = clamped.x;
+        session.pendingY = clamped.y;
+        SnapGuide.clearGuides();
+      }
+      
+      this.updateGhost(session.pendingX, session.pendingY, session.layout.width, session.layout.height, session.type, canvas);
       return;
     }
 
@@ -231,6 +255,18 @@ window.DragDrop = {
       const dy = e.clientY - session.startClientY;
       const next = CanvasUtils.applyResize(session.startLayout, session.handle, dx, dy);
       const cs = CanvasUtils.getCanvasSize(session.canvasEl);
+      
+      // Calculate size snaps
+      const page = StateUtils.getCurrentPage();
+      const sizeSnaps = SnapGuide.calculateSizeSnaps(next.width, next.height, page.components, component.id);
+      
+      if (sizeSnaps.length > 0) {
+        sizeSnaps.forEach(snap => {
+          if (snap.type === "width") next.width = snap.value;
+          if (snap.type === "height") next.height = snap.value;
+        });
+      }
+      
       const clamped = CanvasUtils.clampToBounds(
         next.x, next.y, next.width, next.height, cs.width, cs.height
       );
@@ -250,8 +286,25 @@ window.DragDrop = {
         cs.width,
         cs.height
       );
-      component.layout.x = clamped.x;
-      component.layout.y = clamped.y;
+      
+      // Calculate snaps for move
+      const layout = { x: clamped.x, y: clamped.y, width: component.layout.width, height: component.layout.height };
+      const page = StateUtils.getCurrentPage();
+      const centerSnaps = SnapGuide.calculateCenterSnap(layout, cs);
+      const elementSnaps = SnapGuide.calculateElementSnaps(layout, page.components, component.id);
+      const allSnaps = [...centerSnaps, ...elementSnaps];
+      
+      if (allSnaps.length > 0) {
+        const snapped = SnapGuide.applySnaps(layout, allSnaps, cs);
+        component.layout.x = snapped.x;
+        component.layout.y = snapped.y;
+        SnapGuide.renderGuides(allSnaps, cs);
+      } else {
+        component.layout.x = clamped.x;
+        component.layout.y = clamped.y;
+        SnapGuide.clearGuides();
+      }
+      
       if (session.wrapperEl) {
         CanvasUtils.applyLayoutToWrapper(session.wrapperEl, component.layout);
         session.wrapperEl.classList.add("is-dragging");
@@ -337,6 +390,7 @@ window.DragDrop = {
   finishSession(commitHistory) {
     document.body.classList.remove("canvas-dragging", "canvas-placing", "canvas-resizing");
     this.removeGhost();
+    SnapGuide.hide();
     this.session = null;
     AppState.suppressCanvasClickUntil = Date.now() + 120;
     if (commitHistory) StateUtils.pushHistorySnapshot();
@@ -346,6 +400,7 @@ window.DragDrop = {
   cancelSession() {
     document.body.classList.remove("canvas-dragging", "canvas-placing", "canvas-resizing");
     this.removeGhost();
+    SnapGuide.hide();
     this.session = null;
   },
 
