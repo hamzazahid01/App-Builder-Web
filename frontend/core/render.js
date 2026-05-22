@@ -485,6 +485,9 @@ window.applyDeviceFrame = function applyDeviceFrame(deviceKey) {
     const device = AppState.deviceMap[deviceKey] || AppState.deviceMap["iphone-14"];
     const deviceSize = { width: device.width - 24, height: device.height - 100 };
     
+    // Calculate scale factor for styles
+    const scaleFactor = CanvasUtils.getScaleFactor(deviceKey);
+    
     function updateComponentLayouts(components) {
       components.forEach(comp => {
         if (comp.layout?.layoutPercent) {
@@ -496,6 +499,15 @@ window.applyDeviceFrame = function applyDeviceFrame(deviceKey) {
             comp.layout.height = pixelLayout.height;
           }
         }
+        
+        // Scale styles based on device change
+        if (comp.styles && comp.originalStyles) {
+          comp.styles = CanvasUtils.scaleStyles(comp.originalStyles, scaleFactor);
+        } else if (comp.styles && !comp.originalStyles) {
+          // Store original styles on first device change
+          comp.originalStyles = { ...comp.styles };
+        }
+        
         // Recursively update nested components (groups)
         if (comp.children && comp.children.length > 0) {
           updateComponentLayouts(comp.children);

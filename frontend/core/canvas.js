@@ -41,6 +41,60 @@ window.CanvasUtils = {
     };
   },
 
+  // Calculate scale factor between devices
+  getScaleFactor(targetDeviceKey, baseDeviceKey = null) {
+    const baseKey = baseDeviceKey || AppState.app.baseDevice || "iphone-14";
+    const baseDevice = AppState.deviceMap[baseKey];
+    const targetDevice = AppState.deviceMap[targetDeviceKey];
+    
+    if (!baseDevice || !targetDevice) return 1;
+    
+    // Use width as primary scale factor (height can vary more between devices)
+    return targetDevice.width / baseDevice.width;
+  },
+
+  // Scale style values based on device change
+  scaleStyles(styles, scaleFactor) {
+    if (!styles || scaleFactor === 1) return styles;
+    
+    const scaled = { ...styles };
+    
+    // Scale numeric style properties
+    const scalableProps = [
+      'fontSize', 'padding', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight',
+      'margin', 'marginTop', 'marginBottom', 'marginLeft', 'marginRight',
+      'borderWidth', 'borderRadius', 'borderTopWidth', 'borderBottomWidth',
+      'borderLeftWidth', 'borderRightWidth', 'lineHeight', 'letterSpacing'
+    ];
+    
+    scalableProps.forEach(prop => {
+      if (typeof scaled[prop] === 'number') {
+        scaled[prop] = Math.max(1, Math.round(scaled[prop] * scaleFactor));
+      }
+    });
+    
+    // Scale padding/margin objects
+    if (scaled.padding && typeof scaled.padding === 'object') {
+      scaled.padding = {
+        top: Math.max(1, Math.round((scaled.padding.top || 0) * scaleFactor)),
+        right: Math.max(1, Math.round((scaled.padding.right || 0) * scaleFactor)),
+        bottom: Math.max(1, Math.round((scaled.padding.bottom || 0) * scaleFactor)),
+        left: Math.max(1, Math.round((scaled.padding.left || 0) * scaleFactor))
+      };
+    }
+    
+    if (scaled.margin && typeof scaled.margin === 'object') {
+      scaled.margin = {
+        top: Math.max(1, Math.round((scaled.margin.top || 0) * scaleFactor)),
+        right: Math.max(1, Math.round((scaled.margin.right || 0) * scaleFactor)),
+        bottom: Math.max(1, Math.round((scaled.margin.bottom || 0) * scaleFactor)),
+        left: Math.max(1, Math.round((scaled.margin.left || 0) * scaleFactor))
+      };
+    }
+    
+    return scaled;
+  },
+
   clampToBounds(x, y, width, height, maxW, maxH) {
     const safeW = Math.max(this.MIN_SIZE * 2, maxW || 0);
     const safeH = Math.max(this.MIN_SIZE * 2, maxH || 0);

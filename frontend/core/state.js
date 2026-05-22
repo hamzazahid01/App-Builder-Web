@@ -4,6 +4,7 @@ window.AppState = {
     theme: "light",
     primaryColor: "#2563eb",
     fontFamily: "Inter",
+    baseDevice: "iphone-14",
     splashScreen: {
       enabled: true,
       backgroundColor: "#111827",
@@ -118,6 +119,10 @@ window.StateUtils = {
             width: Math.max(0.01, Math.min(1, comp.layout.width / baseDevice.width)),
             height: Math.max(0.01, Math.min(1, comp.layout.height / baseDevice.height))
           };
+        }
+        // Store original styles for responsive scaling
+        if (comp.styles && !comp.originalStyles) {
+          comp.originalStyles = { ...comp.styles };
         }
         // Recursively migrate nested components (groups)
         if (comp.children && comp.children.length > 0) {
