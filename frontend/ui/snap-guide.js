@@ -77,10 +77,10 @@ window.SnapGuide = {
         top: ${y1}px;
         width: ${Math.abs(x2 - x1)}px;
         height: ${isCenter ? 1 : 1}px;
-        background: linear-gradient(90deg, transparent, ${isCenter ? '#818cf8' : '#6366f1'} 20%, ${isCenter ? '#818cf8' : '#6366f1'} 80%, transparent);
+        background: linear-gradient(90deg, transparent, ${isCenter ? '#06b6d4' : '#0891b2'} 20%, ${isCenter ? '#06b6d4' : '#0891b2'} 80%, transparent);
         opacity: ${isCenter ? 0.7 : 0.5};
         pointer-events: none;
-        box-shadow: 0 0 4px rgba(99, 102, 241, 0.3);
+        box-shadow: 0 0 4px rgba(6, 182, 212, 0.3);
       `;
     } else {
       line.style.cssText = `
@@ -89,10 +89,10 @@ window.SnapGuide = {
         top: ${Math.min(y1, y2)}px;
         width: ${isCenter ? 1 : 1}px;
         height: ${Math.abs(y2 - y1)}px;
-        background: linear-gradient(180deg, transparent, ${isCenter ? '#818cf8' : '#6366f1'} 20%, ${isCenter ? '#818cf8' : '#6366f1'} 80%, transparent);
+        background: linear-gradient(180deg, transparent, ${isCenter ? '#06b6d4' : '#0891b2'} 20%, ${isCenter ? '#06b6d4' : '#0891b2'} 80%, transparent);
         opacity: ${isCenter ? 0.7 : 0.5};
         pointer-events: none;
-        box-shadow: 0 0 4px rgba(99, 102, 241, 0.3);
+        box-shadow: 0 0 4px rgba(6, 182, 212, 0.3);
       `;
     }
     
