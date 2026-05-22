@@ -351,6 +351,11 @@ function renderPage(preview, page) {
   contentLayer.style.position = "relative";
   contentLayer.style.zIndex = "1";
   
+  // Add scrollbar-hidden class if scrollbar visibility is disabled
+  if (page.scrollbarVisible === false) {
+    contentLayer.classList.add('scrollbar-hidden');
+  }
+  
   // Handle scroll - set height based on scroll setting
   if (page.scroll !== false) {
     // When scroll is enabled, set contentLayer to manual height or frame height

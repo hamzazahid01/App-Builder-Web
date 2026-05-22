@@ -88,6 +88,7 @@ window.StateUtils = {
       orientation: "portrait",
       safeAreaPadding: true,
       scroll: true,
+      scrollbarVisible: true,
       appBar: {
         enabled: true,
         title: name,

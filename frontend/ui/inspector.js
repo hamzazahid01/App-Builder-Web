@@ -121,6 +121,14 @@ function buildSimplePagePanel(panel, page) {
       Builder.refreshAll();
     })));
     
+    // Show scrollbar visibility option only when scroll is enabled
+    if (page.scroll !== false) {
+      content.appendChild(createField("Show Scrollbar", createCheckbox(page.scrollbarVisible !== false, (v) => {
+        page.scrollbarVisible = v;
+        renderPreview();
+      })));
+    }
+    
     // Show manual height option only when scroll is enabled
     if (page.scroll !== false) {
       const frame = AppState.deviceMap[AppState.currentDeviceKey] || { width: 390, height: 844 };

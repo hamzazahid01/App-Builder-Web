@@ -135,6 +135,16 @@
   -ms-overflow-style: none;
 }
 
+/* Hide scrollbar when scrollbarVisible is false */
+.page-content-layer.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+.page-content-layer.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 .page-root {
   flex: 1;
   display: flex;
