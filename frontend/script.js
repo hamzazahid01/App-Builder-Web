@@ -15,6 +15,7 @@ window.addEventListener("DOMContentLoaded", () => {
   StateUtils.restoreFromLocal();
   StateUtils.ensureBootstrap();
   ComponentFactory.migrateApp(AppState.app);
+  StateUtils.migrateComponentLayouts();
   AppState.selectedType = "page";
 
   const titleLabel = document.getElementById("app-title-label");

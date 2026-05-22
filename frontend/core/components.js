@@ -29,9 +29,21 @@ window.ComponentFactory = {
     return { ...(DEFAULT_CANVAS_LAYOUTS[type] || { width: 260, height: 120 }) };
   },
 
-  createLayout(type, x = 16, y = 16, zIndex = 1) {
+  createLayout(type, x = 16, y = 16, zIndex = 1, deviceSize = null) {
     const size = this.getDefaultLayout(type);
-    return { x, y, width: size.width, height: size.height, zIndex };
+    const layout = { x, y, width: size.width, height: size.height, zIndex };
+    
+    // Calculate percentages if device size is provided
+    if (deviceSize) {
+      layout.layoutPercent = {
+        x: x / deviceSize.width,
+        y: y / deviceSize.height,
+        width: size.width / deviceSize.width,
+        height: size.height / deviceSize.height
+      };
+    }
+    
+    return layout;
   },
 
   createBase(type) {

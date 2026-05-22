@@ -105,6 +105,32 @@ window.StateUtils = {
     };
   },
 
+  migrateComponentLayouts() {
+    // Migrate existing pixel layouts to percentage-based layouts
+    const baseDevice = AppState.deviceMap["iphone-14"] || { width: 390, height: 844 };
+    
+    function migrateComponents(components) {
+      components.forEach(comp => {
+        if (comp.layout && !comp.layout.layoutPercent) {
+          comp.layout.layoutPercent = {
+            x: Math.max(0, Math.min(1, comp.layout.x / baseDevice.width)),
+            y: Math.max(0, Math.min(1, comp.layout.y / baseDevice.height)),
+            width: Math.max(0.01, Math.min(1, comp.layout.width / baseDevice.width)),
+            height: Math.max(0.01, Math.min(1, comp.layout.height / baseDevice.height))
+          };
+        }
+        // Recursively migrate nested components (groups)
+        if (comp.children && comp.children.length > 0) {
+          migrateComponents(comp.children);
+        }
+      });
+    }
+    
+    AppState.app.pages.forEach(page => {
+      migrateComponents(page.components);
+    });
+  },
+
   getCurrentPage() {
     return AppState.app.pages.find((p) => p.id === AppState.app.currentPageId) || null;
   },

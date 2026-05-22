@@ -19,6 +19,28 @@ window.CanvasUtils = {
     };
   },
 
+  // Convert pixel layout to percentage (0-1)
+  pixelsToPercent(layout, deviceSize) {
+    if (!deviceSize) return null;
+    return {
+      x: Math.max(0, Math.min(1, layout.x / deviceSize.width)),
+      y: Math.max(0, Math.min(1, layout.y / deviceSize.height)),
+      width: Math.max(0.01, Math.min(1, layout.width / deviceSize.width)),
+      height: Math.max(0.01, Math.min(1, layout.height / deviceSize.height))
+    };
+  },
+
+  // Convert percentage (0-1) to pixel layout
+  percentToPixels(layoutPercent, deviceSize) {
+    if (!layoutPercent || !deviceSize) return null;
+    return {
+      x: Math.round(layoutPercent.x * deviceSize.width),
+      y: Math.round(layoutPercent.y * deviceSize.height),
+      width: Math.max(this.MIN_SIZE, Math.round(layoutPercent.width * deviceSize.width)),
+      height: Math.max(this.MIN_SIZE, Math.round(layoutPercent.height * deviceSize.height))
+    };
+  },
+
   clampToBounds(x, y, width, height, maxW, maxH) {
     const safeW = Math.max(this.MIN_SIZE * 2, maxW || 0);
     const safeH = Math.max(this.MIN_SIZE * 2, maxH || 0);

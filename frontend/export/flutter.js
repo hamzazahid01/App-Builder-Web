@@ -106,6 +106,22 @@ function renderFlutterNode(node, depth = 4) {
   const inner = renderFlutterNodeInner(node, depth + 2);
   if (!node.layout) return inner;
   const i = "  ".repeat(depth);
+  
+  // Use FractionallySizedBox for percentage-based responsive layout
+  if (node.layout.layoutPercent) {
+    const lp = node.layout.layoutPercent;
+    return `${i}Positioned(
+${i}  left: ${node.layout.x},
+${i}  top: ${node.layout.y},
+${i}  child: FractionallySizedBox(
+${i}    widthFactor: ${lp.width.toFixed(2)},
+${i}    heightFactor: ${lp.height.toFixed(2)},
+${i}    child: ${inner.trim()},
+${i}  ),
+${i})`;
+  }
+  
+  // Fallback to fixed pixel layout
   return `${i}Positioned(
 ${i}  left: ${node.layout.x},
 ${i}  top: ${node.layout.y},

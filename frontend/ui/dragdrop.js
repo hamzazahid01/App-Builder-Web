@@ -235,6 +235,12 @@ window.DragDrop = {
         SnapGuide.clearGuides();
       }
       
+      // Update percentages for placement
+      session.layoutPercent = CanvasUtils.pixelsToPercent(
+        { x: session.pendingX, y: session.pendingY, width: session.layout.width, height: session.layout.height },
+        cs
+      );
+      
       this.updateGhost(session.pendingX, session.pendingY, session.layout.width, session.layout.height, session.type, canvas);
       return;
     }
@@ -290,10 +296,14 @@ window.DragDrop = {
         SnapGuide.hideTooltip();
       }
       
+      // Update percentages for resize
+      next.layoutPercent = CanvasUtils.pixelsToPercent(next, cs);
+      
       const clamped = CanvasUtils.clampToBounds(
         next.x, next.y, next.width, next.height, cs.width, cs.height
       );
       Object.assign(component.layout, clamped);
+      component.layout.layoutPercent = next.layoutPercent;
       if (session.wrapperEl) CanvasUtils.applyLayoutToWrapper(session.wrapperEl, component.layout);
       return;
     }
@@ -331,6 +341,9 @@ window.DragDrop = {
         component.layout.y = clamped.y;
         SnapGuide.clearGuides();
       }
+      
+      // Update percentages for move
+      component.layout.layoutPercent = CanvasUtils.pixelsToPercent(component.layout, cs);
       
       if (session.wrapperEl) {
         CanvasUtils.applyLayoutToWrapper(session.wrapperEl, component.layout);
@@ -407,6 +420,10 @@ window.DragDrop = {
     component.layout.y = clamped.y;
     component.layout.width = clamped.width;
     component.layout.height = clamped.height;
+    
+    // Calculate and store percentages
+    component.layout.layoutPercent = CanvasUtils.pixelsToPercent(component.layout, bounds);
+    
     component.layout.zIndex = StateUtils.getNextZIndexInList(list);
     list.push(component);
 

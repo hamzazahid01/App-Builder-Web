@@ -477,6 +477,34 @@ window.applyDeviceFrame = function applyDeviceFrame(deviceKey) {
   const preview = document.getElementById("mobile-preview");
   if (!preview) return;
   preview.dataset.device = deviceKey;
+  
+  // Recalculate component layouts from percentages when device changes
+  const page = StateUtils.getCurrentPage();
+  if (page) {
+    const pageCanvas = document.querySelector(".page-canvas");
+    const deviceSize = CanvasUtils.getCanvasSize(pageCanvas);
+    
+    function updateComponentLayouts(components) {
+      components.forEach(comp => {
+        if (comp.layout?.layoutPercent) {
+          const pixelLayout = CanvasUtils.percentToPixels(comp.layout.layoutPercent, deviceSize);
+          if (pixelLayout) {
+            comp.layout.x = pixelLayout.x;
+            comp.layout.y = pixelLayout.y;
+            comp.layout.width = pixelLayout.width;
+            comp.layout.height = pixelLayout.height;
+          }
+        }
+        // Recursively update nested components (groups)
+        if (comp.children && comp.children.length > 0) {
+          updateComponentLayouts(comp.children);
+        }
+      });
+    }
+    
+    updateComponentLayouts(page.components);
+  }
+  
   renderPreview();
 };
 
