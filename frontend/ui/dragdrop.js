@@ -265,6 +265,9 @@ window.DragDrop = {
           if (snap.type === "width") next.width = snap.value;
           if (snap.type === "height") next.height = snap.value;
         });
+        SnapGuide.renderGuides(sizeSnaps, cs);
+      } else {
+        SnapGuide.clearGuides();
       }
       
       const clamped = CanvasUtils.clampToBounds(

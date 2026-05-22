@@ -198,12 +198,20 @@ window.SnapGuide = {
 
       // Width snapping
       if (Math.abs(width - comp.layout.width) <= this.SNAP_THRESHOLD) {
-        snaps.push({ type: "width", value: comp.layout.width });
+        snaps.push({ 
+          type: "width", 
+          value: comp.layout.width,
+          line: { x1: comp.layout.x, y1: comp.layout.y, x2: comp.layout.x + comp.layout.width, y2: comp.layout.y }
+        });
       }
 
       // Height snapping
       if (Math.abs(height - comp.layout.height) <= this.SNAP_THRESHOLD) {
-        snaps.push({ type: "height", value: comp.layout.height });
+        snaps.push({ 
+          type: "height", 
+          value: comp.layout.height,
+          line: { x1: comp.layout.x, y1: comp.layout.y, x2: comp.layout.x, y2: comp.layout.y + comp.layout.height }
+        });
       }
     });
 
