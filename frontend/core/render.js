@@ -350,6 +350,7 @@ function renderPage(preview, page) {
   contentLayer.className = "page-content-layer";
   contentLayer.style.position = "relative";
   contentLayer.style.zIndex = "1";
+  contentLayer.style.overflow = "auto";
   
   // Handle scroll - set height based on scroll setting
   if (page.scroll !== false) {
