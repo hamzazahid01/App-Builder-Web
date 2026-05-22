@@ -355,7 +355,9 @@ function renderPage(preview, page) {
   if (page.scroll !== false) {
     // When scroll is enabled, set contentLayer to manual height or frame height
     if (!AppState.runtimeMode && page.scrollManualHeight) {
-      contentLayer.style.height = `${page.scrollManualHeight}px`;
+      // Ensure manual height is at least device height
+      const effectiveHeight = Math.max(page.scrollManualHeight, frame.height);
+      contentLayer.style.height = `${effectiveHeight}px`;
     } else {
       contentLayer.style.height = `${frame.height}px`;
     }
@@ -403,10 +405,11 @@ function renderPage(preview, page) {
     body.style.height = "auto";
     body.style.minHeight = "100%";
     
-    // If manual height is set in preview mode, set minHeight to manual height
+    // If manual height is set in preview mode, set minHeight to effective manual height
     // This ensures the scrollable area is at least the specified size
     if (!AppState.runtimeMode && page.scrollManualHeight) {
-      body.style.minHeight = `${page.scrollManualHeight}px`;
+      const effectiveHeight = Math.max(page.scrollManualHeight, frame.height);
+      body.style.minHeight = `${effectiveHeight}px`;
     }
   } else {
     // When scroll is disabled, constrain height to fit within container

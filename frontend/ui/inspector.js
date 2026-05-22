@@ -123,8 +123,11 @@ function buildSimplePagePanel(panel, page) {
     
     // Show manual height option only when scroll is enabled
     if (page.scroll !== false) {
-      content.appendChild(createField("Manual Height (Preview Only)", createStepper(page.scrollManualHeight || 0, (v) => {
-        page.scrollManualHeight = v > 0 ? v : null;
+      const frame = AppState.deviceMap[AppState.currentDeviceKey] || { width: 390, height: 844 };
+      const minHeight = frame.height;
+      content.appendChild(createField("Manual Height (Preview Only)", createStepper(page.scrollManualHeight || minHeight, (v) => {
+        // Ensure manual height is at least device height
+        page.scrollManualHeight = v >= minHeight ? v : minHeight;
         renderPreview();
       })));
     }
