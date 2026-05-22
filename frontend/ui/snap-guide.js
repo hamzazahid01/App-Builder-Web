@@ -8,44 +8,33 @@ window.SnapGuide = {
   },
 
   createOverlay() {
-    // Create SVG overlay for guide lines
-    const overlay = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    // Create div overlay for guide lines (simpler than SVG)
+    const overlay = document.createElement("div");
     overlay.className = "snap-guide-overlay";
-    overlay.style.position = "absolute";
-    overlay.style.top = "0";
-    overlay.style.left = "0";
-    overlay.style.width = "100%";
-    overlay.style.height = "100%";
-    overlay.style.pointerEvents = "none";
-    overlay.style.zIndex = "9999";
-    overlay.style.display = "none";
-    
-    // Add style for guide lines
-    const style = document.createElement("style");
-    style.textContent = `
-      .snap-guide-overlay {
-        overflow: visible;
-      }
-      .snap-guide-line {
-        stroke: #6366f1;
-        stroke-width: 1;
-        stroke-dasharray: 4 2;
-        opacity: 0.8;
-      }
-      .snap-guide-center {
-        stroke: #818cf8;
-        stroke-width: 2;
-        stroke-dasharray: 6 3;
-        opacity: 0.9;
-      }
+    overlay.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+      display: none;
+      overflow: visible;
     `;
-    overlay.appendChild(style);
     
     this.overlay = overlay;
   },
 
   attachToCanvas(canvas) {
     if (!canvas || canvas.contains(this.overlay)) return;
+    
+    // Ensure canvas has relative positioning for absolute overlay
+    const computedStyle = window.getComputedStyle(canvas);
+    if (computedStyle.position === 'static') {
+      canvas.style.position = 'relative';
+    }
+    
     canvas.appendChild(this.overlay);
   },
 
@@ -55,7 +44,9 @@ window.SnapGuide = {
   },
 
   show() {
-    if (this.overlay) this.overlay.style.display = "block";
+    if (this.overlay) {
+      this.overlay.style.display = "block";
+    }
   },
 
   hide() {
@@ -67,7 +58,7 @@ window.SnapGuide = {
 
   clearGuides() {
     if (!this.overlay) return;
-    // Remove all guide lines except the style element
+    // Remove all guide line divs
     const lines = this.overlay.querySelectorAll(".snap-guide-line, .snap-guide-center");
     lines.forEach(line => line.remove());
     this.activeGuides = [];
@@ -76,13 +67,34 @@ window.SnapGuide = {
   drawLine(x1, y1, x2, y2, isCenter = false) {
     if (!this.overlay) return;
     
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", x1);
-    line.setAttribute("y1", y1);
-    line.setAttribute("x2", x2);
-    line.setAttribute("y2", y2);
-    line.className = isCenter ? "snap-guide-center" : "snap-guide-line";
+    const line = document.createElement("div");
+    const isHorizontal = y1 === y2;
     
+    if (isHorizontal) {
+      line.style.cssText = `
+        position: absolute;
+        left: ${Math.min(x1, x2)}px;
+        top: ${y1}px;
+        width: ${Math.abs(x2 - x1)}px;
+        height: ${isCenter ? 2 : 1}px;
+        background-color: ${isCenter ? '#818cf8' : '#6366f1'};
+        opacity: ${isCenter ? 0.9 : 0.8};
+        pointer-events: none;
+      `;
+    } else {
+      line.style.cssText = `
+        position: absolute;
+        left: ${x1}px;
+        top: ${Math.min(y1, y2)}px;
+        width: ${isCenter ? 2 : 1}px;
+        height: ${Math.abs(y2 - y1)}px;
+        background-color: ${isCenter ? '#818cf8' : '#6366f1'};
+        opacity: ${isCenter ? 0.9 : 0.8};
+        pointer-events: none;
+      `;
+    }
+    
+    line.className = isCenter ? "snap-guide-center" : "snap-guide-line";
     this.overlay.appendChild(line);
     this.activeGuides.push(line);
   },
