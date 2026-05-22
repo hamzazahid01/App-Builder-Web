@@ -353,15 +353,14 @@ function renderPage(preview, page) {
   
   // Handle scroll - set height based on scroll setting
   if (page.scroll !== false) {
-    // When scroll is enabled, set contentLayer to screen height to enable scrolling
-    contentLayer.style.height = `${frame.height}px`;
-    contentLayer.style.minHeight = "auto";
-    contentLayer.style.overflow = "auto";
-    
-    // If manual height is set in preview mode, use it on contentLayer
+    // When scroll is enabled, set contentLayer to manual height or frame height
     if (!AppState.runtimeMode && page.scrollManualHeight) {
       contentLayer.style.height = `${page.scrollManualHeight}px`;
+    } else {
+      contentLayer.style.height = `${frame.height}px`;
     }
+    contentLayer.style.minHeight = "auto";
+    contentLayer.style.overflow = "auto";
   } else {
     // When scroll is disabled, constrain height to fit within container
     contentLayer.style.height = "100%";
@@ -400,14 +399,14 @@ function renderPage(preview, page) {
   
   // Handle scroll - set height based on scroll setting
   if (page.scroll !== false) {
-    // When scroll is enabled, don't constrain height to allow content to grow
+    // When scroll is enabled, let body grow based on content
     body.style.height = "auto";
     body.style.minHeight = "100%";
     
-    // If manual height is set in preview mode, use it and clear minHeight
+    // If manual height is set in preview mode, set minHeight to manual height
+    // This ensures the scrollable area is at least the specified size
     if (!AppState.runtimeMode && page.scrollManualHeight) {
-      body.style.height = `${page.scrollManualHeight}px`;
-      body.style.minHeight = "auto";
+      body.style.minHeight = `${page.scrollManualHeight}px`;
     }
   } else {
     // When scroll is disabled, constrain height to fit within container
@@ -423,9 +422,22 @@ function renderPage(preview, page) {
   } else {
     renderComponentsOnCanvas(page.components, body);
     
-    // When manual height is set in preview mode, ensure body has that height
-    if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
-      body.style.height = `${page.scrollManualHeight}px`;
+    // In runtime mode, use dynamic height calculation based on component positions
+    if (AppState.runtimeMode && page.scroll !== false && page.components.length > 0) {
+      let maxBottom = 0;
+      page.components.forEach(component => {
+        if (component.layout) {
+          const bottom = component.layout.y + component.layout.height;
+          if (bottom > maxBottom) {
+            maxBottom = bottom;
+          }
+        }
+      });
+      
+      // Set body height to accommodate all components with some extra space
+      if (maxBottom > 0) {
+        body.style.height = `${maxBottom + 200}px`;
+      }
     }
   }
 
