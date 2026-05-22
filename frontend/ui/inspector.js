@@ -139,7 +139,7 @@ function buildSimplePagePanel(panel, page) {
         renderPreview();
       }, 1, minHeight)));
     }
-  }, false));
+  }, false, null, "screen-settings"));
 
   const hint = document.createElement("p");
   hint.className = "inspector-hint";

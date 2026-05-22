@@ -20,9 +20,14 @@ function createSpacingEditor(title, spacingObj, onChange) {
   return wrap;
 }
 
-function createAccordion(title, buildContentFn, openByDefault = false, section = null) {
+function createAccordion(title, buildContentFn, openByDefault = false, section = null, id = null) {
   const tpl = document.getElementById("accordion-template");
   const root = tpl.content.firstElementChild.cloneNode(true);
+  
+  // Set unique ID for state tracking
+  if (id) {
+    root.dataset.accordionId = id;
+  }
   
   // Set section attribute for color coding
   if (section) {
