@@ -245,11 +245,6 @@ function renderPage(preview, page) {
     screen.classList.add('scroll-enabled');
   }
   
-  // Add manual-height class when manual height is set in preview mode
-  if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
-    screen.classList.add('manual-height');
-  }
-  
   // Add runtime-mode-scroll class to hide scrollbar in runtime mode
   if (AppState.runtimeMode) {
     screen.classList.add('runtime-mode-scroll');
@@ -260,14 +255,9 @@ function renderPage(preview, page) {
   
   // Set screen height based on scroll and manual height settings
   if (page.scroll !== false) {
-    // When scroll is enabled, let content determine height
-    screen.style.height = "auto";
+    // When scroll is enabled, use fixed height from device frame
+    screen.style.height = `${frame.height}px`;
     screen.style.aspectRatio = "none";
-    
-    // If manual height is set in preview mode, set it on screen
-    if (!AppState.runtimeMode && page.scrollManualHeight) {
-      screen.style.height = `${page.scrollManualHeight}px`;
-    }
   } else {
     // When scroll is disabled, use aspect ratio to constrain height
     screen.style.height = "auto";
@@ -283,11 +273,6 @@ function renderPage(preview, page) {
   root.style.position = "relative";
   root.style.height = "100%";
   root.style.minHeight = "0";
-  
-  // Add manual-height class when manual height is set
-  if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
-    root.classList.add('manual-height');
-  }
   
   // Set root background to fade-to color so it shows through when background layer is transparent
   root.style.backgroundColor = fadeColor;
@@ -412,11 +397,6 @@ function renderPage(preview, page) {
   body.style.position = "relative";
   body.style.flex = "1";
   body.style.width = "100%";
-  
-  // Add manual-height class when manual height is set
-  if (!AppState.runtimeMode && page.scroll !== false && page.scrollManualHeight) {
-    body.classList.add('manual-height');
-  }
   
   // Handle scroll - set height based on scroll setting
   if (page.scroll !== false) {

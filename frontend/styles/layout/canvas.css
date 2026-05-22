@@ -72,11 +72,6 @@
   overflow: auto;
 }
 
-/* Allow screen to expand when manual height is set */
-.device-screen.manual-height {
-  overflow: visible;
-}
-
 .device-screen::before {
   content: '';
   position: absolute;
@@ -148,11 +143,6 @@
   overflow: hidden;
 }
 
-/* Allow page-root to expand when manual height is set */
-.page-root.manual-height {
-  overflow: visible;
-}
-
 .page-canvas {
   position: relative;
   width: 100%;
@@ -160,11 +150,6 @@
   background-image: radial-gradient(circle at 0 0, rgba(139,92,246,0.06) 1px, transparent 0), radial-gradient(circle at 100% 100%, rgba(56,189,248,0.04) 1px, transparent 0);
   background-size: 48px 48px;
   overflow: hidden;
-}
-
-/* Allow page-canvas to expand when manual height is set */
-.page-canvas.manual-height {
-  overflow: visible;
 }
 
 .canvas-hint {
