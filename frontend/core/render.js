@@ -478,7 +478,7 @@ window.applyDeviceFrame = function applyDeviceFrame(deviceKey) {
   if (!preview) return;
   preview.dataset.device = deviceKey;
   
-  // Recalculate component layouts using constraints when device changes
+  // Recalculate component layouts using percentage-based layout when device changes
   const page = StateUtils.getCurrentPage();
   if (page) {
     const targetDevice = AppState.deviceMap[deviceKey] || AppState.deviceMap["iphone-14"];
@@ -486,17 +486,8 @@ window.applyDeviceFrame = function applyDeviceFrame(deviceKey) {
     
     function updateComponentLayouts(components) {
       components.forEach(comp => {
-        if (comp.layout?.constraints) {
-          // Get original device size
-          const createdOnDevice = comp.layout.createdOnDevice || "iphone-14";
-          const originalDevice = AppState.deviceMap[createdOnDevice] || AppState.deviceMap["iphone-14"];
-          const originalDeviceSize = { width: originalDevice.width - 24, height: originalDevice.height - 100 };
-          
-          // Apply constraints to calculate new layout
-          const newLayout = CanvasUtils.applyConstraints(comp.layout, originalDeviceSize, targetDeviceSize);
-          Object.assign(comp.layout, newLayout);
-        } else if (comp.layout?.layoutPercent) {
-          // Fallback to percentage-based for components without constraints
+        if (comp.layout?.layoutPercent) {
+          // Use percentage-based layout (simpler and more reliable)
           const pixelLayout = CanvasUtils.percentToPixels(comp.layout.layoutPercent, targetDeviceSize);
           if (pixelLayout) {
             comp.layout.x = pixelLayout.x;
