@@ -7,6 +7,26 @@
   padding-right: 4px;
 }
 
+/* Professional scrollbar for component library */
+.component-categories::-webkit-scrollbar {
+  width: 6px;
+}
+
+.component-categories::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.component-categories::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.4);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.component-categories::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.6);
+}
+
 .component-category {
   border-radius: 24px;
   overflow: hidden;

@@ -112,6 +112,26 @@
 }
 
 /* Hide scrollbar while keeping scroll functionality */
+/* Professional scrollbar for mobile canvas */
+.page-content-layer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.page-content-layer::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.page-content-layer::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.4);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.page-content-layer::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.6);
+}
+
 .device-screen::-webkit-scrollbar {
   width: 0px;
   background: transparent;
