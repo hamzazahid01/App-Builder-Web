@@ -274,8 +274,20 @@ window.DragDrop = {
           if (snap.type === "height") next.height = snap.value;
         });
         SnapGuide.renderGuides(sizeSnaps, cs);
+        
+        // Show dimension tooltip
+        const tooltipText = sizeSnaps.map(s => {
+          if (s.type === "width") return `W: ${Math.round(s.value)}px`;
+          if (s.type === "height") return `H: ${Math.round(s.value)}px`;
+          return '';
+        }).filter(Boolean).join(' | ');
+        if (tooltipText) {
+          const canvasRect = session.canvasEl.getBoundingClientRect();
+          SnapGuide.showTooltip(0, 0, tooltipText);
+        }
       } else {
         SnapGuide.clearGuides();
+        SnapGuide.hideTooltip();
       }
       
       const clamped = CanvasUtils.clampToBounds(

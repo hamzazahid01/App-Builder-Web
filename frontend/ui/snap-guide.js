@@ -2,9 +2,11 @@ window.SnapGuide = {
   SNAP_THRESHOLD: 10,
   overlay: null,
   activeGuides: [],
+  tooltip: null,
 
   init() {
     this.createOverlay();
+    this.createTooltip();
   },
 
   createOverlay() {
@@ -24,6 +26,44 @@ window.SnapGuide = {
     `;
     
     this.overlay = overlay;
+  },
+
+  createTooltip() {
+    const tooltip = document.createElement("div");
+    tooltip.className = "snap-tooltip";
+    tooltip.style.cssText = `
+      position: absolute;
+      background: rgba(15, 23, 42, 0.95);
+      color: #f8fafc;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: 'Inter', sans-serif;
+      pointer-events: none;
+      z-index: 10000;
+      display: none;
+      white-space: nowrap;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    `;
+    this.tooltip = tooltip;
+  },
+
+  showTooltip(x, y, text) {
+    if (!this.tooltip) return;
+    this.tooltip.textContent = text;
+    this.tooltip.style.left = `${x + 10}px`;
+    this.tooltip.style.top = `${y - 30}px`;
+    this.tooltip.style.display = "block";
+    
+    if (this.overlay && !this.overlay.contains(this.tooltip)) {
+      this.overlay.appendChild(this.tooltip);
+    }
+  },
+
+  hideTooltip() {
+    if (this.tooltip) {
+      this.tooltip.style.display = "none";
+    }
   },
 
   attachToCanvas(canvas) {
@@ -53,6 +93,7 @@ window.SnapGuide = {
     if (this.overlay) {
       this.overlay.style.display = "none";
       this.clearGuides();
+      this.hideTooltip();
     }
   },
 
@@ -187,6 +228,20 @@ window.SnapGuide = {
       if (Math.abs(elementCenterY - compCenterY) <= this.SNAP_THRESHOLD) {
         snaps.push({ type: "center-y", value: compCenterY - layout.height / 2, line: { x1: 0, y1: compCenterY, x2: 0, y2: compCenterY } });
       }
+
+      // Corner alignment (top-left, top-right, bottom-left, bottom-right)
+      if (Math.abs(elementLeft - compLeft) <= this.SNAP_THRESHOLD && Math.abs(elementTop - compTop) <= this.SNAP_THRESHOLD) {
+        snaps.push({ type: "corner-tl", value: { x: compLeft, y: compTop }, line: { x1: compLeft, y1: compTop, x2: compLeft, y2: compTop } });
+      }
+      if (Math.abs(elementRight - compRight) <= this.SNAP_THRESHOLD && Math.abs(elementTop - compTop) <= this.SNAP_THRESHOLD) {
+        snaps.push({ type: "corner-tr", value: { x: compRight - layout.width, y: compTop }, line: { x1: compRight, y1: compTop, x2: compRight, y2: compTop } });
+      }
+      if (Math.abs(elementLeft - compLeft) <= this.SNAP_THRESHOLD && Math.abs(elementBottom - compBottom) <= this.SNAP_THRESHOLD) {
+        snaps.push({ type: "corner-bl", value: { x: compLeft, y: compBottom - layout.height }, line: { x1: compLeft, y1: compBottom, x2: compLeft, y2: compBottom } });
+      }
+      if (Math.abs(elementRight - compRight) <= this.SNAP_THRESHOLD && Math.abs(elementBottom - compBottom) <= this.SNAP_THRESHOLD) {
+        snaps.push({ type: "corner-br", value: { x: compRight - layout.width, y: compBottom - layout.height }, line: { x1: compRight, y1: compBottom, x2: compRight, y2: compBottom } });
+      }
     });
 
     return snaps;
@@ -243,6 +298,14 @@ window.SnapGuide = {
         newX = snap.value;
       } else if (snap.type.startsWith("top") || snap.type.startsWith("bottom")) {
         newY = snap.value;
+      } else if (snap.type.startsWith("corner")) {
+        // Corner snaps have object value {x, y}
+        if (typeof snap.value === 'object' && snap.value.x !== undefined) {
+          newX = snap.value.x;
+        }
+        if (typeof snap.value === 'object' && snap.value.y !== undefined) {
+          newY = snap.value.y;
+        }
       }
     });
 
@@ -255,11 +318,36 @@ window.SnapGuide = {
     snaps.forEach(snap => {
       if (snap.line) {
         const isCenter = snap.type.includes("center");
-        // Extend guide lines to full canvas
-        const x1 = snap.line.x1 === 0 ? 0 : snap.line.x1;
-        const y1 = snap.line.y1 === 0 ? 0 : snap.line.y1;
-        const x2 = snap.line.x2 === 0 ? canvasSize.width : snap.line.x2;
-        const y2 = snap.line.y2 === 0 ? canvasSize.height : snap.line.y2;
+        
+        // Limit guide line length to relevant area
+        // For center lines, extend across canvas
+        // For edge alignment, extend with some padding around the snap point
+        let x1, y1, x2, y2;
+        
+        if (isCenter) {
+          // Center lines extend across full canvas
+          x1 = snap.line.x1 === 0 ? 0 : snap.line.x1;
+          y1 = snap.line.y1 === 0 ? 0 : snap.line.y1;
+          x2 = snap.line.x2 === 0 ? canvasSize.width : snap.line.x2;
+          y2 = snap.line.y2 === 0 ? canvasSize.height : snap.line.y2;
+        } else {
+          // Edge alignment lines - extend with 100px padding
+          const padding = 100;
+          if (snap.line.y1 === snap.line.y2) {
+            // Horizontal line
+            x1 = Math.max(0, snap.line.x1 - padding);
+            y1 = snap.line.y1;
+            x2 = Math.min(canvasSize.width, snap.line.x2 + padding);
+            y2 = snap.line.y2;
+          } else {
+            // Vertical line
+            x1 = snap.line.x1;
+            y1 = Math.max(0, snap.line.y1 - padding);
+            x2 = snap.line.x2;
+            y2 = Math.min(canvasSize.height, snap.line.y2 + padding);
+          }
+        }
+        
         this.drawLine(x1, y1, x2, y2, isCenter);
       }
     });
