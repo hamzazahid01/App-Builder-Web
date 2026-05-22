@@ -129,7 +129,7 @@ function buildSimplePagePanel(panel, page) {
         // Ensure manual height is at least device height
         page.scrollManualHeight = v >= minHeight ? v : minHeight;
         renderPreview();
-      })));
+      }, 1, minHeight)));
     }
   }, false));
 

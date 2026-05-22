@@ -54,12 +54,15 @@ function createCheckbox(value, onChange) {
   return input;
 }
 
-function createStepper(value, onChange, step = 1) {
+function createStepper(value, onChange, step = 1, min = null) {
   const wrap = document.createElement("div");
   wrap.className = "stepper";
   const input = document.createElement("input");
   input.type = "number";
   input.step = `${step}`;
+  if (min !== null) {
+    input.min = min;
+  }
   input.value = Number(value ?? 0);
   input.addEventListener("input", (e) => onChange(Number(e.target.value)));
   const btns = document.createElement("div");
