@@ -258,7 +258,7 @@ window.DragDrop = {
       
       // Calculate size snaps
       const page = StateUtils.getCurrentPage();
-      const sizeSnaps = SnapGuide.calculateSizeSnaps(next.width, next.height, page.components, component.id);
+      const sizeSnaps = SnapGuide.calculateSizeSnaps(next.width, next.height, page.components, component.id, next);
       
       if (sizeSnaps.length > 0) {
         sizeSnaps.forEach(snap => {
