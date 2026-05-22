@@ -481,8 +481,9 @@ window.applyDeviceFrame = function applyDeviceFrame(deviceKey) {
   // Recalculate component layouts from percentages when device changes
   const page = StateUtils.getCurrentPage();
   if (page) {
-    const pageCanvas = document.querySelector(".page-canvas");
-    const deviceSize = CanvasUtils.getCanvasSize(pageCanvas);
+    // Use deviceMap to get device size directly (more reliable than DOM)
+    const device = AppState.deviceMap[deviceKey] || AppState.deviceMap["iphone-14"];
+    const deviceSize = { width: device.width - 24, height: device.height - 100 };
     
     function updateComponentLayouts(components) {
       components.forEach(comp => {
