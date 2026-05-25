@@ -112,6 +112,7 @@ window.DragDrop = {
       canvasEl: canvas,
       wrapperEl,
       startLayout: { ...component.layout },
+      startFontSize: component.styles?.fontSize || 16,
       startClientX: e.clientX,
       startClientY: e.clientY,
       moved: true
@@ -304,6 +305,45 @@ window.DragDrop = {
       );
       Object.assign(component.layout, clamped);
       component.layout.layoutPercent = next.layoutPercent;
+      
+      // Mark text component as manually resized and scale font size
+      if (component.type === "text" && component.styles) {
+        component.styles.manuallyResized = true;
+        
+        const originalWidth = session.startLayout.width;
+        const originalHeight = session.startLayout.height;
+        const originalFontSize = session.startFontSize || component.styles.fontSize || 16;
+        
+        // Calculate the ideal font size to fit within new dimensions
+        // First, get current text dimensions at original font size
+        const tempStyles = { ...component.styles, fontSize: originalFontSize };
+        const originalDimensions = CanvasUtils.measureTextDimensions(component.props.value, tempStyles);
+        
+        // Calculate scale factors based on dimension ratios
+        const widthScale = next.width / originalDimensions.width;
+        const heightScale = next.height / originalDimensions.height;
+        
+        // Use the smaller scale factor to ensure text fits in both dimensions
+        const scale = Math.min(widthScale, heightScale);
+        
+        // Apply scale to font size with reasonable limits
+        let newFontSize = Math.max(8, Math.min(200, Math.round(originalFontSize * scale)));
+        
+        // Fine-tune: measure and adjust if still doesn't fit (one iteration for precision)
+        component.styles.fontSize = newFontSize;
+        const newDimensions = CanvasUtils.measureTextDimensions(component.props.value, component.styles);
+        
+        if (newDimensions.width > next.width || newDimensions.height > next.height) {
+          // Still doesn't fit, reduce further
+          const adjustScale = Math.min(
+            next.width / newDimensions.width,
+            next.height / newDimensions.height
+          );
+          newFontSize = Math.max(8, Math.round(newFontSize * adjustScale));
+          component.styles.fontSize = newFontSize;
+        }
+      }
+      
       if (session.wrapperEl) CanvasUtils.applyLayoutToWrapper(session.wrapperEl, component.layout);
       return;
     }

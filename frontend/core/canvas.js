@@ -233,5 +233,43 @@ window.CanvasUtils = {
       parentComponent: null,
       list: page.components
     };
+  },
+
+  measureTextDimensions(text, styles) {
+    if (!text) text = "Text";
+    if (!styles) styles = {};
+
+    const tempEl = document.createElement("div");
+    tempEl.style.position = "absolute";
+    tempEl.style.visibility = "hidden";
+    tempEl.style.whiteSpace = "pre-wrap";
+    tempEl.style.wordBreak = "break-word";
+    tempEl.style.width = "auto";
+    tempEl.style.height = "auto";
+    tempEl.style.padding = "0px";
+    tempEl.style.margin = "0px";
+    tempEl.style.border = "none";
+    tempEl.style.boxSizing = "border-box";
+    tempEl.style.display = "inline-block";
+    tempEl.style.fontFamily = `"${styles.fontFamily || "Inter"}", sans-serif`;
+    tempEl.style.fontSize = `${styles.fontSize || 16}px`;
+    tempEl.style.fontWeight = styles.fontWeight || "400";
+    tempEl.style.fontStyle = styles.fontStyle === "italic" ? "italic" : "normal";
+    tempEl.style.lineHeight = styles.lineHeight || 1.5;
+    tempEl.style.letterSpacing = `${styles.letterSpacing || 0}px`;
+    tempEl.style.wordSpacing = `${styles.wordSpacing || 0}px`;
+    tempEl.style.textAlign = styles.textAlign || "left";
+    tempEl.innerText = text;
+
+    document.body.appendChild(tempEl);
+    const width = tempEl.offsetWidth;
+    const height = tempEl.offsetHeight;
+    document.body.removeChild(tempEl);
+
+    const padding = styles.padding || { top: 0, right: 0, bottom: 0, left: 0 };
+    return {
+      width: Math.max(24, width + (padding.left || 0) + (padding.right || 0)),
+      height: Math.max(24, height + (padding.top || 0) + (padding.bottom || 0))
+    };
   }
 };

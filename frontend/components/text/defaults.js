@@ -62,6 +62,7 @@ window.TextComponent = {
         },
         widthMode: "auto",
         heightMode: "auto",
+        manuallyResized: false,
         rotation: 0,
         overflow: "wrap",
         maxLines: null,
@@ -99,6 +100,12 @@ window.TextComponent = {
       }
     };
     TextStyles.ensure(text);
+    
+    // Auto-size text component based on default content
+    const dimensions = CanvasUtils.measureTextDimensions(text.props.value, text.styles);
+    text.layout.width = dimensions.width;
+    text.layout.height = dimensions.height;
+    
     return text;
   }
 };

@@ -21,6 +21,11 @@ window.TextComponent.buildInspector = function(panel, node) {
     textArea.style.boxSizing = "border-box";
     textArea.addEventListener("input", (e) => {
       node.props.value = e.target.value;
+      // Reset manual resize flag and auto-size text component based on content
+      node.styles.manuallyResized = false;
+      const dimensions = CanvasUtils.measureTextDimensions(node.props.value, node.styles);
+      node.layout.width = dimensions.width;
+      node.layout.height = dimensions.height;
       renderPreview();
     });
     content.appendChild(createField("Text Content", textArea));
@@ -41,14 +46,26 @@ window.TextComponent.buildInspector = function(panel, node) {
         node.styles.fontSize = preset.fontSize;
         node.styles.fontWeight = preset.fontWeight.toString();
         node.styles.lineHeight = preset.lineHeight;
+        // Auto-size text component when text type changes (only if not manually resized)
+        if (!node.styles.manuallyResized) {
+          const dimensions = CanvasUtils.measureTextDimensions(node.props.value, node.styles);
+          node.layout.width = dimensions.width;
+          node.layout.height = dimensions.height;
+        }
       }
       renderPreview();
-    }));
+    })));
   }, true));
 
   panel.appendChild(createAccordion("Typography", (content) => {
     content.appendChild(createField("Font", createFontPicker(node.styles.fontFamily || "Inter", (v) => {
       node.styles.fontFamily = v;
+      // Auto-size text component when font family changes (only if not manually resized)
+      if (!node.styles.manuallyResized) {
+        const dimensions = CanvasUtils.measureTextDimensions(node.props.value, node.styles);
+        node.layout.width = dimensions.width;
+        node.layout.height = dimensions.height;
+      }
       renderPreview();
     })));
 
@@ -59,11 +76,23 @@ window.TextComponent.buildInspector = function(panel, node) {
     const fontSizeSlider = createRangeInput(node.styles.fontSize || 16, 8, 72, 1, (v) => {
       node.styles.fontSize = Math.max(8, Math.round(v));
       fontSizeStepper.querySelector("input").value = node.styles.fontSize;
+      // Auto-size text component when font size changes (only if not manually resized)
+      if (!node.styles.manuallyResized) {
+        const dimensions = CanvasUtils.measureTextDimensions(node.props.value, node.styles);
+        node.layout.width = dimensions.width;
+        node.layout.height = dimensions.height;
+      }
       renderPreview();
     });
     const fontSizeStepper = createStepper(node.styles.fontSize || 16, (v) => {
       node.styles.fontSize = Math.max(8, v);
       fontSizeSlider.value = node.styles.fontSize;
+      // Auto-size text component when font size changes via stepper (only if not manually resized)
+      if (!node.styles.manuallyResized) {
+        const dimensions = CanvasUtils.measureTextDimensions(node.props.value, node.styles);
+        node.layout.width = dimensions.width;
+        node.layout.height = dimensions.height;
+      }
       renderPreview();
     }, 1);
     fontSizeWrapper.appendChild(fontSizeSlider);
@@ -89,16 +118,34 @@ window.TextComponent.buildInspector = function(panel, node) {
 
     content.appendChild(createField("Line Height", createStepper(node.styles.lineHeight || 1.5, (v) => {
       node.styles.lineHeight = Math.max(0.5, v);
+      // Auto-size text component when line height changes (only if not manually resized)
+      if (!node.styles.manuallyResized) {
+        const dimensions = CanvasUtils.measureTextDimensions(node.props.value, node.styles);
+        node.layout.width = dimensions.width;
+        node.layout.height = dimensions.height;
+      }
       renderPreview();
     }, 0.1)));
 
     content.appendChild(createField("Letter Spacing", createStepper(node.styles.letterSpacing || 0, (v) => {
       node.styles.letterSpacing = v;
+      // Auto-size text component when letter spacing changes (only if not manually resized)
+      if (!node.styles.manuallyResized) {
+        const dimensions = CanvasUtils.measureTextDimensions(node.props.value, node.styles);
+        node.layout.width = dimensions.width;
+        node.layout.height = dimensions.height;
+      }
       renderPreview();
     }, 0.5)));
 
     content.appendChild(createField("Word Spacing", createStepper(node.styles.wordSpacing || 0, (v) => {
       node.styles.wordSpacing = v;
+      // Auto-size text component when word spacing changes (only if not manually resized)
+      if (!node.styles.manuallyResized) {
+        const dimensions = CanvasUtils.measureTextDimensions(node.props.value, node.styles);
+        node.layout.width = dimensions.width;
+        node.layout.height = dimensions.height;
+      }
       renderPreview();
     }, 0.5)));
   }, false));
