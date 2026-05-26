@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'widgets/topbar.dart';
+import 'widgets/left_panel.dart';
 
 void main() {
   runApp(const AppBuilderApp());
@@ -45,12 +46,22 @@ class AppBuilderHome extends StatelessWidget {
             onThemeToggle: () => print('Theme toggle clicked'),
             onProfile: () => print('Profile clicked'),
           ),
-          const Expanded(
-            child: Center(
-              child: Text(
-                'Main content area',
-                style: TextStyle(color: Colors.white),
-              ),
+          Expanded(
+            child: Row(
+              children: [
+                LeftPanel(
+                  onAddTemplate: () => print('Add template clicked'),
+                  onAddPage: () => print('Add page clicked'),
+                ),
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      'Main canvas area',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
