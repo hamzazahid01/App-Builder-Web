@@ -144,32 +144,42 @@ class CenterPanel extends StatelessWidget {
   }
 
   Widget _buildZoomControl() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
-        color: Colors.white.withOpacity(0.06),
-      ),
-      child: Row(
-        children: [
-          _buildZoomButton('−'),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              '100%',
-              style: const TextStyle(
-                color: Color(0xFFF8FAFC),
-                fontSize: 12,
-              ),
-            ),
+    return Consumer<AppStateProvider>(
+      builder: (context, provider, child) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white.withOpacity(0.12)),
+            color: Colors.white.withOpacity(0.06),
           ),
-          _buildZoomButton('+'),
-        ],
-      ),
+          child: Row(
+            children: [
+              _buildZoomButton('−', () {
+                final newZoom = (provider.previewZoom - 0.1).clamp(0.5, 2.0);
+                provider.setPreviewZoom(newZoom);
+              }),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  '${(provider.previewZoom * 100).toInt()}%',
+                  style: const TextStyle(
+                    color: Color(0xFFF8FAFC),
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              _buildZoomButton('+', () {
+                final newZoom = (provider.previewZoom + 0.1).clamp(0.5, 2.0);
+                provider.setPreviewZoom(newZoom);
+              }),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildZoomButton(String label) {
+  Widget _buildZoomButton(String label, VoidCallback onTap) {
     return Container(
       width: 28,
       height: 28,
@@ -181,7 +191,7 @@ class CenterPanel extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: onTap,
           child: Center(
             child: Text(
               label,
