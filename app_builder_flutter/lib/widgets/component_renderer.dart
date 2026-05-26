@@ -28,6 +28,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   double? _startY;
   double? _initialX;
   double? _initialY;
+  bool _isDragging = false;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +37,9 @@ class _ComponentRendererState extends State<ComponentRenderer> {
 
     return Consumer<AppStateProvider>(
       builder: (context, provider, child) {
+        final currentPage = provider.getCurrentPage();
+        final otherComponents = currentPage?.components.where((c) => c.id != widget.component.id).toList() ?? [];
+        
         return Positioned(
           left: layout?.x ?? 0,
           top: layout?.y ?? 0,
@@ -47,6 +51,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
               _startY = details.globalPosition.dy;
               _initialX = layout?.x;
               _initialY = layout?.y;
+              setState(() => _isDragging = true);
             },
             onPanUpdate: (details) {
               if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
@@ -74,12 +79,13 @@ class _ComponentRendererState extends State<ComponentRenderer> {
               _startY = null;
               _initialX = null;
               _initialY = null;
+              setState(() => _isDragging = false);
             },
             child: Stack(
               children: [
-                // Snap guide lines (horizontal)
-                if (provider.snapToGrid && _startX != null)
-                  ..._buildSnapGuides(layout?.x ?? 0, layout?.y ?? 0, layout?.width ?? 100, layout?.height ?? 40, provider),
+                // Alignment guides (only show during drag)
+                if (_isDragging)
+                  ..._buildAlignmentGuides(layout?.x ?? 0, layout?.y ?? 0, layout?.width ?? 100, layout?.height ?? 40, otherComponents, provider),
                 Container(
                   width: layout?.width ?? 100,
                   height: layout?.height ?? 40,
@@ -117,44 +123,201 @@ class _ComponentRendererState extends State<ComponentRenderer> {
     );
   }
 
-  List<Widget> _buildSnapGuides(double x, double y, double width, double height, AppStateProvider provider) {
-    final gridSize = 10.0;
+  List<Widget> _buildAlignmentGuides(double x, double y, double width, double height, List<Component> otherComponents, AppStateProvider provider) {
     final guides = <Widget>[];
-    
-    // Vertical guide lines
-    for (double gx = 0; gx <= 400; gx += gridSize) {
-      if ((gx - x).abs() < 5) {
+    const snapThreshold = 8.0;
+    final currentPage = provider.getCurrentPage();
+    final canvasWidth = 390.0; // iPhone 14 width
+    final canvasHeight = 844.0; // iPhone 14 height
+
+    // Center alignment guides
+    final centerX = canvasWidth / 2;
+    final centerY = canvasHeight / 2;
+    final componentCenterX = x + width / 2;
+    final componentCenterY = y + height / 2;
+
+    // Horizontal center guide
+    if ((componentCenterX - centerX).abs() < snapThreshold) {
+      guides.add(
+        Positioned(
+          left: centerX - x,
+          top: -50,
+          bottom: -50,
+          child: Container(
+            width: 1,
+            color: const Color(0xFF8B5CF6).withOpacity(0.8),
+          ),
+        ),
+      );
+    }
+
+    // Vertical center guide
+    if ((componentCenterY - centerY).abs() < snapThreshold) {
+      guides.add(
+        Positioned(
+          top: centerY - y,
+          left: -50,
+          right: -50,
+          child: Container(
+            height: 1,
+            color: const Color(0xFF8B5CF6).withOpacity(0.8),
+          ),
+        ),
+      );
+    }
+
+    // Alignment with other components
+    for (final other in otherComponents) {
+      final otherLayout = other.layout;
+      if (otherLayout == null) continue;
+
+      final otherX = otherLayout.x;
+      final otherY = otherLayout.y;
+      final otherWidth = otherLayout.width;
+      final otherHeight = otherLayout.height;
+      final otherCenterX = otherX + otherWidth / 2;
+      final otherCenterY = otherY + otherHeight / 2;
+
+      // Left edge alignment
+      if ((x - otherX).abs() < snapThreshold) {
         guides.add(
           Positioned(
-            left: gx - x,
-            top: -10,
-            bottom: -10,
+            left: otherX - x,
+            top: -50,
+            bottom: -50,
             child: Container(
               width: 1,
-              color: const Color(0xFF8B5CF6).withOpacity(0.5),
+              color: const Color(0xFF4ADE80).withOpacity(0.8),
             ),
           ),
         );
       }
-    }
-    
-    // Horizontal guide lines
-    for (double gy = 0; gy <= 800; gy += gridSize) {
-      if ((gy - y).abs() < 5) {
+
+      // Right edge alignment
+      if ((x + width - (otherX + otherWidth)).abs() < snapThreshold) {
         guides.add(
           Positioned(
-            top: gy - y,
-            left: -10,
-            right: -10,
+            left: otherX + otherWidth - x,
+            top: -50,
+            bottom: -50,
+            child: Container(
+              width: 1,
+              color: const Color(0xFF4ADE80).withOpacity(0.8),
+            ),
+          ),
+        );
+      }
+
+      // Top edge alignment
+      if ((y - otherY).abs() < snapThreshold) {
+        guides.add(
+          Positioned(
+            top: otherY - y,
+            left: -50,
+            right: -50,
             child: Container(
               height: 1,
-              color: const Color(0xFF8B5CF6).withOpacity(0.5),
+              color: const Color(0xFF4ADE80).withOpacity(0.8),
+            ),
+          ),
+        );
+      }
+
+      // Bottom edge alignment
+      if ((y + height - (otherY + otherHeight)).abs() < snapThreshold) {
+        guides.add(
+          Positioned(
+            top: otherY + otherHeight - y,
+            left: -50,
+            right: -50,
+            child: Container(
+              height: 1,
+              color: const Color(0xFF4ADE80).withOpacity(0.8),
+            ),
+          ),
+        );
+      }
+
+      // Center alignment with other component
+      if ((componentCenterX - otherCenterX).abs() < snapThreshold) {
+        guides.add(
+          Positioned(
+            left: otherCenterX - x,
+            top: -50,
+            bottom: -50,
+            child: Container(
+              width: 1,
+              color: const Color(0xFFF472B6).withOpacity(0.8),
+            ),
+          ),
+        );
+      }
+
+      if ((componentCenterY - otherCenterY).abs() < snapThreshold) {
+        guides.add(
+          Positioned(
+            top: otherCenterY - y,
+            left: -50,
+            right: -50,
+            child: Container(
+              height: 1,
+              color: const Color(0xFFF472B6).withOpacity(0.8),
+            ),
+          ),
+        );
+      }
+
+      // Width matching
+      if ((width - otherWidth).abs() < snapThreshold) {
+        guides.add(
+          Positioned(
+            right: -20,
+            top: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF60A5FA).withOpacity(0.9),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'W: ${width.toInt()}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Height matching
+      if ((height - otherHeight).abs() < snapThreshold) {
+        guides.add(
+          Positioned(
+            bottom: -20,
+            left: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF60A5FA).withOpacity(0.9),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'H: ${height.toInt()}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         );
       }
     }
-    
+
     return guides;
   }
 

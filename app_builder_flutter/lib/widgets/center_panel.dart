@@ -411,30 +411,32 @@ class CenterPanel extends StatelessWidget {
                           ? _parseColor(page.backgroundColor)
                           : Colors.white,
                     ),
-                    child: page != null && page.components.isNotEmpty
-                        ? Stack(
-                            children: page.components.map((component) {
-                              if (component is Component) {
-                                return ComponentRenderer(
-                                  component: component,
-                                  isSelected: component.id == provider.selectedId,
-                                  onTap: () {
-                                    provider.selectComponent(component.id);
-                                  },
-                                  onPositionChanged: (x, y) {
-                                    if (component.layout != null) {
-                                      provider.updateComponentLayout(
-                                        component.id,
-                                        component.layout!.copyWith(x: x, y: y),
-                                      );
-                                    }
-                                  },
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            }).toList(),
-                          )
-                        : const Center(
+                    child: Stack(
+                      children: [
+                        // Components
+                        if (page != null && page.components.isNotEmpty)
+                          ...page.components.map((component) {
+                            if (component is Component) {
+                              return ComponentRenderer(
+                                component: component,
+                                isSelected: component.id == provider.selectedId,
+                                onTap: () {
+                                  provider.selectComponent(component.id);
+                                },
+                                onPositionChanged: (x, y) {
+                                  if (component.layout != null) {
+                                    provider.updateComponentLayout(
+                                      component.id,
+                                      component.layout!.copyWith(x: x, y: y),
+                                    );
+                                  }
+                                },
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          }).toList(),
+                        if (page == null || page.components.isEmpty)
+                          const Center(
                             child: Text(
                               'Canvas Area',
                               style: TextStyle(
@@ -443,6 +445,8 @@ class CenterPanel extends StatelessWidget {
                               ),
                             ),
                           ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -464,4 +468,5 @@ class CenterPanel extends StatelessWidget {
       return Colors.white;
     }
   }
+
 }
