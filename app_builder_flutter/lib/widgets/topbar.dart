@@ -25,7 +25,7 @@ class TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+      height: 48,
       decoration: BoxDecoration(
         color: const Color(0xFF070B16).withOpacity(0.78),
         border: Border(
@@ -35,14 +35,40 @@ class TopBar extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          _buildBrand(),
-          const Spacer(),
-          _buildActions(),
-          const SizedBox(width: 16),
-          _buildProfile(),
-        ],
+    );
+  }
+
+  Widget _buildCompactActions() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildCompactIconButton(Icons.save, onSave),
+        _buildCompactIconButton(Icons.undo, onUndo),
+        _buildCompactIconButton(Icons.redo, onRedo),
+      ],
+    );
+  }
+
+  Widget _buildCompactIconButton(IconData icon, VoidCallback? onPressed) {
+    return Container(
+      width: 32,
+      height: 32,
+      margin: const EdgeInsets.only(right: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.white.withOpacity(0.08),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(8),
+          child: Icon(
+            icon,
+            size: 16,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
@@ -51,22 +77,15 @@ class TopBar extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 48,
-          height: 48,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             gradient: const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF8B5CF6).withOpacity(0.28),
-                blurRadius: 50,
-                offset: const Offset(0, 18),
-              ),
-            ],
           ),
           child: const Center(
             child: Text(
@@ -74,20 +93,21 @@ class TopBar extends StatelessWidget {
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
-                fontSize: 18,
+                fontSize: 14,
               ),
             ),
           ),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 10),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               'App Builder',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 18,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -95,7 +115,7 @@ class TopBar extends StatelessWidget {
               projectName,
               style: TextStyle(
                 color: Colors.grey.shade400,
-                fontSize: 13,
+                fontSize: 11,
               ),
             ),
           ],

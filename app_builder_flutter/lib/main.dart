@@ -41,81 +41,42 @@ class AppBuilderHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0B1220),
       body: Column(
         children: [
-          Consumer<AppStateProvider>(
-            builder: (context, provider, child) {
-              return TopBar(
-                projectName: provider.app.appName,
-                onSave: () {
-                  provider.saveToLocal();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Project saved')),
-                  );
-                },
-                onUndo: provider.canUndo()
-                    ? () {
-                        provider.undo();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Undo')),
-                        );
-                      }
-                    : () {},
-                onRedo: provider.canRedo()
-                    ? () {
-                        provider.redo();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Redo')),
-                        );
-                      }
-                    : () {},
-                onPreview: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Preview mode coming soon')),
-                  );
-                },
-                onExport: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Export coming soon')),
-                  );
-                },
-                onThemeToggle: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Theme toggle coming soon')),
-                  );
-                },
-                onProfile: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Profile menu coming soon')),
-                  );
-                },
-              );
-            },
+          Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFF070B16).withOpacity(0.78),
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.white.withOpacity(0.08),
+                  width: 1,
+                ),
+              ),
+            ),
           ),
           Expanded(
             child: Row(
               children: [
                 Consumer<AppStateProvider>(
                   builder: (context, provider, child) {
-                    return LeftPanel(
-                      onAddTemplate: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Templates coming soon')),
-                        );
-                      },
-                      onAddPage: () {
-                        final newPage = provider.createDefaultPage('Page ${provider.app.pages.length + 1}');
-                        provider.app.pages = [...provider.app.pages, newPage];
-                        provider.setCurrentPage(newPage.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Added ${newPage.name}')),
-                        );
-                      },
+                    return SizedBox(
+                      width: 320,
+                      child: LeftPanel(
+                        onAddTemplate: () {},
+                        onAddPage: () {},
+                      ),
                     );
                   },
                 ),
-                const CenterPanel(),
-                const RightPanel(),
+                const Expanded(
+                  child: CenterPanel(),
+                ),
+                const SizedBox(
+                  width: 320,
+                  child: RightPanel(),
+                ),
               ],
             ),
           ),
