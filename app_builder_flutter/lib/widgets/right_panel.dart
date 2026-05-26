@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state_provider.dart';
+import '../models/component.dart';
 
 class RightPanel extends StatelessWidget {
   const RightPanel({super.key});
@@ -16,52 +19,179 @@ class RightPanel extends StatelessWidget {
       child: Column(
         children: [
           _buildHeader(),
-          const Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-              child: Column(
-                children: [
-                  InspectorAccordion(
-                    title: 'Content',
-                    icon: Icons.text_fields,
-                    iconColor: Color(0xFF818CF8),
+          Expanded(
+            child: Consumer<AppStateProvider>(
+              builder: (context, provider, child) {
+                final component = provider.findSelectedComponent();
+                if (component == null) {
+                  return const Center(
+                    child: Text(
+                      'Select a component to edit its properties',
+                      style: TextStyle(
+                        color: Color(0xFF94A3B8),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                }
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                  child: Column(
                     children: [
-                      InspectorField(label: 'Text', placeholder: 'Enter text'),
-                      InspectorField(label: 'Placeholder', placeholder: 'Enter placeholder'),
+                      _buildSelectedHeader(component),
+                      const SizedBox(height: 16),
+                      InspectorAccordion(
+                        title: 'Content',
+                        icon: Icons.text_fields,
+                        iconColor: const Color(0xFF818CF8),
+                        children: [
+                          InspectorField(
+                            label: 'Text',
+                            value: component.props?['text'] as String?,
+                            placeholder: 'Enter text',
+                            onChanged: (value) {
+                              component.props ??= {};
+                              component.props!['text'] = value;
+                              provider.notifyListeners();
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      InspectorAccordion(
+                        title: 'Typography',
+                        icon: Icons.format_size,
+                        iconColor: const Color(0xFFF472B6),
+                        children: [
+                          InspectorField(
+                            label: 'Font Size',
+                            value: component.styles?.fontSize,
+                            placeholder: '16',
+                            onChanged: (value) {
+                              component.styles ??= ComponentStyles();
+                              component.styles!.fontSize = value;
+                              provider.updateComponentStyles(
+                                component.id,
+                                component.styles!,
+                              );
+                            },
+                          ),
+                          InspectorField(
+                            label: 'Font Weight',
+                            value: component.styles?.fontWeight,
+                            placeholder: 'Normal',
+                            onChanged: (value) {
+                              component.styles ??= ComponentStyles();
+                              component.styles!.fontWeight = value;
+                              provider.updateComponentStyles(
+                                component.id,
+                                component.styles!,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      InspectorAccordion(
+                        title: 'Colors',
+                        icon: Icons.palette,
+                        iconColor: const Color(0xFF4ADE80),
+                        children: [
+                          InspectorColorField(
+                            label: 'Text Color',
+                            value: component.styles?.color,
+                            onChanged: (value) {
+                              component.styles ??= ComponentStyles();
+                              component.styles!.color = value;
+                              provider.updateComponentStyles(
+                                component.id,
+                                component.styles!,
+                              );
+                            },
+                          ),
+                          InspectorColorField(
+                            label: 'Background Color',
+                            value: component.styles?.backgroundColor,
+                            onChanged: (value) {
+                              component.styles ??= ComponentStyles();
+                              component.styles!.backgroundColor = value;
+                              provider.updateComponentStyles(
+                                component.id,
+                                component.styles!,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      InspectorAccordion(
+                        title: 'Layout',
+                        icon: Icons.view_quilt,
+                        iconColor: const Color(0xFF60A5FA),
+                        children: [
+                          InspectorField(
+                            label: 'X Position',
+                            value: component.layout?.x.toString(),
+                            placeholder: '0',
+                            onChanged: (value) {
+                              final x = double.tryParse(value);
+                              if (x != null && component.layout != null) {
+                                provider.updateComponentLayout(
+                                  component.id,
+                                  component.layout!.copyWith(x: x),
+                                );
+                              }
+                            },
+                          ),
+                          InspectorField(
+                            label: 'Y Position',
+                            value: component.layout?.y.toString(),
+                            placeholder: '0',
+                            onChanged: (value) {
+                              final y = double.tryParse(value);
+                              if (y != null && component.layout != null) {
+                                provider.updateComponentLayout(
+                                  component.id,
+                                  component.layout!.copyWith(y: y),
+                                );
+                              }
+                            },
+                          ),
+                          InspectorField(
+                            label: 'Width',
+                            value: component.layout?.width.toString(),
+                            placeholder: '100',
+                            onChanged: (value) {
+                              final width = double.tryParse(value);
+                              if (width != null && component.layout != null) {
+                                provider.updateComponentLayout(
+                                  component.id,
+                                  component.layout!.copyWith(width: width),
+                                );
+                              }
+                            },
+                          ),
+                          InspectorField(
+                            label: 'Height',
+                            value: component.layout?.height.toString(),
+                            placeholder: '40',
+                            onChanged: (value) {
+                              final height = double.tryParse(value);
+                              if (height != null && component.layout != null) {
+                                provider.updateComponentLayout(
+                                  component.id,
+                                  component.layout!.copyWith(height: height),
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                  SizedBox(height: 12),
-                  InspectorAccordion(
-                    title: 'Typography',
-                    icon: Icons.format_size,
-                    iconColor: Color(0xFFF472B6),
-                    children: [
-                      InspectorField(label: 'Font Size', placeholder: '16'),
-                      InspectorField(label: 'Font Weight', placeholder: 'Normal'),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  InspectorAccordion(
-                    title: 'Colors',
-                    icon: Icons.palette,
-                    iconColor: Color(0xFF4ADE80),
-                    children: [
-                      InspectorColorField(label: 'Text Color'),
-                      InspectorColorField(label: 'Background Color'),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  InspectorAccordion(
-                    title: 'Layout',
-                    icon: Icons.view_quilt,
-                    iconColor: Color(0xFF60A5FA),
-                    children: [
-                      InspectorField(label: 'Width', placeholder: 'auto'),
-                      InspectorField(label: 'Height', placeholder: 'auto'),
-                    ],
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ],
@@ -89,6 +219,38 @@ class RightPanel extends StatelessWidget {
             style: TextStyle(
               color: Color(0xFF94A3B8),
               fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedHeader(Component component) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF334155)),
+        color: const Color(0xFF1E293B).withOpacity(0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            component.type.toUpperCase(),
+            style: const TextStyle(
+              color: Color(0xFFF8FAFC),
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'ID: ${component.id}',
+            style: const TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 12,
             ),
           ),
         ],
@@ -201,12 +363,16 @@ class _InspectorAccordionState extends State<InspectorAccordion> {
 
 class InspectorField extends StatelessWidget {
   final String label;
+  final String? value;
   final String placeholder;
+  final Function(String)? onChanged;
 
   const InspectorField({
     super.key,
     required this.label,
+    this.value,
     required this.placeholder,
+    this.onChanged,
   });
 
   @override
@@ -226,6 +392,7 @@ class InspectorField extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           TextField(
+            controller: TextEditingController(text: value ?? '')..selection = TextSelection.fromPosition(TextPosition(offset: value?.length ?? 0)),
             style: const TextStyle(color: Color(0xFFF8FAFC), fontSize: 13),
             decoration: InputDecoration(
               hintText: placeholder,
@@ -252,6 +419,7 @@ class InspectorField extends StatelessWidget {
                 vertical: 10,
               ),
             ),
+            onChanged: onChanged,
           ),
         ],
       ),
@@ -261,10 +429,14 @@ class InspectorField extends StatelessWidget {
 
 class InspectorColorField extends StatelessWidget {
   final String label;
+  final String? value;
+  final Function(String)? onChanged;
 
   const InspectorColorField({
     super.key,
     required this.label,
+    this.value,
+    this.onChanged,
   });
 
   @override
@@ -298,18 +470,24 @@ class InspectorColorField extends StatelessWidget {
                   margin: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(6),
-                    color: const Color(0xFF6366F1),
+                    color: _parseColor(value),
                   ),
                 ),
-                const Expanded(
+                Expanded(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      '#6366F1',
-                      style: TextStyle(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: TextField(
+                      controller: TextEditingController(text: value ?? '#6366F1')..selection = TextSelection.fromPosition(TextPosition(offset: value?.length ?? 7)),
+                      style: const TextStyle(
                         color: Color(0xFFF8FAFC),
                         fontSize: 13,
                       ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      onChanged: onChanged,
                     ),
                   ),
                 ),
@@ -327,5 +505,19 @@ class InspectorColorField extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _parseColor(String? colorString) {
+    if (colorString == null || colorString.isEmpty) {
+      return const Color(0xFF6366F1);
+    }
+    try {
+      if (colorString.startsWith('#')) {
+        return Color(int.parse(colorString.substring(1), radix: 16) + 0xFF000000);
+      }
+      return const Color(0xFF6366F1);
+    } catch (e) {
+      return const Color(0xFF6366F1);
+    }
   }
 }
