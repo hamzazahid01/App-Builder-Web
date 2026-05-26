@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state_provider.dart';
+import 'component_renderer.dart';
 
 class CenterPanel extends StatelessWidget {
   const CenterPanel({super.key});
@@ -181,39 +184,51 @@ class CenterPanel extends StatelessWidget {
   }
 
   Widget _buildPageTabs() {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          _buildPageTab('Home Page', true),
-          const SizedBox(width: 8),
-          _buildPageTab('Page 2', false),
-        ],
-      ),
+    return Consumer<AppStateProvider>(
+      builder: (context, provider, child) {
+        return Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: provider.app.pages.map((page) {
+              final isActive = page.id == provider.app.currentPageId;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _buildPageTab(page.name, isActive, () {
+                  provider.setCurrentPage(page.id);
+                }),
+              );
+            }).toList(),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildPageTab(String title, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: isActive
-            ? const Color(0xFF8B5CF6).withOpacity(0.2)
-            : Colors.white.withOpacity(0.04),
-        border: Border.all(
+  Widget _buildPageTab(String title, bool isActive, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
           color: isActive
-              ? const Color(0xFF8B5CF6)
-              : Colors.white.withOpacity(0.08),
+              ? const Color(0xFF8B5CF6).withOpacity(0.2)
+              : Colors.white.withOpacity(0.04),
+          border: Border.all(
+            color: isActive
+                ? const Color(0xFF8B5CF6)
+                : Colors.white.withOpacity(0.08),
+          ),
         ),
-      ),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: isActive ? const Color(0xFF8B5CF6) : Colors.grey.shade400,
-          fontSize: 12,
-          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+        child: Text(
+          title,
+          style: TextStyle(
+            color: isActive ? const Color(0xFF8B5CF6) : Colors.grey.shade400,
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+          ),
         ),
       ),
     );
@@ -255,91 +270,125 @@ class CenterPanel extends StatelessWidget {
   }
 
   Widget _buildDeviceScreen() {
-    return Container(
-      width: 390,
-      height: 844,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(44),
-        color: const Color(0xFFF8FBFF),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.08),
-            blurRadius: 0,
-            offset: const Offset(0, 0),
-            spreadRadius: 1,
+    return Consumer<AppStateProvider>(
+      builder: (context, provider, child) {
+        final page = provider.getCurrentPage();
+        final deviceInfo = provider.deviceMap[provider.currentDeviceKey] ??
+            provider.deviceMap['iphone-14']!;
+
+        return Container(
+          width: deviceInfo.width,
+          height: deviceInfo.height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(44),
+            color: const Color(0xFFF8FBFF),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withOpacity(0.08),
+                blurRadius: 0,
+                offset: const Offset(0, 0),
+                spreadRadius: 1,
+              ),
+              BoxShadow(
+                color: const Color(0xFF0F172A).withOpacity(0.05),
+                blurRadius: 30,
+                offset: const Offset(0, 16),
+              ),
+            ],
           ),
-          BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.05),
-            blurRadius: 30,
-            offset: const Offset(0, 16),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Notch
-          Positioned(
-            top: 14,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                width: 104,
-                height: 7,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: Colors.black.withOpacity(0.12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 1,
-                      offset: const Offset(0, 1),
+          child: Stack(
+            children: [
+              // Notch
+              Positioned(
+                top: 14,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    width: 104,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      color: Colors.black.withOpacity(0.12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 1,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Home indicator
-          Positioned(
-            bottom: 18,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                width: 72,
-                height: 6,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: Colors.black.withOpacity(0.12),
-                ),
-              ),
-            ),
-          ),
-          // Canvas content
-          Positioned.fill(
-            top: 30,
-            bottom: 30,
-            left: 12,
-            right: 12,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(40),
-                color: Colors.white,
-              ),
-              child: const Center(
-                child: Text(
-                  'Canvas Area',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
                   ),
                 ),
               ),
-            ),
+              // Home indicator
+              Positioned(
+                bottom: 18,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    width: 72,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      color: Colors.black.withOpacity(0.12),
+                    ),
+                  ),
+                ),
+              ),
+              // Canvas content
+              Positioned.fill(
+                top: 30,
+                bottom: 30,
+                left: 12,
+                right: 12,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(40),
+                    color: page != null
+                        ? _parseColor(page.backgroundColor)
+                        : Colors.white,
+                  ),
+                  child: page != null && page.components.isNotEmpty
+                      ? Stack(
+                          children: page.components.map((component) {
+                            return ComponentRenderer(
+                              component: component,
+                              isSelected: component.id == provider.selectedId,
+                              onTap: () {
+                                provider.selectComponent(component.id);
+                              },
+                            );
+                          }).toList(),
+                        )
+                      : const Center(
+                          child: Text(
+                            'Canvas Area',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  Color? _parseColor(String? colorString) {
+    if (colorString == null || colorString.isEmpty) return Colors.white;
+    try {
+      if (colorString.startsWith('#')) {
+        return Color(int.parse(colorString.substring(1), radix: 16) + 0xFF000000);
+      }
+      return Colors.white;
+    } catch (e) {
+      return Colors.white;
+    }
   }
 }

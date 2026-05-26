@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state_provider.dart';
 
 class LeftPanel extends StatelessWidget {
   final VoidCallback onAddTemplate;
@@ -295,41 +297,51 @@ class _ComponentItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
-        color: const Color(0xFF1E293B).withOpacity(0.6),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(
-                color: Color(0xFFE2E8F0),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+    return InkWell(
+      onTap: () {
+        final provider = context.read<AppStateProvider>();
+        provider.addComponent(name.toLowerCase());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Added $name')),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          color: const Color(0xFF1E293B).withOpacity(0.6),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                name,
+                style: const TextStyle(
+                  color: Color(0xFFE2E8F0),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.white.withOpacity(0.08),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.drag_handle,
-                size: 18,
-                color: Colors.grey.shade400,
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white.withOpacity(0.08),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.add,
+                  size: 18,
+                  color: Colors.grey.shade400,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
