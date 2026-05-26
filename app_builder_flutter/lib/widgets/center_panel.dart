@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
 import '../models/component.dart';
+import '../models/page.dart' as app_models;
 import 'component_renderer.dart';
 
 class CenterPanel extends StatelessWidget {
@@ -67,18 +68,86 @@ class CenterPanel extends StatelessWidget {
   }
 
   Widget _buildDeviceSwitcher() {
-    return Row(
-      children: [
-        Text(
-          'Device',
-          style: TextStyle(
-            color: Colors.grey.shade400,
-            fontSize: 12,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    return Consumer<AppStateProvider>(
+      builder: (context, provider, child) {
+        final currentDevice = provider.deviceMap[provider.currentDeviceKey];
+        return Row(
+          children: [
+            Text(
+              'Device',
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(width: 8),
+            PopupMenuButton<String>(
+              initialValue: provider.currentDeviceKey,
+              onSelected: (deviceKey) {
+                provider.setCurrentDevice(deviceKey);
+              },
+              itemBuilder: (context) {
+                return provider.deviceMap.entries.map((entry) {
+                  return PopupMenuItem<String>(
+                    value: entry.key,
+                    child: Row(
+                      children: [
+                        Text(
+                          entry.value.label,
+                          style: const TextStyle(
+                            color: Color(0xFFF8FAFC),
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${entry.value.width.toInt()}x${entry.value.height.toInt()}',
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.white.withOpacity(0.12)),
+                  color: Colors.white.withOpacity(0.06),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      currentDevice?.label ?? 'iPhone 14',
+                      style: const TextStyle(
+                        color: Color(0xFFF8FAFC),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 16,
+                      color: Colors.grey.shade400,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildZoomControl() {
+    return Consumer<AppStateProvider>(
+      builder: (context, provider, child) {
+        return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.white.withOpacity(0.12)),
@@ -86,53 +155,32 @@ class CenterPanel extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Text(
-                'iPhone 14',
-                style: const TextStyle(
-                  color: Color(0xFFF8FAFC),
-                  fontSize: 12,
+              _buildZoomButton('−', () {
+                final newZoom = (provider.previewZoom - 0.1).clamp(0.5, 2.0);
+                provider.setPreviewZoom(newZoom);
+              }),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  '${(provider.previewZoom * 100).toInt()}%',
+                  style: const TextStyle(
+                    color: Color(0xFFF8FAFC),
+                    fontSize: 12,
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.keyboard_arrow_down,
-                size: 16,
-                color: Colors.grey.shade400,
-              ),
+              _buildZoomButton('+', () {
+                final newZoom = (provider.previewZoom + 0.1).clamp(0.5, 2.0);
+                provider.setPreviewZoom(newZoom);
+              }),
             ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildZoomControl() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
-        color: Colors.white.withOpacity(0.06),
-      ),
-      child: Row(
-        children: [
-          _buildZoomButton('−'),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              '100%',
-              style: const TextStyle(
-                color: Color(0xFFF8FAFC),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          _buildZoomButton('+'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildZoomButton(String label) {
+  Widget _buildZoomButton(String label, VoidCallback onTap) {
     return Container(
       width: 28,
       height: 28,
@@ -144,7 +192,7 @@ class CenterPanel extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: onTap,
           child: Center(
             child: Text(
               label,
@@ -160,27 +208,39 @@ class CenterPanel extends StatelessWidget {
   }
 
   Widget _buildSnapToggle() {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
-        color: Colors.white.withOpacity(0.08),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(8),
-          child: const Center(
-            child: Text(
-              '🧲',
-              style: TextStyle(fontSize: 16),
+    return Consumer<AppStateProvider>(
+      builder: (context, provider, child) {
+        return Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: provider.snapToGrid
+                  ? const Color(0xFF8B5CF6)
+                  : Colors.white.withOpacity(0.12),
+            ),
+            color: provider.snapToGrid
+                ? const Color(0xFF8B5CF6).withOpacity(0.2)
+                : Colors.white.withOpacity(0.08),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                provider.setSnapToGrid(!provider.snapToGrid);
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: const Center(
+                child: Text(
+                  '🧲',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -236,7 +296,7 @@ class CenterPanel extends StatelessWidget {
   }
 
   Widget _buildPreviewViewport() {
-    return Container(
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Center(
         child: _buildMobilePreview(),
@@ -278,8 +338,8 @@ class CenterPanel extends StatelessWidget {
             provider.deviceMap['iphone-14']!;
 
         return Container(
-          width: deviceInfo.width,
-          height: deviceInfo.height,
+          width: deviceInfo.width * provider.previewZoom,
+          height: deviceInfo.height * provider.previewZoom,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(44),
             color: const Color(0xFFF8FBFF),
@@ -344,16 +404,25 @@ class CenterPanel extends StatelessWidget {
                 bottom: 30,
                 left: 12,
                 right: 12,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(40),
-                    color: page != null
-                        ? _parseColor(page.backgroundColor)
-                        : Colors.white,
-                  ),
-                  child: page != null && page.components.isNotEmpty
-                      ? Stack(
-                          children: page.components.map((component) {
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(40),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: page != null
+                          ? _parseColor(page.backgroundColor)
+                          : Colors.white,
+                    ),
+                    child: Stack(
+                      children: [
+                        // Snap guide overlay (global)
+                        Consumer<AppStateProvider>(
+                          builder: (context, provider, child) {
+                            return _buildSnapGuideOverlay(provider, page);
+                          },
+                        ),
+                        // Components
+                        if (page != null && page.components.isNotEmpty)
+                          ...page.components.map((component) {
                             if (component is Component) {
                               return ComponentRenderer(
                                 component: component,
@@ -373,16 +442,19 @@ class CenterPanel extends StatelessWidget {
                             }
                             return const SizedBox.shrink();
                           }).toList(),
-                        )
-                      : const Center(
-                          child: Text(
-                            'Canvas Area',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
+                        if (page == null || page.components.isEmpty)
+                          const Center(
+                            child: Text(
+                              'Canvas Area',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
-                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -403,4 +475,177 @@ class CenterPanel extends StatelessWidget {
       return Colors.white;
     }
   }
+
+  Widget _buildSnapGuideOverlay(AppStateProvider provider, app_models.Page? page) {
+    final selectedComponent = provider.findSelectedComponent();
+    if (selectedComponent == null || selectedComponent.layout == null) {
+      return const SizedBox.shrink();
+    }
+
+    final layout = selectedComponent.layout!;
+    final otherComponents = page?.components.where((c) => c.id != selectedComponent.id).toList() ?? [];
+    final deviceInfo = provider.deviceMap[provider.currentDeviceKey] ?? provider.deviceMap['iphone-14']!;
+    
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: CustomPaint(
+          painter: _SnapGuidePainter(
+            layout: layout,
+            otherComponents: otherComponents,
+            canvasWidth: deviceInfo.width,
+            canvasHeight: deviceInfo.height,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SnapGuidePainter extends CustomPainter {
+  final ComponentLayout layout;
+  final List<Component> otherComponents;
+  final double canvasWidth;
+  final double canvasHeight;
+  static const double snapThreshold = 10.0;
+
+  _SnapGuidePainter({
+    required this.layout,
+    required this.otherComponents,
+    required this.canvasWidth,
+    required this.canvasHeight,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final guides = _calculateGuides();
+    
+    for (final guide in guides) {
+      final paint = Paint()
+        ..color = guide.isCenter 
+            ? const Color(0xFF06B6D4).withOpacity(0.7)
+            : const Color(0xFF0891B2).withOpacity(0.5)
+        ..strokeWidth = 1
+        ..style = PaintingStyle.stroke;
+
+      if (guide.isHorizontal) {
+        canvas.drawLine(
+          Offset(guide.x1, guide.y1),
+          Offset(guide.x2, guide.y2),
+          paint,
+        );
+      } else {
+        canvas.drawLine(
+          Offset(guide.x1, guide.y1),
+          Offset(guide.x2, guide.y2),
+          paint,
+        );
+      }
+    }
+  }
+
+  List<_GuideLine> _calculateGuides() {
+    final guides = <_GuideLine>[];
+    final elementLeft = layout.x;
+    final elementRight = layout.x + layout.width;
+    final elementTop = layout.y;
+    final elementBottom = layout.y + layout.height;
+    final elementCenterX = layout.x + layout.width / 2;
+    final elementCenterY = layout.y + layout.height / 2;
+
+    // Center alignment with canvas
+    final centerX = canvasWidth / 2;
+    final centerY = canvasHeight / 2;
+
+    if ((elementCenterX - centerX).abs() <= snapThreshold) {
+      guides.add(_GuideLine(
+        x1: centerX, y1: 0, x2: centerX, y2: canvasHeight,
+        isHorizontal: false, isCenter: true,
+      ));
+    }
+
+    if ((elementCenterY - centerY).abs() <= snapThreshold) {
+      guides.add(_GuideLine(
+        x1: 0, y1: centerY, x2: canvasWidth, y2: centerY,
+        isHorizontal: true, isCenter: true,
+      ));
+    }
+
+    // Alignment with other components
+    for (final comp in otherComponents) {
+      final compLayout = comp.layout;
+      if (compLayout == null) continue;
+
+      final compLeft = compLayout.x;
+      final compRight = compLayout.x + compLayout.width;
+      final compTop = compLayout.y;
+      final compBottom = compLayout.y + compLayout.height;
+      final compCenterX = compLayout.x + compLayout.width / 2;
+      final compCenterY = compLayout.y + compLayout.height / 2;
+
+      // Left edge alignment
+      if ((elementLeft - compLeft).abs() <= snapThreshold) {
+        guides.add(_GuideLine(
+          x1: compLeft, y1: 0, x2: compLeft, y2: canvasHeight,
+          isHorizontal: false, isCenter: false,
+        ));
+      }
+
+      // Right edge alignment
+      if ((elementRight - compRight).abs() <= snapThreshold) {
+        guides.add(_GuideLine(
+          x1: compRight, y1: 0, x2: compRight, y2: canvasHeight,
+          isHorizontal: false, isCenter: false,
+        ));
+      }
+
+      // Top edge alignment
+      if ((elementTop - compTop).abs() <= snapThreshold) {
+        guides.add(_GuideLine(
+          x1: 0, y1: compTop, x2: canvasWidth, y2: compTop,
+          isHorizontal: true, isCenter: false,
+        ));
+      }
+
+      // Bottom edge alignment
+      if ((elementBottom - compBottom).abs() <= snapThreshold) {
+        guides.add(_GuideLine(
+          x1: 0, y1: compBottom, x2: canvasWidth, y2: compBottom,
+          isHorizontal: true, isCenter: false,
+        ));
+      }
+
+      // Center alignment with other component
+      if ((elementCenterX - compCenterX).abs() <= snapThreshold) {
+        guides.add(_GuideLine(
+          x1: compCenterX, y1: 0, x2: compCenterX, y2: canvasHeight,
+          isHorizontal: false, isCenter: false,
+        ));
+      }
+
+      if ((elementCenterY - compCenterY).abs() <= snapThreshold) {
+        guides.add(_GuideLine(
+          x1: 0, y1: compCenterY, x2: canvasWidth, y2: compCenterY,
+          isHorizontal: true, isCenter: false,
+        ));
+      }
+    }
+
+    return guides;
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class _GuideLine {
+  final double x1, y1, x2, y2;
+  final bool isHorizontal;
+  final bool isCenter;
+
+  _GuideLine({
+    required this.x1, required this.y1,
+    required this.x2, required this.y2,
+    required this.isHorizontal,
+    required this.isCenter,
+  });
 }
