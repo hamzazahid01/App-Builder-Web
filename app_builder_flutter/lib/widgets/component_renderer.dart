@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/component.dart';
 
-class ComponentRenderer extends StatelessWidget {
+class ComponentRenderer extends StatefulWidget {
   final Component component;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onDoubleTap;
+  final Function(double x, double y)? onPositionChanged;
 
   const ComponentRenderer({
     super.key,
@@ -13,19 +14,53 @@ class ComponentRenderer extends StatelessWidget {
     this.isSelected = false,
     this.onTap,
     this.onDoubleTap,
+    this.onPositionChanged,
   });
 
   @override
+  State<ComponentRenderer> createState() => _ComponentRendererState();
+}
+
+class _ComponentRendererState extends State<ComponentRenderer> {
+  double? _startX;
+  double? _startY;
+  double? _initialX;
+  double? _initialY;
+
+  @override
   Widget build(BuildContext context) {
-    final layout = component.layout;
-    final styles = component.styles;
+    final layout = widget.component.layout;
+    final styles = widget.component.styles;
 
     return Positioned(
       left: layout?.x ?? 0,
       top: layout?.y ?? 0,
       child: GestureDetector(
-        onTap: onTap,
-        onDoubleTap: onDoubleTap,
+        onTap: widget.onTap,
+        onDoubleTap: widget.onDoubleTap,
+        onPanStart: (details) {
+          _startX = details.globalPosition.dx;
+          _startY = details.globalPosition.dy;
+          _initialX = layout?.x;
+          _initialY = layout?.y;
+        },
+        onPanUpdate: (details) {
+          if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
+          
+          final dx = details.globalPosition.dx - _startX!;
+          final dy = details.globalPosition.dy - _startY!;
+          
+          final newX = (_initialX! + dx).clamp(0.0, 350.0);
+          final newY = (_initialY! + dy).clamp(0.0, 750.0);
+          
+          widget.onPositionChanged?.call(newX, newY);
+        },
+        onPanEnd: (details) {
+          _startX = null;
+          _startY = null;
+          _initialX = null;
+          _initialY = null;
+        },
         child: Container(
           width: layout?.width ?? 100,
           height: layout?.height ?? 40,
@@ -38,7 +73,7 @@ class ComponentRenderer extends StatelessWidget {
                     width: _parseDouble(styles?.borderWidth) ?? 1,
                   )
                 : null,
-            boxShadow: isSelected
+            boxShadow: widget.isSelected
                 ? [
                     BoxShadow(
                       color: const Color(0xFF8B5CF6).withOpacity(0.9),

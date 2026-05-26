@@ -359,6 +359,14 @@ class CenterPanel extends StatelessWidget {
                               onTap: () {
                                 provider.selectComponent(component.id);
                               },
+                              onPositionChanged: (x, y) {
+                                if (component.layout != null) {
+                                  provider.updateComponentLayout(
+                                    component.id,
+                                    component.layout!.copyWith(x: x, y: y),
+                                  );
+                                }
+                              },
                             );
                           }).toList(),
                         )
