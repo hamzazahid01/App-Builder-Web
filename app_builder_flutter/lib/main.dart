@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/app_state_provider.dart';
 import 'widgets/topbar.dart';
 import 'widgets/left_panel.dart';
 import 'widgets/right_panel.dart';
@@ -13,19 +15,22 @@ class AppBuilderApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'App Builder',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0B1220),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF8B5CF6),
+    return ChangeNotifierProvider(
+      create: (_) => AppStateProvider(),
+      child: MaterialApp(
+        title: 'App Builder',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
           brightness: Brightness.dark,
+          scaffoldBackgroundColor: const Color(0xFF0B1220),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF8B5CF6),
+            brightness: Brightness.dark,
+          ),
+          useMaterial3: true,
         ),
-        useMaterial3: true,
+        home: const AppBuilderHome(),
       ),
-      home: const AppBuilderHome(),
     );
   }
 }
@@ -38,22 +43,76 @@ class AppBuilderHome extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          TopBar(
-            projectName: 'Untitled project',
-            onSave: () => print('Save clicked'),
-            onUndo: () => print('Undo clicked'),
-            onRedo: () => print('Redo clicked'),
-            onPreview: () => print('Preview clicked'),
-            onExport: () => print('Export clicked'),
-            onThemeToggle: () => print('Theme toggle clicked'),
-            onProfile: () => print('Profile clicked'),
+          Consumer<AppStateProvider>(
+            builder: (context, provider, child) {
+              return TopBar(
+                projectName: provider.app.appName,
+                onSave: () {
+                  provider.saveToLocal();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Project saved')),
+                  );
+                },
+                onUndo: provider.canUndo()
+                    ? () {
+                        provider.undo();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Undo')),
+                        );
+                      }
+                    : null,
+                onRedo: provider.canRedo()
+                    ? () {
+                        provider.redo();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Redo')),
+                        );
+                      }
+                    : null,
+                onPreview: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Preview mode coming soon')),
+                  );
+                },
+                onExport: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Export coming soon')),
+                  );
+                },
+                onThemeToggle: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Theme toggle coming soon')),
+                  );
+                },
+                onProfile: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Profile menu coming soon')),
+                  );
+                },
+              );
+            },
           ),
           Expanded(
             child: Row(
               children: [
-                LeftPanel(
-                  onAddTemplate: () => print('Add template clicked'),
-                  onAddPage: () => print('Add page clicked'),
+                Consumer<AppStateProvider>(
+                  builder: (context, provider, child) {
+                    return LeftPanel(
+                      onAddTemplate: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Templates coming soon')),
+                        );
+                      },
+                      onAddPage: () {
+                        final newPage = provider.createDefaultPage('Page ${provider.app.pages.length + 1}');
+                        provider.app.pages = [...provider.app.pages, newPage];
+                        provider.setCurrentPage(newPage.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Added ${newPage.name}')),
+                        );
+                      },
+                    );
+                  },
                 ),
                 const CenterPanel(),
                 const RightPanel(),
