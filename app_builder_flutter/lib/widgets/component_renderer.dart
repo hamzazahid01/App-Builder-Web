@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/component.dart';
+import '../providers/app_state_provider.dart';
 
 class ComponentRenderer extends StatefulWidget {
   final Component component;
@@ -32,66 +34,128 @@ class _ComponentRendererState extends State<ComponentRenderer> {
     final layout = widget.component.layout;
     final styles = widget.component.styles;
 
-    return Positioned(
-      left: layout?.x ?? 0,
-      top: layout?.y ?? 0,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onDoubleTap: widget.onDoubleTap,
-        onPanStart: (details) {
-          _startX = details.globalPosition.dx;
-          _startY = details.globalPosition.dy;
-          _initialX = layout?.x;
-          _initialY = layout?.y;
-        },
-        onPanUpdate: (details) {
-          if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
-          
-          final dx = details.globalPosition.dx - _startX!;
-          final dy = details.globalPosition.dy - _startY!;
-          
-          final newX = (_initialX! + dx).clamp(0.0, 350.0);
-          final newY = (_initialY! + dy).clamp(0.0, 750.0);
-          
-          widget.onPositionChanged?.call(newX, newY);
-        },
-        onPanEnd: (details) {
-          _startX = null;
-          _startY = null;
-          _initialX = null;
-          _initialY = null;
-        },
-        child: Container(
-          width: layout?.width ?? 100,
-          height: layout?.height ?? 40,
-          decoration: BoxDecoration(
-            color: _parseColor(styles?.backgroundColor),
-            borderRadius: _parseBorderRadius(styles?.borderRadius),
-            border: styles?.borderColor != null
-                ? Border.all(
-                    color: _parseColor(styles?.borderColor) ?? Colors.transparent,
-                    width: _parseDouble(styles?.borderWidth) ?? 1,
-                  )
-                : null,
-            boxShadow: widget.isSelected
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF8B5CF6).withOpacity(0.9),
-                      blurRadius: 0,
-                      spreadRadius: 2,
-                    ),
-                    BoxShadow(
-                      color: const Color(0xFF8B5CF6).withOpacity(0.14),
-                      blurRadius: 8,
-                      spreadRadius: 4,
-                    ),
-                  ]
-                : null,
+    return Consumer<AppStateProvider>(
+      builder: (context, provider, child) {
+        return Positioned(
+          left: layout?.x ?? 0,
+          top: layout?.y ?? 0,
+          child: GestureDetector(
+            onTap: widget.onTap,
+            onDoubleTap: widget.onDoubleTap,
+            onPanStart: (details) {
+              _startX = details.globalPosition.dx;
+              _startY = details.globalPosition.dy;
+              _initialX = layout?.x;
+              _initialY = layout?.y;
+            },
+            onPanUpdate: (details) {
+              if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
+              
+              final dx = details.globalPosition.dx - _startX!;
+              final dy = details.globalPosition.dy - _startY!;
+              
+              double newX = _initialX! + dx;
+              double newY = _initialY! + dy;
+              
+              // Apply snap to grid if enabled
+              if (provider.snapToGrid) {
+                final gridSize = 10.0;
+                newX = (newX / gridSize).round() * gridSize;
+                newY = (newY / gridSize).round() * gridSize;
+              }
+              
+              newX = newX.clamp(0.0, 350.0);
+              newY = newY.clamp(0.0, 750.0);
+              
+              widget.onPositionChanged?.call(newX, newY);
+            },
+            onPanEnd: (details) {
+              _startX = null;
+              _startY = null;
+              _initialX = null;
+              _initialY = null;
+            },
+            child: Stack(
+              children: [
+                // Snap guide lines (horizontal)
+                if (provider.snapToGrid && _startX != null)
+                  ..._buildSnapGuides(layout?.x ?? 0, layout?.y ?? 0, layout?.width ?? 100, layout?.height ?? 40, provider),
+                Container(
+                  width: layout?.width ?? 100,
+                  height: layout?.height ?? 40,
+                  decoration: BoxDecoration(
+                    color: _parseColor(styles?.backgroundColor),
+                    borderRadius: _parseBorderRadius(styles?.borderRadius),
+                    border: styles?.borderColor != null
+                        ? Border.all(
+                            color: _parseColor(styles?.borderColor) ?? Colors.transparent,
+                            width: _parseDouble(styles?.borderWidth) ?? 1,
+                          )
+                        : null,
+                    boxShadow: widget.isSelected
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.9),
+                              blurRadius: 0,
+                              spreadRadius: 2,
+                            ),
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.14),
+                              blurRadius: 8,
+                              spreadRadius: 4,
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: _buildContent(styles),
+                ),
+              ],
+            ),
           ),
-          child: _buildContent(styles),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  List<Widget> _buildSnapGuides(double x, double y, double width, double height, AppStateProvider provider) {
+    final gridSize = 10.0;
+    final guides = <Widget>[];
+    
+    // Vertical guide lines
+    for (double gx = 0; gx <= 400; gx += gridSize) {
+      if ((gx - x).abs() < 5) {
+        guides.add(
+          Positioned(
+            left: gx - x,
+            top: -10,
+            bottom: -10,
+            child: Container(
+              width: 1,
+              color: const Color(0xFF8B5CF6).withOpacity(0.5),
+            ),
+          ),
+        );
+      }
+    }
+    
+    // Horizontal guide lines
+    for (double gy = 0; gy <= 800; gy += gridSize) {
+      if ((gy - y).abs() < 5) {
+        guides.add(
+          Positioned(
+            top: gy - y,
+            left: -10,
+            right: -10,
+            child: Container(
+              height: 1,
+              color: const Color(0xFF8B5CF6).withOpacity(0.5),
+            ),
+          ),
+        );
+      }
+    }
+    
+    return guides;
   }
 
   Widget _buildContent(ComponentStyles? styles) {
