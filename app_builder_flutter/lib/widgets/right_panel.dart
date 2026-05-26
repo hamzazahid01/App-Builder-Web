@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
 import '../models/component.dart';
-import '../models/page.dart';
+import '../models/page.dart' as app_models;
 
 class RightPanel extends StatelessWidget {
   const RightPanel({super.key});
@@ -52,7 +52,7 @@ class RightPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildPageInspector(BuildContext context, AppStateProvider provider, Page page) {
+  Widget _buildPageInspector(BuildContext context, AppStateProvider provider, app_models.Page page) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Column(
@@ -348,37 +348,6 @@ class RightPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildSelectedHeader(Component component) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF334155)),
-        color: const Color(0xFF1E293B).withOpacity(0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            component.type.toUpperCase(),
-            style: const TextStyle(
-              color: Color(0xFFF8FAFC),
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'ID: ${component.id}',
-            style: const TextStyle(
-              color: Color(0xFF94A3B8),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class InspectorAccordion extends StatefulWidget {
