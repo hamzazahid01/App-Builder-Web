@@ -63,6 +63,12 @@ class AppStateProvider with ChangeNotifier {
     );
   }
 
+  void addPage(Page page) {
+    _state.app.pages = [..._state.app.pages, page];
+    _pushHistorySnapshot();
+    notifyListeners();
+  }
+
   Component? findById(List<Component> nodes, String id) {
     for (final node in nodes) {
       if (node.id == id) return node;

@@ -64,8 +64,19 @@ class AppBuilderHome extends StatelessWidget {
                     return SizedBox(
                       width: 320,
                       child: LeftPanel(
-                        onAddTemplate: () {},
-                        onAddPage: () {},
+                        onAddTemplate: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Templates coming soon')),
+                          );
+                        },
+                        onAddPage: () {
+                          final newPage = provider.createDefaultPage('Page ${provider.app.pages.length + 1}');
+                          provider.addPage(newPage);
+                          provider.setCurrentPage(newPage.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Added ${newPage.name}')),
+                          );
+                        },
                       ),
                     );
                   },
