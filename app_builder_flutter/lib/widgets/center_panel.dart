@@ -353,21 +353,24 @@ class CenterPanel extends StatelessWidget {
                   child: page != null && page.components.isNotEmpty
                       ? Stack(
                           children: page.components.map((component) {
-                            return ComponentRenderer(
-                              component: component,
-                              isSelected: component.id == provider.selectedId,
-                              onTap: () {
-                                provider.selectComponent(component.id);
-                              },
-                              onPositionChanged: (x, y) {
-                                if (component.layout != null) {
-                                  provider.updateComponentLayout(
-                                    component.id,
-                                    component.layout!.copyWith(x: x, y: y),
-                                  );
-                                }
-                              },
-                            );
+                            if (component is Component) {
+                              return ComponentRenderer(
+                                component: component,
+                                isSelected: component.id == provider.selectedId,
+                                onTap: () {
+                                  provider.selectComponent(component.id);
+                                },
+                                onPositionChanged: (x, y) {
+                                  if (component.layout != null) {
+                                    provider.updateComponentLayout(
+                                      component.id,
+                                      component.layout!.copyWith(x: x, y: y),
+                                    );
+                                  }
+                                },
+                              );
+                            }
+                            return const SizedBox.shrink();
                           }).toList(),
                         )
                       : const Center(

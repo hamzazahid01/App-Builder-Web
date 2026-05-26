@@ -69,7 +69,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
             borderRadius: _parseBorderRadius(styles?.borderRadius),
             border: styles?.borderColor != null
                 ? Border.all(
-                    color: _parseColor(styles?.borderColor),
+                    color: _parseColor(styles?.borderColor) ?? Colors.transparent,
                     width: _parseDouble(styles?.borderWidth) ?? 1,
                   )
                 : null,
@@ -95,7 +95,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   }
 
   Widget _buildContent(ComponentStyles? styles) {
-    switch (component.type) {
+    switch (widget.component.type) {
       case 'button':
         return _buildButton(styles);
       case 'text':
@@ -114,7 +114,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   Widget _buildButton(ComponentStyles? styles) {
     return Center(
       child: Text(
-        component.props?['text'] ?? 'Button',
+        widget.component.props?['text'] ?? 'Button',
         style: TextStyle(
           color: _parseColor(styles?.color),
           fontSize: _parseDouble(styles?.fontSize) ?? 14,
@@ -129,7 +129,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Text(
-        component.props?['text'] ?? 'Text',
+        widget.component.props?['text'] ?? 'Text',
         style: TextStyle(
           color: _parseColor(styles?.color),
           fontSize: _parseDouble(styles?.fontSize) ?? 14,
@@ -143,7 +143,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   }
 
   Widget _buildImage(ComponentStyles? styles) {
-    final imageUrl = component.props?['src'] ?? '';
+    final imageUrl = widget.component.props?['src'] ?? '';
     if (imageUrl.isEmpty) {
       return Container(
         color: Colors.grey.shade300,
@@ -168,7 +168,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
       child: TextField(
         enabled: false,
         decoration: InputDecoration(
-          hintText: component.props?['placeholder'] ?? 'Input',
+          hintText: widget.component.props?['placeholder'] ?? 'Input',
           hintStyle: TextStyle(
             color: _parseColor(styles?.color)?.withOpacity(0.5),
           ),
@@ -183,7 +183,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   }
 
   Widget _buildIcon(ComponentStyles? styles) {
-    final iconName = component.props?['icon'] ?? 'star';
+    final iconName = widget.component.props?['icon'] ?? 'star';
     return Center(
       child: Icon(
         _getIconData(iconName),
@@ -196,7 +196,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   Widget _buildDefault(ComponentStyles? styles) {
     return Center(
       child: Text(
-        component.type.toUpperCase(),
+        widget.component.type.toUpperCase(),
         style: TextStyle(
           color: _parseColor(styles?.color),
           fontSize: 12,

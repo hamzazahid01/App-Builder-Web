@@ -48,6 +48,28 @@ class ComponentLayout {
           : null,
     );
   }
+
+  ComponentLayout copyWith({
+    double? x,
+    double? y,
+    double? width,
+    double? height,
+    int? zIndex,
+    LayoutPercent? layoutPercent,
+    String? createdOnDevice,
+    ComponentConstraints? constraints,
+  }) {
+    return ComponentLayout(
+      x: x ?? this.x,
+      y: y ?? this.y,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      zIndex: zIndex ?? this.zIndex,
+      layoutPercent: layoutPercent ?? this.layoutPercent,
+      createdOnDevice: createdOnDevice ?? this.createdOnDevice,
+      constraints: constraints ?? this.constraints,
+    );
+  }
 }
 
 class LayoutPercent {
@@ -272,50 +294,6 @@ class Component {
       props: props ?? this.props,
       children: children ?? this.children,
       originalStyles: originalStyles ?? this.originalStyles,
-    );
-  }
-}
-
-class ComponentLayout {
-  double x;
-  double y;
-  double width;
-  double height;
-  int zIndex;
-  LayoutPercent? layoutPercent;
-  String? createdOnDevice;
-  ComponentConstraints? constraints;
-
-  ComponentLayout({
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-    this.zIndex = 1,
-    this.layoutPercent,
-    this.createdOnDevice,
-    this.constraints,
-  });
-
-  ComponentLayout copyWith({
-    double? x,
-    double? y,
-    double? width,
-    double? height,
-    int? zIndex,
-    LayoutPercent? layoutPercent,
-    String? createdOnDevice,
-    ComponentConstraints? constraints,
-  }) {
-    return ComponentLayout(
-      x: x ?? this.x,
-      y: y ?? this.y,
-      width: width ?? this.width,
-      height: height ?? this.height,
-      zIndex: zIndex ?? this.zIndex,
-      layoutPercent: layoutPercent ?? this.layoutPercent,
-      createdOnDevice: createdOnDevice ?? this.createdOnDevice,
-      constraints: constraints ?? this.constraints,
     );
   }
 }

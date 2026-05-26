@@ -60,7 +60,7 @@ class AppBuilderHome extends StatelessWidget {
                           const SnackBar(content: Text('Undo')),
                         );
                       }
-                    : null,
+                    : () {},
                 onRedo: provider.canRedo()
                     ? () {
                         provider.redo();
@@ -68,7 +68,7 @@ class AppBuilderHome extends StatelessWidget {
                           const SnackBar(content: Text('Redo')),
                         );
                       }
-                    : null,
+                    : () {},
                 onPreview: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Preview mode coming soon')),

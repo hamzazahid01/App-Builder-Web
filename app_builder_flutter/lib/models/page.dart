@@ -1,3 +1,5 @@
+import 'component.dart';
+
 class AppBarConfig {
   bool enabled;
   String title;

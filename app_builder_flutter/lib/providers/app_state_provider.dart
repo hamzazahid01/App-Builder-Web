@@ -113,7 +113,7 @@ class AppStateProvider with ChangeNotifier {
     final page = getCurrentPage();
     if (page == null) return;
 
-    page.components = page.components.where((c) => c.id != selectedId).toList();
+    page.components = page.components.where((c) => c is Component && c.id != selectedId).cast<Component>().toList();
     selectComponent(null);
     _pushHistorySnapshot();
     notifyListeners();
@@ -123,10 +123,11 @@ class AppStateProvider with ChangeNotifier {
     final page = getCurrentPage();
     if (page == null) return;
 
-    final index = page.components.indexWhere((c) => c.id == componentId);
+    final index = page.components.indexWhere((c) => c is Component && c.id == componentId);
     if (index == -1) return;
 
-    page.components[index] = page.components[index].copyWith(layout: newLayout);
+    final component = page.components[index] as Component;
+    page.components[index] = component.copyWith(layout: newLayout);
     notifyListeners();
   }
 
@@ -134,10 +135,11 @@ class AppStateProvider with ChangeNotifier {
     final page = getCurrentPage();
     if (page == null) return;
 
-    final index = page.components.indexWhere((c) => c.id == componentId);
+    final index = page.components.indexWhere((c) => c is Component && c.id == componentId);
     if (index == -1) return;
 
-    page.components[index] = page.components[index].copyWith(styles: newStyles);
+    final component = page.components[index] as Component;
+    page.components[index] = component.copyWith(styles: newStyles);
     notifyListeners();
   }
 
