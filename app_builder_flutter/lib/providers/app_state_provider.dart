@@ -42,6 +42,7 @@ class AppStateProvider with ChangeNotifier {
       _state.app.navigationStack = [..._state.app.navigationStack, pageId];
     }
     _state.app.currentPageId = pageId;
+    selectComponent(null, type: 'page');
     notifyListeners();
   }
 

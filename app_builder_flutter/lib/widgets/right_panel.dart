@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
 import '../models/component.dart';
+import '../models/page.dart';
 
 class RightPanel extends StatelessWidget {
   const RightPanel({super.key});
@@ -23,6 +24,13 @@ class RightPanel extends StatelessWidget {
             child: Consumer<AppStateProvider>(
               builder: (context, provider, child) {
                 final component = provider.findSelectedComponent();
+                final page = provider.getCurrentPage();
+                final isPageSelected = provider.selectedId == null || provider.selectedType == 'page';
+                
+                if (isPageSelected && page != null) {
+                  return _buildPageInspector(context, provider, page);
+                }
+                
                 if (component == null) {
                   return const Center(
                     child: Text(
@@ -35,167 +43,281 @@ class RightPanel extends StatelessWidget {
                     ),
                   );
                 }
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                  child: Column(
-                    children: [
-                      _buildSelectedHeader(component),
-                      const SizedBox(height: 16),
-                      InspectorAccordion(
-                        title: 'Content',
-                        icon: Icons.text_fields,
-                        iconColor: const Color(0xFF818CF8),
-                        children: [
-                          InspectorField(
-                            label: 'Text',
-                            value: component.props?['text'] as String?,
-                            placeholder: 'Enter text',
-                            onChanged: (value) {
-                              component.props ??= {};
-                              component.props!['text'] = value;
-                              provider.notifyListeners();
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      InspectorAccordion(
-                        title: 'Typography',
-                        icon: Icons.format_size,
-                        iconColor: const Color(0xFFF472B6),
-                        children: [
-                          InspectorField(
-                            label: 'Font Size',
-                            value: component.styles?.fontSize,
-                            placeholder: '16',
-                            onChanged: (value) {
-                              component.styles ??= ComponentStyles();
-                              component.styles!.fontSize = value;
-                              provider.updateComponentStyles(
-                                component.id,
-                                component.styles!,
-                              );
-                            },
-                          ),
-                          InspectorField(
-                            label: 'Font Weight',
-                            value: component.styles?.fontWeight,
-                            placeholder: 'Normal',
-                            onChanged: (value) {
-                              component.styles ??= ComponentStyles();
-                              component.styles!.fontWeight = value;
-                              provider.updateComponentStyles(
-                                component.id,
-                                component.styles!,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      InspectorAccordion(
-                        title: 'Colors',
-                        icon: Icons.palette,
-                        iconColor: const Color(0xFF4ADE80),
-                        children: [
-                          InspectorColorField(
-                            label: 'Text Color',
-                            value: component.styles?.color,
-                            onChanged: (value) {
-                              component.styles ??= ComponentStyles();
-                              component.styles!.color = value;
-                              provider.updateComponentStyles(
-                                component.id,
-                                component.styles!,
-                              );
-                            },
-                          ),
-                          InspectorColorField(
-                            label: 'Background Color',
-                            value: component.styles?.backgroundColor,
-                            onChanged: (value) {
-                              component.styles ??= ComponentStyles();
-                              component.styles!.backgroundColor = value;
-                              provider.updateComponentStyles(
-                                component.id,
-                                component.styles!,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      InspectorAccordion(
-                        title: 'Layout',
-                        icon: Icons.view_quilt,
-                        iconColor: const Color(0xFF60A5FA),
-                        children: [
-                          InspectorField(
-                            label: 'X Position',
-                            value: component.layout?.x.toString(),
-                            placeholder: '0',
-                            onChanged: (value) {
-                              final x = double.tryParse(value);
-                              if (x != null && component.layout != null) {
-                                provider.updateComponentLayout(
-                                  component.id,
-                                  component.layout!.copyWith(x: x),
-                                );
-                              }
-                            },
-                          ),
-                          InspectorField(
-                            label: 'Y Position',
-                            value: component.layout?.y.toString(),
-                            placeholder: '0',
-                            onChanged: (value) {
-                              final y = double.tryParse(value);
-                              if (y != null && component.layout != null) {
-                                provider.updateComponentLayout(
-                                  component.id,
-                                  component.layout!.copyWith(y: y),
-                                );
-                              }
-                            },
-                          ),
-                          InspectorField(
-                            label: 'Width',
-                            value: component.layout?.width.toString(),
-                            placeholder: '100',
-                            onChanged: (value) {
-                              final width = double.tryParse(value);
-                              if (width != null && component.layout != null) {
-                                provider.updateComponentLayout(
-                                  component.id,
-                                  component.layout!.copyWith(width: width),
-                                );
-                              }
-                            },
-                          ),
-                          InspectorField(
-                            label: 'Height',
-                            value: component.layout?.height.toString(),
-                            placeholder: '40',
-                            onChanged: (value) {
-                              final height = double.tryParse(value);
-                              if (height != null && component.layout != null) {
-                                provider.updateComponentLayout(
-                                  component.id,
-                                  component.layout!.copyWith(height: height),
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
+                return _buildComponentInspector(context, provider, component);
               },
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPageInspector(BuildContext context, AppStateProvider provider, Page page) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      child: Column(
+        children: [
+          _buildSelectedHeader('Page Settings'),
+          const SizedBox(height: 16),
+          InspectorAccordion(
+            title: 'Page Info',
+            icon: Icons.info,
+            iconColor: const Color(0xFF818CF8),
+            children: [
+              InspectorField(
+                label: 'Page Name',
+                value: page.name,
+                placeholder: 'Page Name',
+                onChanged: (value) {
+                  page.name = value;
+                  provider.notifyListeners();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Background',
+            icon: Icons.palette,
+            iconColor: const Color(0xFF4ADE80),
+            children: [
+              InspectorColorField(
+                label: 'Background Color',
+                value: page.backgroundColor,
+                onChanged: (value) {
+                  page.backgroundColor = value;
+                  provider.notifyListeners();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'App Bar',
+            icon: Icons.menu,
+            iconColor: const Color(0xFFF472B6),
+            children: [
+              InspectorField(
+                label: 'Title',
+                value: page.appBar.title,
+                placeholder: 'App Title',
+                onChanged: (value) {
+                  page.appBar.title = value;
+                  provider.notifyListeners();
+                },
+              ),
+              InspectorColorField(
+                label: 'Background Color',
+                value: page.appBar.backgroundColor,
+                onChanged: (value) {
+                  page.appBar.backgroundColor = value;
+                  provider.notifyListeners();
+                },
+              ),
+              InspectorColorField(
+                label: 'Text Color',
+                value: page.appBar.textColor,
+                onChanged: (value) {
+                  page.appBar.textColor = value;
+                  provider.notifyListeners();
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComponentInspector(BuildContext context, AppStateProvider provider, Component component) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      child: Column(
+        children: [
+          _buildSelectedHeader(component.type),
+          const SizedBox(height: 16),
+          InspectorAccordion(
+            title: 'Content',
+            icon: Icons.text_fields,
+            iconColor: const Color(0xFF818CF8),
+            children: [
+              InspectorField(
+                label: 'Text',
+                value: component.props?['text'] as String?,
+                placeholder: 'Enter text',
+                onChanged: (value) {
+                  component.props ??= {};
+                  component.props!['text'] = value;
+                  provider.notifyListeners();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Typography',
+            icon: Icons.format_size,
+            iconColor: const Color(0xFFF472B6),
+            children: [
+              InspectorField(
+                label: 'Font Size',
+                value: component.styles?.fontSize,
+                placeholder: '16',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.fontSize = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Font Weight',
+                value: component.styles?.fontWeight,
+                placeholder: 'Normal',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.fontWeight = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Colors',
+            icon: Icons.palette,
+            iconColor: const Color(0xFF4ADE80),
+            children: [
+              InspectorColorField(
+                label: 'Text Color',
+                value: component.styles?.color,
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.color = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorColorField(
+                label: 'Background Color',
+                value: component.styles?.backgroundColor,
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.backgroundColor = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Layout',
+            icon: Icons.view_quilt,
+            iconColor: const Color(0xFF60A5FA),
+            children: [
+              InspectorField(
+                label: 'X Position',
+                value: component.layout?.x.toString(),
+                placeholder: '0',
+                onChanged: (value) {
+                  final x = double.tryParse(value);
+                  if (x != null && component.layout != null) {
+                    provider.updateComponentLayout(
+                      component.id,
+                      component.layout!.copyWith(x: x),
+                    );
+                  }
+                },
+              ),
+              InspectorField(
+                label: 'Y Position',
+                value: component.layout?.y.toString(),
+                placeholder: '0',
+                onChanged: (value) {
+                  final y = double.tryParse(value);
+                  if (y != null && component.layout != null) {
+                    provider.updateComponentLayout(
+                      component.id,
+                      component.layout!.copyWith(y: y),
+                    );
+                  }
+                },
+              ),
+              InspectorField(
+                label: 'Width',
+                value: component.layout?.width.toString(),
+                placeholder: '100',
+                onChanged: (value) {
+                  final width = double.tryParse(value);
+                  if (width != null && component.layout != null) {
+                    provider.updateComponentLayout(
+                      component.id,
+                      component.layout!.copyWith(width: width),
+                    );
+                  }
+                },
+              ),
+              InspectorField(
+                label: 'Height',
+                value: component.layout?.height.toString(),
+                placeholder: '40',
+                onChanged: (value) {
+                  final height = double.tryParse(value);
+                  if (height != null && component.layout != null) {
+                    provider.updateComponentLayout(
+                      component.id,
+                      component.layout!.copyWith(height: height),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedHeader(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: const Color(0xFF8B5CF6).withOpacity(0.2),
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.settings,
+              size: 16,
+              color: Color(0xFF8B5CF6),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFFF8FAFC),
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
