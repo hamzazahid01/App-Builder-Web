@@ -67,42 +67,79 @@ class CenterPanel extends StatelessWidget {
   }
 
   Widget _buildDeviceSwitcher() {
-    return Row(
-      children: [
-        Text(
-          'Device',
-          style: TextStyle(
-            color: Colors.grey.shade400,
-            fontSize: 12,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withOpacity(0.12)),
-            color: Colors.white.withOpacity(0.06),
-          ),
-          child: Row(
-            children: [
-              Text(
-                'iPhone 14',
-                style: const TextStyle(
-                  color: Color(0xFFF8FAFC),
-                  fontSize: 12,
+    return Consumer<AppStateProvider>(
+      builder: (context, provider, child) {
+        final currentDevice = provider.deviceMap[provider.currentDeviceKey];
+        return Row(
+          children: [
+            Text(
+              'Device',
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(width: 8),
+            PopupMenuButton<String>(
+              initialValue: provider.currentDeviceKey,
+              onSelected: (deviceKey) {
+                provider.setCurrentDevice(deviceKey);
+              },
+              itemBuilder: (context) {
+                return provider.deviceMap.entries.map((entry) {
+                  return PopupMenuItem<String>(
+                    value: entry.key,
+                    child: Row(
+                      children: [
+                        Text(
+                          entry.value.label,
+                          style: const TextStyle(
+                            color: Color(0xFFF8FAFC),
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${entry.value.width.toInt()}x${entry.value.height.toInt()}',
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.white.withOpacity(0.12)),
+                  color: Colors.white.withOpacity(0.06),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      currentDevice?.label ?? 'iPhone 14',
+                      style: const TextStyle(
+                        color: Color(0xFFF8FAFC),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 16,
+                      color: Colors.grey.shade400,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.keyboard_arrow_down,
-                size: 16,
-                color: Colors.grey.shade400,
-              ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -236,7 +273,7 @@ class CenterPanel extends StatelessWidget {
   }
 
   Widget _buildPreviewViewport() {
-    return Container(
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Center(
         child: _buildMobilePreview(),
@@ -278,8 +315,8 @@ class CenterPanel extends StatelessWidget {
             provider.deviceMap['iphone-14']!;
 
         return Container(
-          width: deviceInfo.width,
-          height: deviceInfo.height,
+          width: deviceInfo.width * provider.previewZoom,
+          height: deviceInfo.height * provider.previewZoom,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(44),
             color: const Color(0xFFF8FBFF),
@@ -344,45 +381,47 @@ class CenterPanel extends StatelessWidget {
                 bottom: 30,
                 left: 12,
                 right: 12,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(40),
-                    color: page != null
-                        ? _parseColor(page.backgroundColor)
-                        : Colors.white,
-                  ),
-                  child: page != null && page.components.isNotEmpty
-                      ? Stack(
-                          children: page.components.map((component) {
-                            if (component is Component) {
-                              return ComponentRenderer(
-                                component: component,
-                                isSelected: component.id == provider.selectedId,
-                                onTap: () {
-                                  provider.selectComponent(component.id);
-                                },
-                                onPositionChanged: (x, y) {
-                                  if (component.layout != null) {
-                                    provider.updateComponentLayout(
-                                      component.id,
-                                      component.layout!.copyWith(x: x, y: y),
-                                    );
-                                  }
-                                },
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          }).toList(),
-                        )
-                      : const Center(
-                          child: Text(
-                            'Canvas Area',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(40),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: page != null
+                          ? _parseColor(page.backgroundColor)
+                          : Colors.white,
+                    ),
+                    child: page != null && page.components.isNotEmpty
+                        ? Stack(
+                            children: page.components.map((component) {
+                              if (component is Component) {
+                                return ComponentRenderer(
+                                  component: component,
+                                  isSelected: component.id == provider.selectedId,
+                                  onTap: () {
+                                    provider.selectComponent(component.id);
+                                  },
+                                  onPositionChanged: (x, y) {
+                                    if (component.layout != null) {
+                                      provider.updateComponentLayout(
+                                        component.id,
+                                        component.layout!.copyWith(x: x, y: y),
+                                      );
+                                    }
+                                  },
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            }).toList(),
+                          )
+                        : const Center(
+                            child: Text(
+                              'Canvas Area',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
-                        ),
+                  ),
                 ),
               ),
             ],
