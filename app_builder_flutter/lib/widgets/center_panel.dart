@@ -207,27 +207,39 @@ class CenterPanel extends StatelessWidget {
   }
 
   Widget _buildSnapToggle() {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
-        color: Colors.white.withOpacity(0.08),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(8),
-          child: const Center(
-            child: Text(
-              '🧲',
-              style: TextStyle(fontSize: 16),
+    return Consumer<AppStateProvider>(
+      builder: (context, provider, child) {
+        return Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: provider.snapToGrid
+                  ? const Color(0xFF8B5CF6)
+                  : Colors.white.withOpacity(0.12),
+            ),
+            color: provider.snapToGrid
+                ? const Color(0xFF8B5CF6).withOpacity(0.2)
+                : Colors.white.withOpacity(0.08),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                provider.setSnapToGrid(!provider.snapToGrid);
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: const Center(
+                child: Text(
+                  '🧲',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
