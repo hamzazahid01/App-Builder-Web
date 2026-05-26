@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'widgets/topbar.dart';
 import 'widgets/left_panel.dart';
+import 'widgets/right_panel.dart';
 
 void main() {
   runApp(const AppBuilderApp());
@@ -61,6 +62,7 @@ class AppBuilderHome extends StatelessWidget {
                     ),
                   ),
                 ),
+                const RightPanel(),
               ],
             ),
           ),
