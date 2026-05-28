@@ -63,6 +63,7 @@ class AppBuilderHome extends StatelessWidget {
                   builder: (context, provider, child) {
                     return SizedBox(
                       width: 320,
+                      
                       child: LeftPanel(
                         onAddTemplate: () {
                           ScaffoldMessenger.of(context).showSnackBar(
