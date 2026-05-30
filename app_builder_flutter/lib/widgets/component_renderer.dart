@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/component.dart';
 import '../providers/app_state_provider.dart';
+import '../config/app_config.dart';
 
 class ComponentRenderer extends StatefulWidget {
   final Component component;
@@ -59,13 +60,12 @@ class _ComponentRendererState extends State<ComponentRenderer> {
               
               // Apply snap to grid if enabled
               if (provider.snapToGrid) {
-                final gridSize = 10.0;
-                newX = (newX / gridSize).round() * gridSize;
-                newY = (newY / gridSize).round() * gridSize;
+                newX = (newX / AppConfig.gridSize).round() * AppConfig.gridSize;
+                newY = (newY / AppConfig.gridSize).round() * AppConfig.gridSize;
               }
               
-              newX = newX.clamp(0.0, 350.0);
-              newY = newY.clamp(0.0, 750.0);
+              newX = newX.clamp(0.0, AppConfig.canvasMaxWidth);
+              newY = newY.clamp(0.0, AppConfig.canvasMaxHeight);
               
               widget.onPositionChanged?.call(newX, newY);
             },
