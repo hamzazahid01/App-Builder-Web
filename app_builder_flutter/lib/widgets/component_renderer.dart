@@ -29,6 +29,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   double? _startY;
   double? _initialX;
   double? _initialY;
+  bool _isHovering = false;
 
   @override
   Widget build(BuildContext context) {
@@ -40,69 +41,83 @@ class _ComponentRendererState extends State<ComponentRenderer> {
         return Positioned(
           left: layout?.x ?? 0,
           top: layout?.y ?? 0,
-          child: GestureDetector(
-            onTap: widget.onTap,
-            onDoubleTap: widget.onDoubleTap,
-            onPanStart: (details) {
-              _startX = details.globalPosition.dx;
-              _startY = details.globalPosition.dy;
-              _initialX = layout?.x;
-              _initialY = layout?.y;
-            },
-            onPanUpdate: (details) {
-              if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
-              
-              final dx = details.globalPosition.dx - _startX!;
-              final dy = details.globalPosition.dy - _startY!;
-              
-              double newX = _initialX! + dx;
-              double newY = _initialY! + dy;
-              
-              // Apply snap to grid if enabled
-              if (provider.snapToGrid) {
-                newX = (newX / AppConfig.gridSize).round() * AppConfig.gridSize;
-                newY = (newY / AppConfig.gridSize).round() * AppConfig.gridSize;
-              }
-              
-              newX = newX.clamp(0.0, AppConfig.canvasMaxWidth);
-              newY = newY.clamp(0.0, AppConfig.canvasMaxHeight);
-              
-              widget.onPositionChanged?.call(newX, newY);
-            },
-            onPanEnd: (details) {
-              _startX = null;
-              _startY = null;
-              _initialX = null;
-              _initialY = null;
-            },
-            child: Container(
-              width: layout?.width ?? 100,
-              height: layout?.height ?? 40,
-              decoration: BoxDecoration(
-                color: _parseColor(styles?.backgroundColor),
-                borderRadius: _parseBorderRadius(styles?.borderRadius),
-                border: styles?.borderColor != null
-                    ? Border.all(
-                        color: _parseColor(styles?.borderColor) ?? Colors.transparent,
-                        width: _parseDouble(styles?.borderWidth) ?? 1,
-                      )
-                    : null,
-                boxShadow: widget.isSelected
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFF8B5CF6).withOpacity(0.9),
-                          blurRadius: 0,
-                          spreadRadius: 2,
-                        ),
-                        BoxShadow(
-                          color: const Color(0xFF8B5CF6).withOpacity(0.14),
-                          blurRadius: 8,
-                          spreadRadius: 4,
-                        ),
-                      ]
-                    : null,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _isHovering = true),
+            onExit: (_) => setState(() => _isHovering = false),
+            child: GestureDetector(
+              onTap: widget.onTap,
+              onDoubleTap: widget.onDoubleTap,
+              onPanStart: (details) {
+                _startX = details.globalPosition.dx;
+                _startY = details.globalPosition.dy;
+                _initialX = layout?.x;
+                _initialY = layout?.y;
+              },
+              onPanUpdate: (details) {
+                if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
+                
+                final dx = details.globalPosition.dx - _startX!;
+                final dy = details.globalPosition.dy - _startY!;
+                
+                double newX = _initialX! + dx;
+                double newY = _initialY! + dy;
+                
+                // Apply snap to grid if enabled
+                if (provider.snapToGrid) {
+                  newX = (newX / AppConfig.gridSize).round() * AppConfig.gridSize;
+                  newY = (newY / AppConfig.gridSize).round() * AppConfig.gridSize;
+                }
+                
+                newX = newX.clamp(0.0, AppConfig.canvasMaxWidth);
+                newY = newY.clamp(0.0, AppConfig.canvasMaxHeight);
+                
+                widget.onPositionChanged?.call(newX, newY);
+              },
+              onPanEnd: (details) {
+                _startX = null;
+                _startY = null;
+                _initialX = null;
+                _initialY = null;
+              },
+              child: Container(
+                width: layout?.width ?? 100,
+                height: layout?.height ?? 40,
+                decoration: BoxDecoration(
+                  color: _parseColor(styles?.backgroundColor),
+                  borderRadius: _parseBorderRadius(styles?.borderRadius),
+                  border: Border.all(
+                    color: widget.isSelected
+                        ? const Color(0xFF8B5CF6)
+                        : _isHovering
+                            ? const Color(0xFF8B5CF6).withOpacity(0.5)
+                            : (styles?.borderColor != null
+                                ? _parseColor(styles?.borderColor) ?? Colors.transparent
+                                : Colors.transparent),
+                    width: widget.isSelected ? 2 : (_parseDouble(styles?.borderWidth) ?? 1),
+                  ),
+                  boxShadow: [
+                    if (widget.isSelected)
+                      BoxShadow(
+                        color: const Color(0xFF8B5CF6).withOpacity(0.9),
+                        blurRadius: 0,
+                        spreadRadius: 2,
+                      ),
+                    if (widget.isSelected)
+                      BoxShadow(
+                        color: const Color(0xFF8B5CF6).withOpacity(0.14),
+                        blurRadius: 8,
+                        spreadRadius: 4,
+                      ),
+                    if (_isHovering && !widget.isSelected)
+                      BoxShadow(
+                        color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                        blurRadius: 4,
+                        spreadRadius: 1,
+                      ),
+                  ],
+                ),
+                child: _buildContent(styles),
               ),
-              child: _buildContent(styles),
             ),
           ),
         );

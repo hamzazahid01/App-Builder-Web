@@ -246,4 +246,24 @@ class AppStateProvider with ChangeNotifier {
     _pushHistorySnapshot();
     notifyListeners();
   }
+
+  bool isValidComponentId(String id) {
+    final page = getCurrentPage();
+    if (page == null) return false;
+    return findById(page.components, id) != null;
+  }
+
+  bool isValidComponentType(String type) {
+    const validTypes = ['button', 'text', 'image', 'input', 'container', 'row', 'column', 'stack', 'appbar', 'bottomnav', 'drawer'];
+    return validTypes.contains(type.toLowerCase());
+  }
+
+  String? validateComponent(Component component) {
+    if (component.id.isEmpty) return 'Component ID cannot be empty';
+    if (!isValidComponentType(component.type)) return 'Invalid component type: ${component.type}';
+    if (component.layout == null) return 'Component layout is required';
+    if (component.layout!.width <= 0) return 'Component width must be greater than 0';
+    if (component.layout!.height <= 0) return 'Component height must be greater than 0';
+    return null;
+  }
 }
