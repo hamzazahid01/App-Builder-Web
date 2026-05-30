@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
 
-class LeftPanel extends StatelessWidget {
+class LeftPanel extends StatefulWidget {
   final VoidCallback onAddTemplate;
   final VoidCallback onAddPage;
 
@@ -11,6 +11,13 @@ class LeftPanel extends StatelessWidget {
     required this.onAddTemplate,
     required this.onAddPage,
   });
+
+  @override
+  State<LeftPanel> createState() => _LeftPanelState();
+}
+
+class _LeftPanelState extends State<LeftPanel> {
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +68,7 @@ class LeftPanel extends StatelessWidget {
               ],
             ),
           ),
-          _buildIconButton('★', 'Templates', onAddTemplate),
+          _buildIconButton('★', 'Templates', widget.onAddTemplate),
         ],
       ),
     );
@@ -100,6 +107,11 @@ class LeftPanel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: TextField(
         style: const TextStyle(color: Color(0xFFF8FAFC)),
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value.toLowerCase();
+          });
+        },
         decoration: InputDecoration(
           hintText: 'Search components',
           hintStyle: TextStyle(
@@ -123,35 +135,71 @@ class LeftPanel extends StatelessWidget {
             horizontal: 16,
             vertical: 14,
           ),
+          prefixIcon: Icon(
+            Icons.search,
+            size: 18,
+            color: Colors.grey.shade400,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildComponentCategories() {
-    return const Expanded(
+    final categories = [
+      const ComponentCategory(
+        title: 'Basic',
+        icon: '📦',
+        items: ['Button', 'Text', 'Image', 'Input'],
+      ),
+      const ComponentCategory(
+        title: 'Layout',
+        icon: '📐',
+        items: ['Container', 'Row', 'Column', 'Stack'],
+      ),
+      const ComponentCategory(
+        title: 'Navigation',
+        icon: '🧭',
+        items: ['AppBar', 'BottomNav', 'Drawer'],
+      ),
+    ];
+
+    final filteredCategories = _searchQuery.isEmpty
+        ? categories
+        : categories
+            .map((cat) => ComponentCategory(
+              title: cat.title,
+              icon: cat.icon,
+              items: cat.items
+                  .where((item) => item.toLowerCase().contains(_searchQuery))
+                  .toList(),
+            ))
+            .where((cat) => cat.items.isNotEmpty)
+            .toList();
+
+    return Expanded(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              ComponentCategory(
-                title: 'Basic',
-                icon: '📦',
-                items: ['Button', 'Text', 'Image', 'Input'],
-              ),
-              SizedBox(height: 14),
-              ComponentCategory(
-                title: 'Layout',
-                icon: '📐',
-                items: ['Container', 'Row', 'Column', 'Stack'],
-              ),
-              SizedBox(height: 14),
-              ComponentCategory(
-                title: 'Navigation',
-                icon: '🧭',
-                items: ['AppBar', 'BottomNav', 'Drawer'],
-              ),
+              if (filteredCategories.isEmpty)
+                Center(
+                  child: Text(
+                    'No components found',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
+                  ),
+                )
+              else
+                ...filteredCategories.map((cat) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: cat,
+                  );
+                }),
             ],
           ),
         ),
@@ -165,7 +213,7 @@ class LeftPanel extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: onAddPage,
+          onPressed: widget.onAddPage,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white.withOpacity(0.06),
             foregroundColor: const Color(0xFFF8FAFC),
