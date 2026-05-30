@@ -283,6 +283,145 @@ class RightPanel extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Spacing',
+            icon: Icons.space_bar,
+            iconColor: const Color(0xFFEC4899),
+            children: [
+              InspectorField(
+                label: 'Padding',
+                value: component.styles?.padding,
+                placeholder: '0',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.padding = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Margin',
+                value: component.styles?.margin,
+                placeholder: '0',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.margin = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Border & Shadow',
+            icon: Icons.border_style,
+            iconColor: const Color(0xFF10B981),
+            children: [
+              InspectorColorField(
+                label: 'Border Color',
+                value: component.styles?.borderColor,
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.borderColor = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Border Width',
+                value: component.styles?.borderWidth,
+                placeholder: '1',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.borderWidth = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Border Radius',
+                value: component.styles?.borderRadius,
+                placeholder: '0',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.borderRadius = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Shadow Blur',
+                value: component.styles?.shadowBlur,
+                placeholder: '0',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.shadowBlur = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorColorField(
+                label: 'Shadow Color',
+                value: component.styles?.shadowColor,
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.shadowColor = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Effects',
+            icon: Icons.blur_on,
+            iconColor: const Color(0xFFF59E0B),
+            children: [
+              InspectorField(
+                label: 'Opacity',
+                value: component.styles?.opacity,
+                placeholder: '1',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.opacity = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Rotation',
+                value: component.styles?.rotation,
+                placeholder: '0',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.rotation = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+            ],
+          ),
         ],
       ),
     );
