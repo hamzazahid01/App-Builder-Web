@@ -205,12 +205,45 @@ class AppStateProvider with ChangeNotifier {
   }
 
   void saveToLocal() {
-    // TODO: Implement local storage
+    // TODO: Implement local storage with shared_preferences
     debugPrint('Saving to local storage: ${_state.appHash()}');
   }
 
   void restoreFromLocal() {
-    // TODO: Implement local storage restoration
+    // TODO: Implement local storage restoration with shared_preferences
     debugPrint('Restoring from local storage');
+  }
+
+  void exportToJson() {
+    final jsonString = _state.toJsonString();
+    debugPrint('Exported JSON: $jsonString');
+    // TODO: Implement file download/export functionality
+  }
+
+  void copyComponent(Component component) {
+    _state.clipboard = component;
+    notifyListeners();
+  }
+
+  void pasteComponent() {
+    if (_state.clipboard == null) return;
+    final page = getCurrentPage();
+    if (page == null) return;
+
+    final newComponent = Component(
+      id: makeId(_state.clipboard!.type),
+      type: _state.clipboard!.type,
+      layout: _state.clipboard!.layout?.copyWith(
+        x: (_state.clipboard!.layout?.x ?? 0) + 20,
+        y: (_state.clipboard!.layout?.y ?? 0) + 20,
+      ),
+      styles: _state.clipboard!.styles,
+      props: _state.clipboard!.props,
+    );
+
+    page.components = [...page.components, newComponent];
+    selectComponent(newComponent.id);
+    _pushHistorySnapshot();
+    notifyListeners();
   }
 }

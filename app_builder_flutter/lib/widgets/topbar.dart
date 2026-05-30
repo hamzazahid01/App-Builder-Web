@@ -9,6 +9,8 @@ class TopBar extends StatelessWidget {
   final VoidCallback onExport;
   final VoidCallback onThemeToggle;
   final VoidCallback onProfile;
+  final bool canUndo;
+  final bool canRedo;
 
   const TopBar({
     super.key,
@@ -20,18 +22,160 @@ class TopBar extends StatelessWidget {
     required this.onExport,
     required this.onThemeToggle,
     required this.onProfile,
+    this.canUndo = false,
+    this.canRedo = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         color: const Color(0xFF070B16).withOpacity(0.78),
         border: Border(
           bottom: BorderSide(
             color: Colors.white.withOpacity(0.08),
             width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          _buildBrand(),
+          const SizedBox(width: 40),
+          Expanded(
+            child: Row(
+              children: [
+                _buildIconButton(Icons.save, 'Save', onSave),
+                const SizedBox(width: 8),
+                _buildIconButton(Icons.undo, 'Undo', onUndo, enabled: canUndo),
+                const SizedBox(width: 8),
+                _buildIconButton(Icons.redo, 'Redo', onRedo, enabled: canRedo),
+                const SizedBox(width: 16),
+                _buildIconButton(Icons.visibility, 'Preview', onPreview),
+                const SizedBox(width: 8),
+                _buildIconButton(Icons.download, 'Export', onExport),
+              ],
+            ),
+          ),
+          _buildIconButton(Icons.brightness_4, 'Theme', onThemeToggle),
+          const SizedBox(width: 8),
+          _buildProfileButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBrand() {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+            ),
+          ),
+          child: const Center(
+            child: Text(
+              'AB',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'App Builder',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              projectName,
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 9,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIconButton(
+    IconData icon,
+    String tooltip,
+    VoidCallback onPressed, {
+    bool enabled = true,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          color: enabled
+              ? Colors.white.withOpacity(0.08)
+              : Colors.white.withOpacity(0.04),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: enabled ? onPressed : null,
+            borderRadius: BorderRadius.circular(6),
+            child: Icon(
+              icon,
+              size: 16,
+              color: enabled ? Colors.white : Colors.grey.shade600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileButton() {
+    return Tooltip(
+      message: 'Profile',
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          color: Colors.white.withOpacity(0.08),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onProfile,
+            borderRadius: BorderRadius.circular(6),
+            child: const Center(
+              child: Text(
+                'HZ',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
+            ),
           ),
         ),
       ),
