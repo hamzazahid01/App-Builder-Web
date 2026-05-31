@@ -451,8 +451,12 @@ class CenterPanel extends StatelessWidget {
                                         provider.updateComponentLayout(
                                           component.id,
                                           component.layout!.copyWith(x: x, y: y),
+                                          notify: false,
                                         );
                                       }
+                                    },
+                                    onDragEnd: () {
+                                      provider.notifyListeners();
                                     },
                                   );
                                 }

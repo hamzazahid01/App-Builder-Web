@@ -150,7 +150,7 @@ class AppStateProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateComponentLayout(String componentId, ComponentLayout newLayout) {
+  void updateComponentLayout(String componentId, ComponentLayout newLayout, {bool notify = false}) {
     final page = getCurrentPage();
     if (page == null) return;
 
@@ -159,7 +159,9 @@ class AppStateProvider with ChangeNotifier {
 
     final component = page.components[index] as Component;
     page.components[index] = component.copyWith(layout: newLayout);
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   void updateComponentStyles(String componentId, ComponentStyles newStyles) {

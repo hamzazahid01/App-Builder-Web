@@ -11,6 +11,7 @@ class ComponentRenderer extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onDoubleTap;
   final Function(double x, double y)? onPositionChanged;
+  final VoidCallback? onDragEnd;
 
   const ComponentRenderer({
     super.key,
@@ -19,6 +20,7 @@ class ComponentRenderer extends StatefulWidget {
     this.onTap,
     this.onDoubleTap,
     this.onPositionChanged,
+    this.onDragEnd,
   });
 
   @override
@@ -110,6 +112,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 _initialX = null;
                 _initialY = null;
                 _activeSnaps = [];
+                widget.onDragEnd?.call();
               },
               child: Stack(
                 children: [
