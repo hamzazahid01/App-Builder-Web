@@ -56,8 +56,8 @@ class _ComponentRendererState extends State<ComponentRenderer> {
               onDoubleTap: widget.onDoubleTap,
               onPanStart: (details) {
                 if (_resizeHandle != null) return;
-                _startX = details.globalPosition.dx;
-                _startY = details.globalPosition.dy;
+                _startX = details.localPosition.dx;
+                _startY = details.localPosition.dy;
                 _initialX = layout?.x;
                 _initialY = layout?.y;
               },
@@ -65,8 +65,8 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 if (_resizeHandle != null) return;
                 if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
                 
-                final dx = details.globalPosition.dx - _startX!;
-                final dy = details.globalPosition.dy - _startY!;
+                final dx = details.localPosition.dx - _startX!;
+                final dy = details.localPosition.dy - _startY!;
                 
                 double newX = _initialX! + dx;
                 double newY = _initialY! + dy;
