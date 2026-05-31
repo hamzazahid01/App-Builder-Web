@@ -101,7 +101,6 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                   newY = snappedPos.dy;
                 }
                 
-                setState(() {});
                 widget.onPositionChanged?.call(newX, newY);
               },
               onPanEnd: (details) {
@@ -111,7 +110,6 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 _initialX = null;
                 _initialY = null;
                 _activeSnaps = [];
-                setState(() {});
               },
               child: Stack(
                 children: [
