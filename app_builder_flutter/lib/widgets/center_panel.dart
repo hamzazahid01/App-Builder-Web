@@ -11,10 +11,15 @@ import '../services/snap_guide_service.dart';
 import 'component_renderer.dart';
 import 'snap_guide_overlay.dart';
 
-class CenterPanel extends StatelessWidget {
-  CenterPanel({super.key});
+class CenterPanel extends StatefulWidget {
+  const CenterPanel({super.key});
 
-  final GlobalKey _canvasKey = GlobalKey();
+  @override
+  State<CenterPanel> createState() => _CenterPanelState();
+}
+
+class _CenterPanelState extends State<CenterPanel> {
+  RenderBox? _canvasBox;
 
   @override
   Widget build(BuildContext context) {
@@ -432,8 +437,8 @@ class CenterPanel extends StatelessWidget {
                       );
                     },
                     builder: (context, candidateData, rejectedData) {
+                      _canvasBox = context.findRenderObject() as RenderBox?;
                       return Container(
-                        key: _canvasKey,
                         decoration: BoxDecoration(
                           color: page != null
                               ? _parseColor(page.backgroundColor)
@@ -504,8 +509,8 @@ class CenterPanel extends StatelessWidget {
   }
 
   Offset? _getCanvasDropOffset(Offset globalOffset) {
-    final renderBox = _canvasKey.currentContext?.findRenderObject() as RenderBox?;
-    return renderBox?.globalToLocal(globalOffset);
+    if (_canvasBox == null) return null;
+    return _canvasBox!.globalToLocal(globalOffset);
   }
 
   ComponentLayout _buildDropLayout({
