@@ -338,57 +338,107 @@ class _ComponentCategoryState extends State<ComponentCategory> {
   }
 }
 
-class _ComponentItem extends StatelessWidget {
+class _ComponentItem extends StatefulWidget {
   final String name;
 
   const _ComponentItem({required this.name});
 
   @override
+  State<_ComponentItem> createState() => _ComponentItemState();
+}
+
+class _ComponentItemState extends State<_ComponentItem> {
+  bool _isDragging = false;
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        final provider = context.read<AppStateProvider>();
-        provider.addComponent(name.toLowerCase());
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Added $name')),
-        );
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
-          color: const Color(0xFF1E293B).withOpacity(0.6),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                name,
+    return Draggable<String>(
+      data: widget.name.toLowerCase(),
+      feedback: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF8B5CF6)),
+            color: const Color(0xFF1E293B).withOpacity(0.9),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                blurRadius: 12,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.name,
                 style: const TextStyle(
                   color: Color(0xFFE2E8F0),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+      onDragStarted: () => setState(() => _isDragging = true),
+      onDraggableCanceled: (_, __) => setState(() => _isDragging = false),
+      onDragEnd: (_) => setState(() => _isDragging = false),
+      child: InkWell(
+        onTap: () {
+          final provider = context.read<AppStateProvider>();
+          provider.addComponent(widget.name.toLowerCase());
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Added ${widget.name}')),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _isDragging
+                  ? const Color(0xFF8B5CF6)
+                  : Colors.white.withOpacity(0.08),
             ),
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.white.withOpacity(0.08),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.add,
-                  size: 18,
-                  color: Colors.grey.shade400,
+            color: _isDragging
+                ? const Color(0xFF1E293B).withOpacity(0.8)
+                : const Color(0xFF1E293B).withOpacity(0.6),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.name,
+                  style: const TextStyle(
+                    color: Color(0xFFE2E8F0),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-          ],
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white.withOpacity(0.08),
+                ),
+                child: Center(
+                  child: Icon(
+                    _isDragging ? Icons.pan_tool : Icons.add,
+                    size: 18,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

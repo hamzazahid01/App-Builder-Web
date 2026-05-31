@@ -406,54 +406,70 @@ class CenterPanel extends StatelessWidget {
                 right: 12,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(40),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: page != null
-                          ? _parseColor(page.backgroundColor)
-                          : Colors.white,
-                    ),
-                    child: Stack(
-                      children: [
-                        // Snap guide overlay (global)
-                        Consumer<AppStateProvider>(
-                          builder: (context, provider, child) {
-                            return _buildSnapGuideOverlay(provider, page);
-                          },
+                  child: DragTarget<String>(
+                    onAccept: (componentType) {
+                      provider.addComponent(componentType);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Added ${componentType.toUpperCase()}')),
+                      );
+                    },
+                    builder: (context, candidateData, rejectedData) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: page != null
+                              ? _parseColor(page.backgroundColor)
+                              : Colors.white,
+                          border: candidateData.isNotEmpty
+                              ? Border.all(
+                                  color: const Color(0xFF8B5CF6),
+                                  width: 2,
+                                )
+                              : null,
                         ),
-                        // Components
-                        if (page != null && page.components.isNotEmpty)
-                          ...page.components.map((component) {
-                            if (component is Component) {
-                              return ComponentRenderer(
-                                component: component,
-                                isSelected: component.id == provider.selectedId,
-                                onTap: () {
-                                  provider.selectComponent(component.id);
-                                },
-                                onPositionChanged: (x, y) {
-                                  if (component.layout != null) {
-                                    provider.updateComponentLayout(
-                                      component.id,
-                                      component.layout!.copyWith(x: x, y: y),
-                                    );
-                                  }
-                                },
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          }).toList(),
-                        if (page == null || page.components.isEmpty)
-                          const Center(
-                            child: Text(
-                              'Canvas Area',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
-                              ),
+                        child: Stack(
+                          children: [
+                            // Snap guide overlay (global)
+                            Consumer<AppStateProvider>(
+                              builder: (context, provider, child) {
+                                return _buildSnapGuideOverlay(provider, page);
+                              },
                             ),
-                          ),
-                      ],
-                    ),
+                            // Components
+                            if (page != null && page.components.isNotEmpty)
+                              ...page.components.map((component) {
+                                if (component is Component) {
+                                  return ComponentRenderer(
+                                    component: component,
+                                    isSelected: component.id == provider.selectedId,
+                                    onTap: () {
+                                      provider.selectComponent(component.id);
+                                    },
+                                    onPositionChanged: (x, y) {
+                                      if (component.layout != null) {
+                                        provider.updateComponentLayout(
+                                          component.id,
+                                          component.layout!.copyWith(x: x, y: y),
+                                        );
+                                      }
+                                    },
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              }).toList(),
+                            if (page == null || page.components.isEmpty)
+                              const Center(
+                                child: Text(
+                                  'Canvas Area',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
