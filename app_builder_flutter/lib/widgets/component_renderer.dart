@@ -507,6 +507,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
           provider.updateComponentLayout(
             widget.component.id,
             layout.copyWith(width: newWidth, height: newHeight),
+            notify: false,
           );
         },
         onPointerUp: (event) {
@@ -515,6 +516,8 @@ class _ComponentRendererState extends State<ComponentRenderer> {
           _startY = null;
           _initialWidth = null;
           _initialHeight = null;
+          final provider = context.read<AppStateProvider>();
+          provider.notifyListeners();
         },
         child: Container(
           width: 8,
