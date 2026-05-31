@@ -1,12 +1,25 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/app_state_provider.dart';
+import '../config/app_config.dart';
 import '../models/component.dart';
+import '../models/component_defaults.dart';
 import '../models/page.dart' as app_models;
+import '../providers/app_state_provider.dart';
+import '../services/snap_guide_service.dart';
 import 'component_renderer.dart';
+import 'snap_guide_overlay.dart';
 
-class CenterPanel extends StatelessWidget {
+class CenterPanel extends StatefulWidget {
   const CenterPanel({super.key});
+
+  @override
+  State<CenterPanel> createState() => _CenterPanelState();
+}
+
+class _CenterPanelState extends State<CenterPanel> {
+  RenderBox? _canvasBox;
 
   @override
   Widget build(BuildContext context) {
@@ -406,54 +419,85 @@ class CenterPanel extends StatelessWidget {
                 right: 12,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(40),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: page != null
-                          ? _parseColor(page.backgroundColor)
-                          : Colors.white,
-                    ),
-                    child: Stack(
-                      children: [
-                        // Snap guide overlay (global)
-                        Consumer<AppStateProvider>(
-                          builder: (context, provider, child) {
-                            return _buildSnapGuideOverlay(provider, page);
-                          },
+                  child: DragTarget<String>(
+                    onAcceptWithDetails: (details) {
+                      final dropOffset = _getCanvasDropOffset(details.offset);
+                      if (dropOffset == null) return;
+                      final layout = _buildDropLayout(
+                        componentType: details.data,
+                        dropOffset: dropOffset,
+                        page: page,
+                      );
+                      provider.addComponent(
+                        details.data,
+                        layout: layout,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Added ${details.data.toUpperCase()}')),
+                      );
+                    },
+                    builder: (context, candidateData, rejectedData) {
+                      _canvasBox = context.findRenderObject() as RenderBox?;
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: page != null
+                              ? _parseColor(page.backgroundColor)
+                              : Colors.white,
+                          border: candidateData.isNotEmpty
+                              ? Border.all(
+                                  color: const Color(0xFF8B5CF6),
+                                  width: 2,
+                                )
+                              : null,
                         ),
-                        // Components
-                        if (page != null && page.components.isNotEmpty)
-                          ...page.components.map((component) {
-                            if (component is Component) {
-                              return ComponentRenderer(
-                                component: component,
-                                isSelected: component.id == provider.selectedId,
-                                onTap: () {
-                                  provider.selectComponent(component.id);
-                                },
-                                onPositionChanged: (x, y) {
-                                  if (component.layout != null) {
-                                    provider.updateComponentLayout(
-                                      component.id,
-                                      component.layout!.copyWith(x: x, y: y),
-                                    );
-                                  }
-                                },
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          }).toList(),
-                        if (page == null || page.components.isEmpty)
-                          const Center(
-                            child: Text(
-                              'Canvas Area',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
-                              ),
+                        child: Stack(
+                          children: [
+                            // Snap guide overlay (global)
+                            Consumer<AppStateProvider>(
+                              builder: (context, provider, child) {
+                                return _buildSnapGuideOverlay(provider, page);
+                              },
                             ),
-                          ),
-                      ],
-                    ),
+                            // Components
+                            if (page != null && page.components.isNotEmpty)
+                              ...page.components.map((component) {
+                                if (component is Component) {
+                                  return ComponentRenderer(
+                                    component: component,
+                                    isSelected: component.id == provider.selectedId,
+                                    onTap: () {
+                                      provider.selectComponent(component.id);
+                                    },
+                                    onPositionChanged: (x, y) {
+                                      if (component.layout != null) {
+                                        provider.updateComponentLayout(
+                                          component.id,
+                                          component.layout!.copyWith(x: x, y: y),
+                                          notify: false,
+                                        );
+                                      }
+                                    },
+                                    onDragEnd: () {
+                                      provider.notifyListeners();
+                                    },
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              }).toList(),
+                            if (page == null || page.components.isEmpty)
+                              const Center(
+                                child: Text(
+                                  'Canvas Area',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -461,6 +505,37 @@ class CenterPanel extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Offset? _getCanvasDropOffset(Offset globalOffset) {
+    if (_canvasBox == null) return null;
+    return _canvasBox!.globalToLocal(globalOffset);
+  }
+
+  ComponentLayout _buildDropLayout({
+    required String componentType,
+    required Offset dropOffset,
+    required app_models.Page? page,
+  }) {
+    final defaults = ComponentDefaults.getDefaults(componentType);
+    final layoutDefaults = defaults['layout'] as Map<String, dynamic>?;
+    final width = (layoutDefaults?['width'] as num?)?.toDouble() ?? AppConfig.defaultComponentWidth;
+    final height = (layoutDefaults?['height'] as num?)?.toDouble() ?? AppConfig.defaultComponentHeight;
+
+    final maxX = math.max(AppConfig.canvasMaxWidth - width, 0.0);
+    final maxY = math.max(AppConfig.canvasMaxHeight - height, 0.0);
+    final x = dropOffset.dx.clamp(0.0, maxX);
+    final y = dropOffset.dy.clamp(0.0, maxY);
+
+    final zIndex = (page?.components.length ?? 0) + 1;
+
+    return ComponentLayout(
+      x: x,
+      y: y,
+      width: width,
+      height: height,
+      zIndex: zIndex,
     );
   }
 

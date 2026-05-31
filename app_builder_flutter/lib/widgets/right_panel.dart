@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
 import '../models/component.dart';
 import '../models/page.dart' as app_models;
+import 'component_tree.dart';
 
 class RightPanel extends StatelessWidget {
   const RightPanel({super.key});
@@ -21,30 +22,56 @@ class RightPanel extends StatelessWidget {
         children: [
           _buildHeader(),
           Expanded(
-            child: Consumer<AppStateProvider>(
-              builder: (context, provider, child) {
-                final component = provider.findSelectedComponent();
-                final page = provider.getCurrentPage();
-                final isPageSelected = provider.selectedId == null || provider.selectedType == 'page';
-                
-                if (isPageSelected && page != null) {
-                  return _buildPageInspector(context, provider, page);
-                }
-                
-                if (component == null) {
-                  return const Center(
-                    child: Text(
-                      'Select a component to edit its properties',
-                      style: TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
+            child: DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  TabBar(
+                    labelColor: const Color(0xFF8B5CF6),
+                    unselectedLabelColor: Colors.grey.shade400,
+                    indicatorColor: const Color(0xFF8B5CF6),
+                    tabs: const [
+                      Tab(text: 'Layers'),
+                      Tab(text: 'Properties'),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: const ComponentTree(),
+                        ),
+                        Consumer<AppStateProvider>(
+                          builder: (context, provider, child) {
+                            final component = provider.findSelectedComponent();
+                            final page = provider.getCurrentPage();
+                            final isPageSelected = provider.selectedId == null || provider.selectedType == 'page';
+                            
+                            if (isPageSelected && page != null) {
+                              return _buildPageInspector(context, provider, page);
+                            }
+                            
+                            if (component == null) {
+                              return const Center(
+                                child: Text(
+                                  'Select a component to edit its properties',
+                                  style: TextStyle(
+                                    color: Color(0xFF94A3B8),
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              );
+                            }
+                            return _buildComponentInspector(context, provider, component);
+                          },
+                        ),
+                      ],
                     ),
-                  );
-                }
-                return _buildComponentInspector(context, provider, component);
-              },
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -280,6 +307,211 @@ class RightPanel extends StatelessWidget {
                     );
                   }
                 },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Spacing',
+            icon: Icons.space_bar,
+            iconColor: const Color(0xFFEC4899),
+            children: [
+              InspectorField(
+                label: 'Padding',
+                value: component.styles?.padding,
+                placeholder: '0',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.padding = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Margin',
+                value: component.styles?.margin,
+                placeholder: '0',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.margin = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Border & Shadow',
+            icon: Icons.border_style,
+            iconColor: const Color(0xFF10B981),
+            children: [
+              InspectorColorField(
+                label: 'Border Color',
+                value: component.styles?.borderColor,
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.borderColor = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Border Width',
+                value: component.styles?.borderWidth,
+                placeholder: '1',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.borderWidth = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Border Radius',
+                value: component.styles?.borderRadius,
+                placeholder: '0',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.borderRadius = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Shadow Blur',
+                value: component.styles?.shadowBlur,
+                placeholder: '0',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.shadowBlur = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorColorField(
+                label: 'Shadow Color',
+                value: component.styles?.shadowColor,
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.shadowColor = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Effects',
+            icon: Icons.blur_on,
+            iconColor: const Color(0xFFF59E0B),
+            children: [
+              InspectorField(
+                label: 'Opacity',
+                value: component.styles?.opacity,
+                placeholder: '1',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.opacity = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+              InspectorField(
+                label: 'Rotation',
+                value: component.styles?.rotation,
+                placeholder: '0',
+                onChanged: (value) {
+                  component.styles ??= ComponentStyles();
+                  component.styles!.rotation = value;
+                  provider.updateComponentStyles(
+                    component.id,
+                    component.styles!,
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Layer',
+            icon: Icons.layers,
+            iconColor: const Color(0xFF06B6D4),
+            children: [
+              InspectorField(
+                label: 'Z-Index',
+                value: component.layout?.zIndex.toString(),
+                placeholder: '1',
+                onChanged: (value) {
+                  final zIndex = int.tryParse(value);
+                  if (zIndex != null && component.layout != null) {
+                    provider.updateComponentLayout(
+                      component.id,
+                      component.layout!.copyWith(zIndex: zIndex),
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        if (component.layout != null) {
+                          provider.updateComponentLayout(
+                            component.id,
+                            component.layout!.copyWith(zIndex: (component.layout!.zIndex - 1).clamp(0, 999)),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_downward, size: 16),
+                      label: const Text('Send Back'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.08),
+                        foregroundColor: const Color(0xFFF8FAFC),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        if (component.layout != null) {
+                          provider.updateComponentLayout(
+                            component.id,
+                            component.layout!.copyWith(zIndex: (component.layout!.zIndex + 1).clamp(0, 999)),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_upward, size: 16),
+                      label: const Text('Bring Front'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.08),
+                        foregroundColor: const Color(0xFFF8FAFC),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

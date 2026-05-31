@@ -167,6 +167,11 @@ class ComponentStyles {
   String? borderWidth;
   String? borderColor;
   String? opacity;
+  String? padding;
+  String? margin;
+  String? shadowBlur;
+  String? shadowColor;
+  String? rotation;
 
   ComponentStyles({
     this.fontSize,
@@ -183,6 +188,11 @@ class ComponentStyles {
     this.borderWidth,
     this.borderColor,
     this.opacity,
+    this.padding,
+    this.margin,
+    this.shadowBlur,
+    this.shadowColor,
+    this.rotation,
   });
 
   Map<String, dynamic> toJson() {
@@ -201,6 +211,11 @@ class ComponentStyles {
       if (borderWidth != null) 'borderWidth': borderWidth,
       if (borderColor != null) 'borderColor': borderColor,
       if (opacity != null) 'opacity': opacity,
+      if (padding != null) 'padding': padding,
+      if (margin != null) 'margin': margin,
+      if (shadowBlur != null) 'shadowBlur': shadowBlur,
+      if (shadowColor != null) 'shadowColor': shadowColor,
+      if (rotation != null) 'rotation': rotation,
     };
   }
 
@@ -220,6 +235,11 @@ class ComponentStyles {
       borderWidth: json['borderWidth'] as String?,
       borderColor: json['borderColor'] as String?,
       opacity: json['opacity'] as String?,
+      padding: json['padding'] as String?,
+      margin: json['margin'] as String?,
+      shadowBlur: json['shadowBlur'] as String?,
+      shadowColor: json['shadowColor'] as String?,
+      rotation: json['rotation'] as String?,
     );
   }
 }

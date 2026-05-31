@@ -243,9 +243,15 @@ class AppState {
       'galaxy-s24-ultra': DeviceInfo(width: 384, height: 824, label: 'Galaxy S24 Ultra'),
       'galaxy-z-fold': DeviceInfo(width: 344, height: 882, label: 'Galaxy Z Fold (cover)'),
       'ipad-mini': DeviceInfo(width: 744, height: 1133, label: 'iPad Mini'),
+      'ipad-air': DeviceInfo(width: 820, height: 1180, label: 'iPad Air'),
+      'ipad-pro-11': DeviceInfo(width: 834, height: 1194, label: 'iPad Pro 11"'),
+      'ipad-pro-12': DeviceInfo(width: 1024, height: 1366, label: 'iPad Pro 12.9"'),
       'android-small': DeviceInfo(width: 360, height: 640, label: 'Android Small'),
       'android-medium': DeviceInfo(width: 384, height: 854, label: 'Android Medium'),
       'android-large': DeviceInfo(width: 412, height: 915, label: 'Android Large'),
+      'desktop-small': DeviceInfo(width: 1280, height: 720, label: 'Desktop 720p'),
+      'desktop-medium': DeviceInfo(width: 1920, height: 1080, label: 'Desktop 1080p'),
+      'desktop-large': DeviceInfo(width: 2560, height: 1440, label: 'Desktop 1440p'),
     };
   }
 

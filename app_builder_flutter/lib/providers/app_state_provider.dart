@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/app_state.dart';
 import '../models/component.dart';
 import '../models/page.dart';
+import '../models/component_defaults.dart';
 
 class AppStateProvider with ChangeNotifier {
   late AppState _state;
@@ -97,22 +98,45 @@ class AppStateProvider with ChangeNotifier {
     final page = getCurrentPage();
     if (page == null) return;
 
+    final defaults = ComponentDefaults.getDefaults(type);
+    final defaultLayout = defaults['layout'] as Map<String, dynamic>;
+    
     final component = Component(
       id: makeId(type),
       type: type,
       layout: layout ?? ComponentLayout(
-        x: 12,
-        y: 12,
-        width: 100,
-        height: 40,
+        x: (defaultLayout['x'] as num).toDouble(),
+        y: (defaultLayout['y'] as num).toDouble(),
+        width: (defaultLayout['width'] as num).toDouble(),
+        height: (defaultLayout['height'] as num).toDouble(),
         zIndex: page.components.length + 1,
       ),
+      styles: _createDefaultStyles(type, defaults),
+      props: defaults['props'] as Map<String, dynamic>?,
     );
 
     page.components = [...page.components, component];
     selectComponent(component.id);
     _pushHistorySnapshot();
     notifyListeners();
+  }
+
+  ComponentStyles _createDefaultStyles(String type, Map<String, dynamic> defaults) {
+    final styleDefaults = defaults['styles'] as Map<String, dynamic>;
+    return ComponentStyles(
+      backgroundColor: styleDefaults['backgroundColor'] as String?,
+      color: styleDefaults['textColor'] as String?,
+      fontSize: styleDefaults['fontSize'] as String?,
+      fontWeight: styleDefaults['fontWeight'] as String?,
+      fontFamily: styleDefaults['fontFamily'] as String?,
+      textAlign: styleDefaults['textAlign'] as String?,
+      borderRadius: styleDefaults['borderRadius'] as String?,
+      borderColor: styleDefaults['borderColor'] as String?,
+      borderWidth: styleDefaults['borderWidth'] as String?,
+      padding: styleDefaults['padding'] as String?,
+      margin: styleDefaults['margin'] as String?,
+      opacity: styleDefaults['opacity'] as String?,
+    );
   }
 
   void deleteSelected() {
@@ -126,7 +150,7 @@ class AppStateProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateComponentLayout(String componentId, ComponentLayout newLayout) {
+  void updateComponentLayout(String componentId, ComponentLayout newLayout, {bool notify = false}) {
     final page = getCurrentPage();
     if (page == null) return;
 
@@ -135,7 +159,9 @@ class AppStateProvider with ChangeNotifier {
 
     final component = page.components[index] as Component;
     page.components[index] = component.copyWith(layout: newLayout);
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   void updateComponentStyles(String componentId, ComponentStyles newStyles) {
@@ -205,12 +231,77 @@ class AppStateProvider with ChangeNotifier {
   }
 
   void saveToLocal() {
-    // TODO: Implement local storage
+    // TODO: Implement local storage with shared_preferences
     debugPrint('Saving to local storage: ${_state.appHash()}');
   }
 
   void restoreFromLocal() {
-    // TODO: Implement local storage restoration
+    // TODO: Implement local storage restoration with shared_preferences
     debugPrint('Restoring from local storage');
+  }
+
+  void exportToJson() {
+    final jsonString = _state.toJsonString();
+    debugPrint('Exported JSON: $jsonString');
+    // TODO: Implement file download/export functionality
+  }
+
+  void copyComponent(Component component) {
+    _state.clipboard = component;
+    notifyListeners();
+  }
+
+  void pasteComponent() {
+    if (_state.clipboard == null) return;
+    final page = getCurrentPage();
+    if (page == null) return;
+
+    final newComponent = Component(
+      id: makeId(_state.clipboard!.type),
+      type: _state.clipboard!.type,
+      layout: _state.clipboard!.layout?.copyWith(
+        x: (_state.clipboard!.layout?.x ?? 0) + 20,
+        y: (_state.clipboard!.layout?.y ?? 0) + 20,
+      ),
+      styles: _state.clipboard!.styles,
+      props: _state.clipboard!.props,
+    );
+
+    page.components = [...page.components, newComponent];
+    selectComponent(newComponent.id);
+    _pushHistorySnapshot();
+    notifyListeners();
+  }
+
+  bool isValidComponentId(String id) {
+    final page = getCurrentPage();
+    if (page == null) return false;
+    return findById(page.components, id) != null;
+  }
+
+  bool isValidComponentType(String type) {
+    const validTypes = ['button', 'text', 'image', 'input', 'container', 'row', 'column', 'stack', 'appbar', 'bottomnav', 'drawer'];
+    return validTypes.contains(type.toLowerCase());
+  }
+
+  String? validateComponent(Component component) {
+    if (component.id.isEmpty) return 'Component ID cannot be empty';
+    if (!isValidComponentType(component.type)) return 'Invalid component type: ${component.type}';
+    if (component.layout == null) return 'Component layout is required';
+    if (component.layout!.width <= 0) return 'Component width must be greater than 0';
+    if (component.layout!.height <= 0) return 'Component height must be greater than 0';
+    return null;
+  }
+
+  void deleteComponent(String componentId) {
+    final page = getCurrentPage();
+    if (page == null) return;
+
+    page.components = page.components.where((c) => c.id != componentId).toList();
+    if (_state.selectedId == componentId) {
+      _state.selectedId = null;
+    }
+    _pushHistorySnapshot();
+    notifyListeners();
   }
 }

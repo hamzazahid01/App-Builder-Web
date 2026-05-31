@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
 
-class LeftPanel extends StatelessWidget {
+class LeftPanel extends StatefulWidget {
   final VoidCallback onAddTemplate;
   final VoidCallback onAddPage;
 
@@ -11,6 +11,13 @@ class LeftPanel extends StatelessWidget {
     required this.onAddTemplate,
     required this.onAddPage,
   });
+
+  @override
+  State<LeftPanel> createState() => _LeftPanelState();
+}
+
+class _LeftPanelState extends State<LeftPanel> {
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +68,7 @@ class LeftPanel extends StatelessWidget {
               ],
             ),
           ),
-          _buildIconButton('★', 'Templates', onAddTemplate),
+          _buildIconButton('★', 'Templates', widget.onAddTemplate),
         ],
       ),
     );
@@ -100,6 +107,11 @@ class LeftPanel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: TextField(
         style: const TextStyle(color: Color(0xFFF8FAFC)),
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value.toLowerCase();
+          });
+        },
         decoration: InputDecoration(
           hintText: 'Search components',
           hintStyle: TextStyle(
@@ -123,35 +135,71 @@ class LeftPanel extends StatelessWidget {
             horizontal: 16,
             vertical: 14,
           ),
+          prefixIcon: Icon(
+            Icons.search,
+            size: 18,
+            color: Colors.grey.shade400,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildComponentCategories() {
-    return const Expanded(
+    final categories = [
+      const ComponentCategory(
+        title: 'Basic',
+        icon: '📦',
+        items: ['Button', 'Text', 'Image', 'Input'],
+      ),
+      const ComponentCategory(
+        title: 'Layout',
+        icon: '📐',
+        items: ['Container', 'Row', 'Column', 'Stack'],
+      ),
+      const ComponentCategory(
+        title: 'Navigation',
+        icon: '🧭',
+        items: ['AppBar', 'BottomNav', 'Drawer'],
+      ),
+    ];
+
+    final filteredCategories = _searchQuery.isEmpty
+        ? categories
+        : categories
+            .map((cat) => ComponentCategory(
+              title: cat.title,
+              icon: cat.icon,
+              items: cat.items
+                  .where((item) => item.toLowerCase().contains(_searchQuery))
+                  .toList(),
+            ))
+            .where((cat) => cat.items.isNotEmpty)
+            .toList();
+
+    return Expanded(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              ComponentCategory(
-                title: 'Basic',
-                icon: '📦',
-                items: ['Button', 'Text', 'Image', 'Input'],
-              ),
-              SizedBox(height: 14),
-              ComponentCategory(
-                title: 'Layout',
-                icon: '📐',
-                items: ['Container', 'Row', 'Column', 'Stack'],
-              ),
-              SizedBox(height: 14),
-              ComponentCategory(
-                title: 'Navigation',
-                icon: '🧭',
-                items: ['AppBar', 'BottomNav', 'Drawer'],
-              ),
+              if (filteredCategories.isEmpty)
+                Center(
+                  child: Text(
+                    'No components found',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
+                  ),
+                )
+              else
+                ...filteredCategories.map((cat) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: cat,
+                  );
+                }),
             ],
           ),
         ),
@@ -165,7 +213,7 @@ class LeftPanel extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: onAddPage,
+          onPressed: widget.onAddPage,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white.withOpacity(0.06),
             foregroundColor: const Color(0xFFF8FAFC),
@@ -290,57 +338,107 @@ class _ComponentCategoryState extends State<ComponentCategory> {
   }
 }
 
-class _ComponentItem extends StatelessWidget {
+class _ComponentItem extends StatefulWidget {
   final String name;
 
   const _ComponentItem({required this.name});
 
   @override
+  State<_ComponentItem> createState() => _ComponentItemState();
+}
+
+class _ComponentItemState extends State<_ComponentItem> {
+  bool _isDragging = false;
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        final provider = context.read<AppStateProvider>();
-        provider.addComponent(name.toLowerCase());
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Added $name')),
-        );
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
-          color: const Color(0xFF1E293B).withOpacity(0.6),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                name,
+    return Draggable<String>(
+      data: widget.name.toLowerCase(),
+      feedback: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF8B5CF6)),
+            color: const Color(0xFF1E293B).withOpacity(0.9),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                blurRadius: 12,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.name,
                 style: const TextStyle(
                   color: Color(0xFFE2E8F0),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+      onDragStarted: () => setState(() => _isDragging = true),
+      onDraggableCanceled: (_, __) => setState(() => _isDragging = false),
+      onDragEnd: (_) => setState(() => _isDragging = false),
+      child: InkWell(
+        onTap: () {
+          final provider = context.read<AppStateProvider>();
+          provider.addComponent(widget.name.toLowerCase());
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Added ${widget.name}')),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _isDragging
+                  ? const Color(0xFF8B5CF6)
+                  : Colors.white.withOpacity(0.08),
             ),
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.white.withOpacity(0.08),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.add,
-                  size: 18,
-                  color: Colors.grey.shade400,
+            color: _isDragging
+                ? const Color(0xFF1E293B).withOpacity(0.8)
+                : const Color(0xFF1E293B).withOpacity(0.6),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.name,
+                  style: const TextStyle(
+                    color: Color(0xFFE2E8F0),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-          ],
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white.withOpacity(0.08),
+                ),
+                child: Center(
+                  child: Icon(
+                    _isDragging ? Icons.pan_tool : Icons.add,
+                    size: 18,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/component.dart';
 import '../providers/app_state_provider.dart';
+import '../config/app_config.dart';
+import '../services/snap_guide_service.dart';
 
 class ComponentRenderer extends StatefulWidget {
   final Component component;
@@ -9,6 +11,7 @@ class ComponentRenderer extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onDoubleTap;
   final Function(double x, double y)? onPositionChanged;
+  final VoidCallback? onDragEnd;
 
   const ComponentRenderer({
     super.key,
@@ -17,6 +20,7 @@ class ComponentRenderer extends StatefulWidget {
     this.onTap,
     this.onDoubleTap,
     this.onPositionChanged,
+    this.onDragEnd,
   });
 
   @override
@@ -28,6 +32,11 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   double? _startY;
   double? _initialX;
   double? _initialY;
+  double? _initialWidth;
+  double? _initialHeight;
+  bool _isHovering = false;
+  String? _resizeHandle;
+  List<SnapLine> _activeSnaps = [];
 
   @override
   Widget build(BuildContext context) {
@@ -39,70 +48,121 @@ class _ComponentRendererState extends State<ComponentRenderer> {
         return Positioned(
           left: layout?.x ?? 0,
           top: layout?.y ?? 0,
-          child: GestureDetector(
-            onTap: widget.onTap,
-            onDoubleTap: widget.onDoubleTap,
-            onPanStart: (details) {
-              _startX = details.globalPosition.dx;
-              _startY = details.globalPosition.dy;
-              _initialX = layout?.x;
-              _initialY = layout?.y;
-            },
-            onPanUpdate: (details) {
-              if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
-              
-              final dx = details.globalPosition.dx - _startX!;
-              final dy = details.globalPosition.dy - _startY!;
-              
-              double newX = _initialX! + dx;
-              double newY = _initialY! + dy;
-              
-              // Apply snap to grid if enabled
-              if (provider.snapToGrid) {
-                final gridSize = 10.0;
-                newX = (newX / gridSize).round() * gridSize;
-                newY = (newY / gridSize).round() * gridSize;
-              }
-              
-              newX = newX.clamp(0.0, 350.0);
-              newY = newY.clamp(0.0, 750.0);
-              
-              widget.onPositionChanged?.call(newX, newY);
-            },
-            onPanEnd: (details) {
-              _startX = null;
-              _startY = null;
-              _initialX = null;
-              _initialY = null;
-            },
-            child: Container(
-              width: layout?.width ?? 100,
-              height: layout?.height ?? 40,
-              decoration: BoxDecoration(
-                color: _parseColor(styles?.backgroundColor),
-                borderRadius: _parseBorderRadius(styles?.borderRadius),
-                border: styles?.borderColor != null
-                    ? Border.all(
-                        color: _parseColor(styles?.borderColor) ?? Colors.transparent,
-                        width: _parseDouble(styles?.borderWidth) ?? 1,
-                      )
-                    : null,
-                boxShadow: widget.isSelected
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFF8B5CF6).withOpacity(0.9),
-                          blurRadius: 0,
-                          spreadRadius: 2,
-                        ),
-                        BoxShadow(
-                          color: const Color(0xFF8B5CF6).withOpacity(0.14),
-                          blurRadius: 8,
-                          spreadRadius: 4,
-                        ),
-                      ]
-                    : null,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _isHovering = true),
+            onExit: (_) => setState(() => _isHovering = false),
+            child: GestureDetector(
+              onTap: widget.onTap,
+              onDoubleTap: widget.onDoubleTap,
+              onPanStart: (details) {
+                if (_resizeHandle != null) return;
+                _startX = details.localPosition.dx;
+                _startY = details.localPosition.dy;
+                _initialX = layout?.x;
+                _initialY = layout?.y;
+              },
+              onPanUpdate: (details) {
+                if (_resizeHandle != null) return;
+                if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
+                
+                final dx = details.localPosition.dx - _startX!;
+                final dy = details.localPosition.dy - _startY!;
+                
+                double newX = _initialX! + dx;
+                double newY = _initialY! + dy;
+                
+                // Apply snap to grid if enabled
+                if (provider.snapToGrid) {
+                  newX = (newX / AppConfig.gridSize).round() * AppConfig.gridSize;
+                  newY = (newY / AppConfig.gridSize).round() * AppConfig.gridSize;
+                }
+                
+                newX = newX.clamp(0.0, AppConfig.canvasMaxWidth);
+                newY = newY.clamp(0.0, AppConfig.canvasMaxHeight);
+                
+                // Calculate snap guides (for visual feedback only, not auto-snap)
+                final page = provider.getCurrentPage();
+                if (page != null && layout != null) {
+                  final tempLayout = layout!.copyWith(x: newX, y: newY);
+                  final centerSnaps = SnapGuide.calculateCenterSnaps(
+                    tempLayout,
+                    Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
+                  );
+                  final elementSnaps = SnapGuide.calculateElementSnaps(
+                    tempLayout,
+                    page.components,
+                    widget.component.id,
+                    Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
+                  );
+                  
+                  _activeSnaps = [...centerSnaps, ...elementSnaps];
+                  
+                  // Check if snap is close enough to apply (within 2px)
+                  if (_activeSnaps.isNotEmpty) {
+                    final snappedPos = SnapGuide.applySnaps(tempLayout, _activeSnaps);
+                    // Only apply snap if very close (2px threshold for auto-snap)
+                    if ((snappedPos.dx - newX).abs() <= 2 && (snappedPos.dy - newY).abs() <= 2) {
+                      newX = snappedPos.dx;
+                      newY = snappedPos.dy;
+                    }
+                  }
+                }
+                
+                widget.onPositionChanged?.call(newX, newY);
+              },
+              onPanEnd: (details) {
+                if (_resizeHandle != null) return;
+                _startX = null;
+                _startY = null;
+                _initialX = null;
+                _initialY = null;
+                _activeSnaps = [];
+                widget.onDragEnd?.call();
+              },
+              child: Stack(
+                children: [
+                  Container(
+                    width: layout?.width ?? 100,
+                    height: layout?.height ?? 40,
+                    decoration: BoxDecoration(
+                      color: _parseColor(styles?.backgroundColor),
+                      borderRadius: _parseBorderRadius(styles?.borderRadius),
+                      border: Border.all(
+                        color: widget.isSelected
+                            ? const Color(0xFF8B5CF6)
+                            : _isHovering
+                                ? const Color(0xFF8B5CF6).withOpacity(0.5)
+                                : (styles?.borderColor != null
+                                    ? _parseColor(styles?.borderColor) ?? Colors.transparent
+                                    : Colors.transparent),
+                        width: widget.isSelected ? 2 : (_parseDouble(styles?.borderWidth) ?? 1),
+                      ),
+                      boxShadow: [
+                        if (widget.isSelected)
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withOpacity(0.9),
+                            blurRadius: 0,
+                            spreadRadius: 2,
+                          ),
+                        if (widget.isSelected)
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withOpacity(0.14),
+                            blurRadius: 8,
+                            spreadRadius: 4,
+                          ),
+                        if (_isHovering && !widget.isSelected)
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                      ],
+                    ),
+                    child: _buildContent(styles),
+                  ),
+                  if (widget.isSelected) _buildResizeHandles(layout),
+                ],
               ),
-              child: _buildContent(styles),
             ),
           ),
         );
@@ -339,5 +399,150 @@ class _ComponentRendererState extends State<ComponentRenderer> {
       default:
         return Icons.help_outline;
     }
+  }
+
+  Widget _buildResizeHandles(ComponentLayout? layout) {
+    if (layout == null) return const SizedBox.shrink();
+
+    const handleSize = 8.0;
+    const handleOffset = -4.0;
+
+    return Stack(
+      children: [
+        Positioned(
+          left: handleOffset,
+          top: handleOffset,
+          child: _buildResizeHandle('top-left'),
+        ),
+        Positioned(
+          right: handleOffset,
+          top: handleOffset,
+          child: _buildResizeHandle('top-right'),
+        ),
+        Positioned(
+          left: handleOffset,
+          bottom: handleOffset,
+          child: _buildResizeHandle('bottom-left'),
+        ),
+        Positioned(
+          right: handleOffset,
+          bottom: handleOffset,
+          child: _buildResizeHandle('bottom-right'),
+        ),
+        Positioned(
+          left: layout.width / 2 - handleSize / 2,
+          top: handleOffset,
+          child: _buildResizeHandle('top'),
+        ),
+        Positioned(
+          left: layout.width / 2 - handleSize / 2,
+          bottom: handleOffset,
+          child: _buildResizeHandle('bottom'),
+        ),
+        Positioned(
+          left: handleOffset,
+          top: layout.height / 2 - handleSize / 2,
+          child: _buildResizeHandle('left'),
+        ),
+        Positioned(
+          right: handleOffset,
+          top: layout.height / 2 - handleSize / 2,
+          child: _buildResizeHandle('right'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResizeHandle(String position) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      child: Listener(
+        onPointerDown: (event) {
+          final layout = widget.component.layout;
+          if (layout == null) return;
+          _resizeHandle = position;
+          _startX = event.position.dx;
+          _startY = event.position.dy;
+          _initialWidth = layout.width;
+          _initialHeight = layout.height;
+        },
+        onPointerMove: (event) {
+          if (_resizeHandle == null || _initialWidth == null || _initialHeight == null) return;
+          final layout = widget.component.layout;
+          if (layout == null) return;
+
+          final dx = event.position.dx - (_startX ?? 0);
+          final dy = event.position.dy - (_startY ?? 0);
+
+          double newWidth = _initialWidth!;
+          double newHeight = _initialHeight!;
+
+          switch (_resizeHandle) {
+            case 'top-left':
+              newWidth = (_initialWidth! - dx).clamp(40, 500);
+              newHeight = (_initialHeight! - dy).clamp(30, 500);
+              break;
+            case 'top-right':
+              newWidth = (_initialWidth! + dx).clamp(40, 500);
+              newHeight = (_initialHeight! - dy).clamp(30, 500);
+              break;
+            case 'bottom-left':
+              newWidth = (_initialWidth! - dx).clamp(40, 500);
+              newHeight = (_initialHeight! + dy).clamp(30, 500);
+              break;
+            case 'bottom-right':
+              newWidth = (_initialWidth! + dx).clamp(40, 500);
+              newHeight = (_initialHeight! + dy).clamp(30, 500);
+              break;
+            case 'top':
+              newHeight = (_initialHeight! - dy).clamp(30, 500);
+              break;
+            case 'bottom':
+              newHeight = (_initialHeight! + dy).clamp(30, 500);
+              break;
+            case 'left':
+              newWidth = (_initialWidth! - dx).clamp(40, 500);
+              break;
+            case 'right':
+              newWidth = (_initialWidth! + dx).clamp(40, 500);
+              break;
+          }
+
+          final provider = context.read<AppStateProvider>();
+          provider.updateComponentLayout(
+            widget.component.id,
+            layout.copyWith(width: newWidth, height: newHeight),
+            notify: false,
+          );
+        },
+        onPointerUp: (event) {
+          _resizeHandle = null;
+          _startX = null;
+          _startY = null;
+          _initialWidth = null;
+          _initialHeight = null;
+          final provider = context.read<AppStateProvider>();
+          provider.notifyListeners();
+        },
+        child: Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF8B5CF6),
+            border: Border.all(
+              color: Colors.white,
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withOpacity(0.5),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
