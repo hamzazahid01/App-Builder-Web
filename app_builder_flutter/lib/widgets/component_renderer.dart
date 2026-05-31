@@ -80,7 +80,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 newX = newX.clamp(0.0, AppConfig.canvasMaxWidth);
                 newY = newY.clamp(0.0, AppConfig.canvasMaxHeight);
                 
-                // Calculate snap guides
+                // Calculate snap guides (for visual feedback only, not auto-snap)
                 final page = provider.getCurrentPage();
                 if (page != null && layout != null) {
                   final tempLayout = layout!.copyWith(x: newX, y: newY);
@@ -97,10 +97,15 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                   
                   _activeSnaps = [...centerSnaps, ...elementSnaps];
                   
-                  // Apply snaps
-                  final snappedPos = SnapGuide.applySnaps(tempLayout, _activeSnaps);
-                  newX = snappedPos.dx;
-                  newY = snappedPos.dy;
+                  // Check if snap is close enough to apply (within 2px)
+                  if (_activeSnaps.isNotEmpty) {
+                    final snappedPos = SnapGuide.applySnaps(tempLayout, _activeSnaps);
+                    // Only apply snap if very close (2px threshold for auto-snap)
+                    if ((snappedPos.dx - newX).abs() <= 2 && (snappedPos.dy - newY).abs() <= 2) {
+                      newX = snappedPos.dx;
+                      newY = snappedPos.dy;
+                    }
+                  }
                 }
                 
                 widget.onPositionChanged?.call(newX, newY);
