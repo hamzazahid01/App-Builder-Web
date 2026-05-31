@@ -422,6 +422,72 @@ class RightPanel extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          InspectorAccordion(
+            title: 'Layer',
+            icon: Icons.layers,
+            iconColor: const Color(0xFF06B6D4),
+            children: [
+              InspectorField(
+                label: 'Z-Index',
+                value: component.layout?.zIndex.toString(),
+                placeholder: '1',
+                onChanged: (value) {
+                  final zIndex = int.tryParse(value);
+                  if (zIndex != null && component.layout != null) {
+                    provider.updateComponentLayout(
+                      component.id,
+                      component.layout!.copyWith(zIndex: zIndex),
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        if (component.layout != null) {
+                          provider.updateComponentLayout(
+                            component.id,
+                            component.layout!.copyWith(zIndex: (component.layout!.zIndex - 1).clamp(0, 999)),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_downward, size: 16),
+                      label: const Text('Send Back'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.08),
+                        foregroundColor: const Color(0xFFF8FAFC),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        if (component.layout != null) {
+                          provider.updateComponentLayout(
+                            component.id,
+                            component.layout!.copyWith(zIndex: (component.layout!.zIndex + 1).clamp(0, 999)),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_upward, size: 16),
+                      label: const Text('Bring Front'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.08),
+                        foregroundColor: const Color(0xFFF8FAFC),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     );
