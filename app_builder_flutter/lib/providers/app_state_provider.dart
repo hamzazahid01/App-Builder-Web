@@ -266,4 +266,16 @@ class AppStateProvider with ChangeNotifier {
     if (component.layout!.height <= 0) return 'Component height must be greater than 0';
     return null;
   }
+
+  void deleteComponent(String componentId) {
+    final page = getCurrentPage();
+    if (page == null) return;
+
+    page.components = page.components.where((c) => c.id != componentId).toList();
+    if (_state.selectedId == componentId) {
+      _state.selectedId = null;
+    }
+    _pushHistorySnapshot();
+    notifyListeners();
+  }
 }

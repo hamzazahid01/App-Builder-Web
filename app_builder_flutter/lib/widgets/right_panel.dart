@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
 import '../models/component.dart';
 import '../models/page.dart' as app_models;
+import 'component_tree.dart';
 
 class RightPanel extends StatelessWidget {
   const RightPanel({super.key});
@@ -21,30 +22,56 @@ class RightPanel extends StatelessWidget {
         children: [
           _buildHeader(),
           Expanded(
-            child: Consumer<AppStateProvider>(
-              builder: (context, provider, child) {
-                final component = provider.findSelectedComponent();
-                final page = provider.getCurrentPage();
-                final isPageSelected = provider.selectedId == null || provider.selectedType == 'page';
-                
-                if (isPageSelected && page != null) {
-                  return _buildPageInspector(context, provider, page);
-                }
-                
-                if (component == null) {
-                  return const Center(
-                    child: Text(
-                      'Select a component to edit its properties',
-                      style: TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
+            child: DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  TabBar(
+                    labelColor: const Color(0xFF8B5CF6),
+                    unselectedLabelColor: Colors.grey.shade400,
+                    indicatorColor: const Color(0xFF8B5CF6),
+                    tabs: const [
+                      Tab(text: 'Layers'),
+                      Tab(text: 'Properties'),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: const ComponentTree(),
+                        ),
+                        Consumer<AppStateProvider>(
+                          builder: (context, provider, child) {
+                            final component = provider.findSelectedComponent();
+                            final page = provider.getCurrentPage();
+                            final isPageSelected = provider.selectedId == null || provider.selectedType == 'page';
+                            
+                            if (isPageSelected && page != null) {
+                              return _buildPageInspector(context, provider, page);
+                            }
+                            
+                            if (component == null) {
+                              return const Center(
+                                child: Text(
+                                  'Select a component to edit its properties',
+                                  style: TextStyle(
+                                    color: Color(0xFF94A3B8),
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              );
+                            }
+                            return _buildComponentInspector(context, provider, component);
+                          },
+                        ),
+                      ],
                     ),
-                  );
-                }
-                return _buildComponentInspector(context, provider, component);
-              },
+                  ),
+                ],
+              ),
             ),
           ),
         ],
