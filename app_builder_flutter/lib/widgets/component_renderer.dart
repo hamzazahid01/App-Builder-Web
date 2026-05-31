@@ -375,50 +375,50 @@ class _ComponentRendererState extends State<ComponentRenderer> {
         Positioned(
           left: handleOffset,
           top: handleOffset,
-          child: _buildResizeHandle('top-left', MouseCursor.resizeNWSE),
+          child: _buildResizeHandle('top-left'),
         ),
         Positioned(
           right: handleOffset,
           top: handleOffset,
-          child: _buildResizeHandle('top-right', MouseCursor.resizeNESW),
+          child: _buildResizeHandle('top-right'),
         ),
         Positioned(
           left: handleOffset,
           bottom: handleOffset,
-          child: _buildResizeHandle('bottom-left', MouseCursor.resizeNESW),
+          child: _buildResizeHandle('bottom-left'),
         ),
         Positioned(
           right: handleOffset,
           bottom: handleOffset,
-          child: _buildResizeHandle('bottom-right', MouseCursor.resizeNWSE),
+          child: _buildResizeHandle('bottom-right'),
         ),
         Positioned(
           left: layout.width / 2 - handleSize / 2,
           top: handleOffset,
-          child: _buildResizeHandle('top', MouseCursor.resizeRow),
+          child: _buildResizeHandle('top'),
         ),
         Positioned(
           left: layout.width / 2 - handleSize / 2,
           bottom: handleOffset,
-          child: _buildResizeHandle('bottom', MouseCursor.resizeRow),
+          child: _buildResizeHandle('bottom'),
         ),
         Positioned(
           left: handleOffset,
           top: layout.height / 2 - handleSize / 2,
-          child: _buildResizeHandle('left', MouseCursor.resizeColumn),
+          child: _buildResizeHandle('left'),
         ),
         Positioned(
           right: handleOffset,
           top: layout.height / 2 - handleSize / 2,
-          child: _buildResizeHandle('right', MouseCursor.resizeColumn),
+          child: _buildResizeHandle('right'),
         ),
       ],
     );
   }
 
-  Widget _buildResizeHandle(String position, MouseCursor cursor) {
+  Widget _buildResizeHandle(String position) {
     return MouseRegion(
-      cursor: cursor,
+      cursor: SystemMouseCursors.resizeColumn,
       child: GestureDetector(
         onPanStart: (details) {
           final layout = widget.component.layout;
