@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/component.dart';
 import '../providers/app_state_provider.dart';
 import '../config/app_config.dart';
+import '../services/snap_guide_service.dart';
 
 class ComponentRenderer extends StatefulWidget {
   final Component component;
@@ -33,6 +34,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   double? _initialHeight;
   bool _isHovering = false;
   String? _resizeHandle;
+  List<SnapLine> _activeSnaps = [];
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +78,30 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 newX = newX.clamp(0.0, AppConfig.canvasMaxWidth);
                 newY = newY.clamp(0.0, AppConfig.canvasMaxHeight);
                 
+                // Calculate snap guides
+                final page = provider.getCurrentPage();
+                if (page != null && layout != null) {
+                  final tempLayout = layout!.copyWith(x: newX, y: newY);
+                  final centerSnaps = SnapGuide.calculateCenterSnaps(
+                    tempLayout,
+                    Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
+                  );
+                  final elementSnaps = SnapGuide.calculateElementSnaps(
+                    tempLayout,
+                    page.components,
+                    widget.component.id,
+                    Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
+                  );
+                  
+                  _activeSnaps = [...centerSnaps, ...elementSnaps];
+                  
+                  // Apply snaps
+                  final snappedPos = SnapGuide.applySnaps(tempLayout, _activeSnaps);
+                  newX = snappedPos.dx;
+                  newY = snappedPos.dy;
+                }
+                
+                setState(() {});
                 widget.onPositionChanged?.call(newX, newY);
               },
               onPanEnd: (details) {
@@ -84,6 +110,8 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 _startY = null;
                 _initialX = null;
                 _initialY = null;
+                _activeSnaps = [];
+                setState(() {});
               },
               child: Stack(
                 children: [
