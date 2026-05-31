@@ -51,12 +51,14 @@ class _ComponentRendererState extends State<ComponentRenderer> {
               onTap: widget.onTap,
               onDoubleTap: widget.onDoubleTap,
               onPanStart: (details) {
+                if (_resizeHandle != null) return;
                 _startX = details.globalPosition.dx;
                 _startY = details.globalPosition.dy;
                 _initialX = layout?.x;
                 _initialY = layout?.y;
               },
               onPanUpdate: (details) {
+                if (_resizeHandle != null) return;
                 if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
                 
                 final dx = details.globalPosition.dx - _startX!;
@@ -77,6 +79,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 widget.onPositionChanged?.call(newX, newY);
               },
               onPanEnd: (details) {
+                if (_resizeHandle != null) return;
                 _startX = null;
                 _startY = null;
                 _initialX = null;
@@ -419,23 +422,23 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   Widget _buildResizeHandle(String position) {
     return MouseRegion(
       cursor: SystemMouseCursors.resizeColumn,
-      child: GestureDetector(
-        onPanStart: (details) {
+      child: Listener(
+        onPointerDown: (event) {
           final layout = widget.component.layout;
           if (layout == null) return;
           _resizeHandle = position;
-          _startX = details.globalPosition.dx;
-          _startY = details.globalPosition.dy;
+          _startX = event.position.dx;
+          _startY = event.position.dy;
           _initialWidth = layout.width;
           _initialHeight = layout.height;
         },
-        onPanUpdate: (details) {
+        onPointerMove: (event) {
           if (_resizeHandle == null || _initialWidth == null || _initialHeight == null) return;
           final layout = widget.component.layout;
           if (layout == null) return;
 
-          final dx = details.globalPosition.dx - (_startX ?? 0);
-          final dy = details.globalPosition.dy - (_startY ?? 0);
+          final dx = event.position.dx - (_startX ?? 0);
+          final dy = event.position.dy - (_startY ?? 0);
 
           double newWidth = _initialWidth!;
           double newHeight = _initialHeight!;
@@ -471,14 +474,13 @@ class _ComponentRendererState extends State<ComponentRenderer> {
               break;
           }
 
-          widget.onPositionChanged?.call(layout.x, layout.y);
           final provider = context.read<AppStateProvider>();
           provider.updateComponentLayout(
             widget.component.id,
             layout.copyWith(width: newWidth, height: newHeight),
           );
         },
-        onPanEnd: (details) {
+        onPointerUp: (event) {
           _resizeHandle = null;
           _startX = null;
           _startY = null;
