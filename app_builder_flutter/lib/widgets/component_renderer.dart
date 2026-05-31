@@ -29,7 +29,10 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   double? _startY;
   double? _initialX;
   double? _initialY;
+  double? _initialWidth;
+  double? _initialHeight;
   bool _isHovering = false;
+  String? _resizeHandle;
 
   @override
   Widget build(BuildContext context) {
@@ -79,44 +82,49 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 _initialX = null;
                 _initialY = null;
               },
-              child: Container(
-                width: layout?.width ?? 100,
-                height: layout?.height ?? 40,
-                decoration: BoxDecoration(
-                  color: _parseColor(styles?.backgroundColor),
-                  borderRadius: _parseBorderRadius(styles?.borderRadius),
-                  border: Border.all(
-                    color: widget.isSelected
-                        ? const Color(0xFF8B5CF6)
-                        : _isHovering
-                            ? const Color(0xFF8B5CF6).withOpacity(0.5)
-                            : (styles?.borderColor != null
-                                ? _parseColor(styles?.borderColor) ?? Colors.transparent
-                                : Colors.transparent),
-                    width: widget.isSelected ? 2 : (_parseDouble(styles?.borderWidth) ?? 1),
+              child: Stack(
+                children: [
+                  Container(
+                    width: layout?.width ?? 100,
+                    height: layout?.height ?? 40,
+                    decoration: BoxDecoration(
+                      color: _parseColor(styles?.backgroundColor),
+                      borderRadius: _parseBorderRadius(styles?.borderRadius),
+                      border: Border.all(
+                        color: widget.isSelected
+                            ? const Color(0xFF8B5CF6)
+                            : _isHovering
+                                ? const Color(0xFF8B5CF6).withOpacity(0.5)
+                                : (styles?.borderColor != null
+                                    ? _parseColor(styles?.borderColor) ?? Colors.transparent
+                                    : Colors.transparent),
+                        width: widget.isSelected ? 2 : (_parseDouble(styles?.borderWidth) ?? 1),
+                      ),
+                      boxShadow: [
+                        if (widget.isSelected)
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withOpacity(0.9),
+                            blurRadius: 0,
+                            spreadRadius: 2,
+                          ),
+                        if (widget.isSelected)
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withOpacity(0.14),
+                            blurRadius: 8,
+                            spreadRadius: 4,
+                          ),
+                        if (_isHovering && !widget.isSelected)
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                      ],
+                    ),
+                    child: _buildContent(styles),
                   ),
-                  boxShadow: [
-                    if (widget.isSelected)
-                      BoxShadow(
-                        color: const Color(0xFF8B5CF6).withOpacity(0.9),
-                        blurRadius: 0,
-                        spreadRadius: 2,
-                      ),
-                    if (widget.isSelected)
-                      BoxShadow(
-                        color: const Color(0xFF8B5CF6).withOpacity(0.14),
-                        blurRadius: 8,
-                        spreadRadius: 4,
-                      ),
-                    if (_isHovering && !widget.isSelected)
-                      BoxShadow(
-                        color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                        blurRadius: 4,
-                        spreadRadius: 1,
-                      ),
-                  ],
-                ),
-                child: _buildContent(styles),
+                  if (widget.isSelected) _buildResizeHandles(layout),
+                ],
               ),
             ),
           ),
@@ -354,5 +362,148 @@ class _ComponentRendererState extends State<ComponentRenderer> {
       default:
         return Icons.help_outline;
     }
+  }
+
+  Widget _buildResizeHandles(ComponentLayout? layout) {
+    if (layout == null) return const SizedBox.shrink();
+
+    const handleSize = 8.0;
+    const handleOffset = -4.0;
+
+    return Stack(
+      children: [
+        Positioned(
+          left: handleOffset,
+          top: handleOffset,
+          child: _buildResizeHandle('top-left', MouseCursor.resizeNWSE),
+        ),
+        Positioned(
+          right: handleOffset,
+          top: handleOffset,
+          child: _buildResizeHandle('top-right', MouseCursor.resizeNESW),
+        ),
+        Positioned(
+          left: handleOffset,
+          bottom: handleOffset,
+          child: _buildResizeHandle('bottom-left', MouseCursor.resizeNESW),
+        ),
+        Positioned(
+          right: handleOffset,
+          bottom: handleOffset,
+          child: _buildResizeHandle('bottom-right', MouseCursor.resizeNWSE),
+        ),
+        Positioned(
+          left: layout.width / 2 - handleSize / 2,
+          top: handleOffset,
+          child: _buildResizeHandle('top', MouseCursor.resizeRow),
+        ),
+        Positioned(
+          left: layout.width / 2 - handleSize / 2,
+          bottom: handleOffset,
+          child: _buildResizeHandle('bottom', MouseCursor.resizeRow),
+        ),
+        Positioned(
+          left: handleOffset,
+          top: layout.height / 2 - handleSize / 2,
+          child: _buildResizeHandle('left', MouseCursor.resizeColumn),
+        ),
+        Positioned(
+          right: handleOffset,
+          top: layout.height / 2 - handleSize / 2,
+          child: _buildResizeHandle('right', MouseCursor.resizeColumn),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResizeHandle(String position, MouseCursor cursor) {
+    return MouseRegion(
+      cursor: cursor,
+      child: GestureDetector(
+        onPanStart: (details) {
+          final layout = widget.component.layout;
+          if (layout == null) return;
+          _resizeHandle = position;
+          _startX = details.globalPosition.dx;
+          _startY = details.globalPosition.dy;
+          _initialWidth = layout.width;
+          _initialHeight = layout.height;
+        },
+        onPanUpdate: (details) {
+          if (_resizeHandle == null || _initialWidth == null || _initialHeight == null) return;
+          final layout = widget.component.layout;
+          if (layout == null) return;
+
+          final dx = details.globalPosition.dx - (_startX ?? 0);
+          final dy = details.globalPosition.dy - (_startY ?? 0);
+
+          double newWidth = _initialWidth!;
+          double newHeight = _initialHeight!;
+
+          switch (_resizeHandle) {
+            case 'top-left':
+              newWidth = (_initialWidth! - dx).clamp(40, 500);
+              newHeight = (_initialHeight! - dy).clamp(30, 500);
+              break;
+            case 'top-right':
+              newWidth = (_initialWidth! + dx).clamp(40, 500);
+              newHeight = (_initialHeight! - dy).clamp(30, 500);
+              break;
+            case 'bottom-left':
+              newWidth = (_initialWidth! - dx).clamp(40, 500);
+              newHeight = (_initialHeight! + dy).clamp(30, 500);
+              break;
+            case 'bottom-right':
+              newWidth = (_initialWidth! + dx).clamp(40, 500);
+              newHeight = (_initialHeight! + dy).clamp(30, 500);
+              break;
+            case 'top':
+              newHeight = (_initialHeight! - dy).clamp(30, 500);
+              break;
+            case 'bottom':
+              newHeight = (_initialHeight! + dy).clamp(30, 500);
+              break;
+            case 'left':
+              newWidth = (_initialWidth! - dx).clamp(40, 500);
+              break;
+            case 'right':
+              newWidth = (_initialWidth! + dx).clamp(40, 500);
+              break;
+          }
+
+          widget.onPositionChanged?.call(layout.x, layout.y);
+          final provider = context.read<AppStateProvider>();
+          provider.updateComponentLayout(
+            widget.component.id,
+            layout.copyWith(width: newWidth, height: newHeight),
+          );
+        },
+        onPanEnd: (details) {
+          _resizeHandle = null;
+          _startX = null;
+          _startY = null;
+          _initialWidth = null;
+          _initialHeight = null;
+        },
+        child: Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF8B5CF6),
+            border: Border.all(
+              color: Colors.white,
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withOpacity(0.5),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
