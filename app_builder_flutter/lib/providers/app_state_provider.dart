@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/app_state.dart';
 import '../models/component.dart';
 import '../models/page.dart';
+import '../models/component_defaults.dart';
 
 class AppStateProvider with ChangeNotifier {
   late AppState _state;
@@ -97,22 +98,45 @@ class AppStateProvider with ChangeNotifier {
     final page = getCurrentPage();
     if (page == null) return;
 
+    final defaults = ComponentDefaults.getDefaults(type);
+    final defaultLayout = defaults['layout'] as Map<String, dynamic>;
+    
     final component = Component(
       id: makeId(type),
       type: type,
       layout: layout ?? ComponentLayout(
-        x: 12,
-        y: 12,
-        width: 100,
-        height: 40,
+        x: (defaultLayout['x'] as num).toDouble(),
+        y: (defaultLayout['y'] as num).toDouble(),
+        width: (defaultLayout['width'] as num).toDouble(),
+        height: (defaultLayout['height'] as num).toDouble(),
         zIndex: page.components.length + 1,
       ),
+      styles: _createDefaultStyles(type, defaults),
+      props: defaults['props'] as Map<String, dynamic>?,
     );
 
     page.components = [...page.components, component];
     selectComponent(component.id);
     _pushHistorySnapshot();
     notifyListeners();
+  }
+
+  ComponentStyles _createDefaultStyles(String type, Map<String, dynamic> defaults) {
+    final styleDefaults = defaults['styles'] as Map<String, dynamic>;
+    return ComponentStyles(
+      backgroundColor: styleDefaults['backgroundColor'] as String?,
+      color: styleDefaults['textColor'] as String?,
+      fontSize: styleDefaults['fontSize'] as String?,
+      fontWeight: styleDefaults['fontWeight'] as String?,
+      fontFamily: styleDefaults['fontFamily'] as String?,
+      textAlign: styleDefaults['textAlign'] as String?,
+      borderRadius: styleDefaults['borderRadius'] as String?,
+      borderColor: styleDefaults['borderColor'] as String?,
+      borderWidth: styleDefaults['borderWidth'] as String?,
+      padding: styleDefaults['padding'] as String?,
+      margin: styleDefaults['margin'] as String?,
+      opacity: styleDefaults['opacity'] as String?,
+    );
   }
 
   void deleteSelected() {

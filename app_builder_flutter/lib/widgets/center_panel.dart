@@ -4,6 +4,8 @@ import '../providers/app_state_provider.dart';
 import '../models/component.dart';
 import '../models/page.dart' as app_models;
 import 'component_renderer.dart';
+import '../services/snap_guide_service.dart';
+import 'snap_guide_overlay.dart';
 
 class CenterPanel extends StatelessWidget {
   const CenterPanel({super.key});
