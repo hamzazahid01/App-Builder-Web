@@ -1,14 +1,20 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/app_state_provider.dart';
+import '../config/app_config.dart';
 import '../models/component.dart';
+import '../models/component_defaults.dart';
 import '../models/page.dart' as app_models;
-import 'component_renderer.dart';
+import '../providers/app_state_provider.dart';
 import '../services/snap_guide_service.dart';
+import 'component_renderer.dart';
 import 'snap_guide_overlay.dart';
 
 class CenterPanel extends StatelessWidget {
-  const CenterPanel({super.key});
+  CenterPanel({super.key});
+
+  final GlobalKey _canvasKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -409,14 +415,25 @@ class CenterPanel extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(40),
                   child: DragTarget<String>(
-                    onAccept: (componentType) {
-                      provider.addComponent(componentType);
+                    onAcceptWithDetails: (details) {
+                      final dropOffset = _getCanvasDropOffset(details.offset);
+                      if (dropOffset == null) return;
+                      final layout = _buildDropLayout(
+                        componentType: details.data,
+                        dropOffset: dropOffset,
+                        page: page,
+                      );
+                      provider.addComponent(
+                        details.data,
+                        layout: layout,
+                      );
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Added ${componentType.toUpperCase()}')),
+                        SnackBar(content: Text('Added ${details.data.toUpperCase()}')),
                       );
                     },
                     builder: (context, candidateData, rejectedData) {
                       return Container(
+                        key: _canvasKey,
                         decoration: BoxDecoration(
                           color: page != null
                               ? _parseColor(page.backgroundColor)
@@ -483,6 +500,37 @@ class CenterPanel extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Offset? _getCanvasDropOffset(Offset globalOffset) {
+    final renderBox = _canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    return renderBox?.globalToLocal(globalOffset);
+  }
+
+  ComponentLayout _buildDropLayout({
+    required String componentType,
+    required Offset dropOffset,
+    required app_models.Page? page,
+  }) {
+    final defaults = ComponentDefaults.getDefaults(componentType);
+    final layoutDefaults = defaults['layout'] as Map<String, dynamic>?;
+    final width = (layoutDefaults?['width'] as num?)?.toDouble() ?? AppConfig.defaultComponentWidth;
+    final height = (layoutDefaults?['height'] as num?)?.toDouble() ?? AppConfig.defaultComponentHeight;
+
+    final maxX = math.max(AppConfig.canvasMaxWidth - width, 0.0);
+    final maxY = math.max(AppConfig.canvasMaxHeight - height, 0.0);
+    final x = dropOffset.dx.clamp(0.0, maxX);
+    final y = dropOffset.dy.clamp(0.0, maxY);
+
+    final zIndex = (page?.components.length ?? 0) + 1;
+
+    return ComponentLayout(
+      x: x,
+      y: y,
+      width: width,
+      height: height,
+      zIndex: zIndex,
     );
   }
 
