@@ -58,6 +58,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 if (_resizeHandle != null) return;
                 _startX = details.localPosition.dx;
                 _startY = details.localPosition.dy;
+                
                 _initialX = layout?.x;
                 _initialY = layout?.y;
               },
