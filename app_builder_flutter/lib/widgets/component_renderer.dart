@@ -37,6 +37,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   double? _initialY;
   double? _initialWidth;
   double? _initialHeight;
+  bool _isDragging = false;
   List<SnapLine> _activeSnaps = [];
 
   @override
@@ -75,6 +76,8 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 if (distance < AppConfig.dragThreshold) {
                   return; // Haven't moved far enough yet
                 }
+                
+                _isDragging = true;
                 
                 if (layout == null) return;
                 
@@ -126,13 +129,17 @@ class _ComponentRendererState extends State<ComponentRenderer> {
               },
               onPanEnd: (details) {
                 if (_resizeHandle != null) return;
+                
+                if (_isDragging) {
+                  provider.finishDragSession(commitHistory: true);
+                  _isDragging = false;
+                }
+                
                 _startX = null;
                 _startY = null;
                 _initialX = null;
                 _initialY = null;
                 _activeSnaps = [];
-                // Finalize drag with history commit
-                provider.finishDragSession(commitHistory: true);
               },
               child: Stack(
                 children: [
