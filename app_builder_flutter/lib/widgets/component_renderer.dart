@@ -95,8 +95,8 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 double newX = _initialX! + dx;
                 double newY = _initialY! + dy;
                 
-                // Apply snap to grid if enabled
-                if (provider.snapToGrid) {
+                // Apply snap to grid if enabled AND snap is enabled
+                if (provider.snapToGrid && provider.snapEnabled) {
                   newX = (newX / AppConfig.gridSize).round() * AppConfig.gridSize;
                   newY = (newY / AppConfig.gridSize).round() * AppConfig.gridSize;
                 }
@@ -135,6 +135,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 } else {
                   // Clear snaps if snap is disabled
                   provider.clearSnapGuides();
+                  // Don't apply snapping when disabled
                 }
                 
                 // Update component position without notifying
@@ -571,7 +572,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
             notify: false,
           );
           
-          // Calculate snap guides for resize
+          // Calculate snap guides for resize (only if snap is enabled)
           final page = provider.getCurrentPage();
           if (page != null && provider.snapEnabled) {
             final tempLayout = layout.copyWith(width: newWidth, height: newHeight);
@@ -588,6 +589,9 @@ class _ComponentRendererState extends State<ComponentRenderer> {
             
             _activeSnaps = [...centerSnaps, ...elementSnaps];
             provider.updateSnapGuides(_activeSnaps);
+          } else {
+            // Clear snaps if snap is disabled
+            provider.clearSnapGuides();
           }
           
           // Update visual size for real-time resize feedback
