@@ -1,11 +1,51 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
 import '../models/app_state.dart';
 import '../models/component.dart';
 import '../models/page.dart';
 import '../models/component_defaults.dart';
 
+class DragSession {
+  final String mode; // 'place', 'move', 'resize'
+  final int pointerId;
+  String? componentId;
+  String? componentType;
+  double offsetX;
+  double offsetY;
+  double startClientX;
+  double startClientY;
+  bool moved;
+  RenderBox? canvasBox;
+  double? pendingX;
+  double? pendingY;
+  double? pendingWidth;
+  double? pendingHeight;
+  ComponentLayout? startLayout;
+  String? resizeHandle;
+
+  DragSession({
+    required this.mode,
+    required this.pointerId,
+    this.componentId,
+    this.componentType,
+    this.offsetX = 0,
+    this.offsetY = 0,
+    this.startClientX = 0,
+    this.startClientY = 0,
+    this.moved = false,
+    this.canvasBox,
+    this.pendingX,
+    this.pendingY,
+    this.pendingWidth,
+    this.pendingHeight,
+    this.startLayout,
+    this.resizeHandle,
+  });
+}
+
 class AppStateProvider with ChangeNotifier {
   late AppState _state;
+  DragSession? _dragSession;
 
   AppStateProvider() {
     _state = AppState();
@@ -13,6 +53,7 @@ class AppStateProvider with ChangeNotifier {
   }
 
   AppState get state => _state;
+  DragSession? get dragSession => _dragSession;
 
   AppData get app => _state.app;
   String? get selectedId => _state.selectedId;
@@ -303,5 +344,27 @@ class AppStateProvider with ChangeNotifier {
     }
     _pushHistorySnapshot();
     notifyListeners();
+  }
+
+  // Drag session management
+  void beginDragSession(DragSession session) {
+    _dragSession = session;
+  }
+
+  void updateDragSession(DragSession session) {
+    _dragSession = session;
+    // Do NOT notify listeners during drag
+  }
+
+  void finishDragSession({bool commitHistory = false}) {
+    _dragSession = null;
+    if (commitHistory) {
+      _pushHistorySnapshot();
+    }
+    notifyListeners();
+  }
+
+  void cancelDragSession() {
+    _dragSession = null;
   }
 }

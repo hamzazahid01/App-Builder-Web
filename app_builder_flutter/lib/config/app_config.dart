@@ -9,6 +9,9 @@ class AppConfig {
   // Snap settings
   static const double snapThreshold = 10.0;
 
+  // Drag settings
+  static const double dragThreshold = 4.0;
+
   // Zoom settings
   static const double minZoom = 0.5;
   static const double maxZoom = 2.0;
