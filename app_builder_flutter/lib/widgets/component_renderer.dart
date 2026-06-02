@@ -38,6 +38,10 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   double? _initialWidth;
   double? _initialHeight;
   bool _isDragging = false;
+  double _dragOffsetX = 0; // Real-time drag offset for visual feedback
+  double _dragOffsetY = 0;
+  double _resizeOffsetWidth = 0; // Real-time resize offset for visual feedback
+  double _resizeOffsetHeight = 0;
   List<SnapLine> _activeSnaps = [];
 
   @override
@@ -48,8 +52,8 @@ class _ComponentRendererState extends State<ComponentRenderer> {
     return Consumer<AppStateProvider>(
       builder: (context, provider, child) {
         return Positioned(
-          left: layout?.x ?? 0,
-          top: layout?.y ?? 0,
+          left: (layout?.x ?? 0) + _dragOffsetX,
+          top: (layout?.y ?? 0) + _dragOffsetY,
           child: Opacity(
             opacity: _isDragging ? 0.7 : 1.0,
             child: MouseRegion(
@@ -65,7 +69,11 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                   _startY = details.localPosition.dy;
                   _initialX = layout?.x;
                   _initialY = layout?.y;
-                  setState(() {}); // Trigger rebuild for opacity
+                  _dragOffsetX = 0;
+                  _dragOffsetY = 0;
+                  setState(() {
+                    _isDragging = true;
+                  });
                 },
               onPanUpdate: (details) {
                 if (_resizeHandle != null) return;
@@ -129,14 +137,25 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                   layout!.copyWith(x: newX, y: newY),
                   notify: false,
                 );
+                
+                // Update visual position for real-time drag feedback
+                setState(() {
+                  _dragOffsetX = newX - (layout?.x ?? 0);
+                  _dragOffsetY = newY - (layout?.y ?? 0);
+                });
               },
               onPanEnd: (details) {
                 if (_resizeHandle != null) return;
                 
                 if (_isDragging) {
                   provider.finishDragSession(commitHistory: true);
-                  _isDragging = false;
                 }
+                
+                setState(() {
+                  _isDragging = false;
+                  _dragOffsetX = 0;
+                  _dragOffsetY = 0;
+                });
                 
                 _startX = null;
                 _startY = null;
@@ -145,8 +164,8 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 _activeSnaps = [];
               },
               child: SizedBox(
-                width: layout?.width ?? 100,
-                height: layout?.height ?? 40,
+                width: (layout?.width ?? 100) + _resizeOffsetWidth,
+                height: (layout?.height ?? 40) + _resizeOffsetHeight,
                 child: Stack(
                   children: [
                     Container(
@@ -542,6 +561,12 @@ class _ComponentRendererState extends State<ComponentRenderer> {
             layout.copyWith(width: newWidth, height: newHeight),
             notify: false,
           );
+          
+          // Update visual size for real-time resize feedback
+          setState(() {
+            _resizeOffsetWidth = newWidth - (layout?.width ?? 100);
+            _resizeOffsetHeight = newHeight - (layout?.height ?? 40);
+          });
         },
         onPointerUp: (event) {
           _resizeHandle = null;
@@ -549,6 +574,12 @@ class _ComponentRendererState extends State<ComponentRenderer> {
           _startY = null;
           _initialWidth = null;
           _initialHeight = null;
+          
+          setState(() {
+            _resizeOffsetWidth = 0;
+            _resizeOffsetHeight = 0;
+          });
+          
           final provider = context.read<AppStateProvider>();
           provider.notifyListeners();
         },
