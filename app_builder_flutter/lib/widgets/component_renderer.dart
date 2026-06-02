@@ -50,20 +50,23 @@ class _ComponentRendererState extends State<ComponentRenderer> {
         return Positioned(
           left: layout?.x ?? 0,
           top: layout?.y ?? 0,
-          child: MouseRegion(
-            onEnter: (_) => setState(() => _isHovering = true),
-            onExit: (_) => setState(() => _isHovering = false),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: widget.onTap,
-              onDoubleTap: widget.onDoubleTap,
-              onPanStart: (details) {
-                if (_resizeHandle != null) return;
-                _startX = details.localPosition.dx;
-                _startY = details.localPosition.dy;
-                _initialX = layout?.x;
-                _initialY = layout?.y;
-              },
+          child: Opacity(
+            opacity: _isDragging ? 0.7 : 1.0,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _isHovering = true),
+              onExit: (_) => setState(() => _isHovering = false),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: widget.onTap,
+                onDoubleTap: widget.onDoubleTap,
+                onPanStart: (details) {
+                  if (_resizeHandle != null) return;
+                  _startX = details.localPosition.dx;
+                  _startY = details.localPosition.dy;
+                  _initialX = layout?.x;
+                  _initialY = layout?.y;
+                  setState(() {}); // Trigger rebuild for opacity
+                },
               onPanUpdate: (details) {
                 if (_resizeHandle != null) return;
                 if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
@@ -186,6 +189,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                     if (widget.isSelected) _buildResizeHandles(layout),
                   ],
                 ),
+              ),
               ),
             ),
           ),
