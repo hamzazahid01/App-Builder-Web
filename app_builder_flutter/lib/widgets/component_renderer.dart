@@ -60,7 +60,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                   
                   final session = DragSession(
                     mode: 'move',
-                    pointerId: event.pointerId,
+                    pointerId: event.pointer,
                     componentId: widget.component.id,
                     offsetX: event.localPosition.dx,
                     offsetY: event.localPosition.dy,
@@ -71,7 +71,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 },
                 onPointerMove: (event) {
                   final session = provider.dragSession;
-                  if (session == null || session.pointerId != event.pointerId || session.mode != 'move') return;
+                  if (session == null || session.pointerId != event.pointer || session.mode != 'move') return;
                   if (session.componentId != widget.component.id) return;
                   
                   // Check drag threshold
@@ -145,7 +145,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 },
                 onPointerUp: (event) {
                   final session = provider.dragSession;
-                  if (session == null || session.pointerId != event.pointerId) return;
+                  if (session == null || session.pointerId != event.pointer) return;
                   if (session.mode != 'move' || session.componentId != widget.component.id) return;
                   
                   _activeSnaps = [];
@@ -160,7 +160,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 },
                 onPointerCancel: (event) {
                   final session = provider.dragSession;
-                  if (session?.pointerId == event.pointerId) {
+                  if (session?.pointerId == event.pointer) {
                     provider.cancelDragSession();
                     _activeSnaps = [];
                   }
