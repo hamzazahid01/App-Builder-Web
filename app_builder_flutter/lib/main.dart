@@ -118,9 +118,7 @@ class AppBuilderHome extends StatelessWidget {
                         );
                       },
                     ),
-                    Expanded(
-                      child: CenterPanel(),
-                    ),
+                    CenterPanel(),
                     const SizedBox(
                       width: 320,
                       child: RightPanel(),

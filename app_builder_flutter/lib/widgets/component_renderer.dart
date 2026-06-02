@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/component.dart';
@@ -28,14 +29,19 @@ class ComponentRenderer extends StatefulWidget {
 }
 
 class _ComponentRendererState extends State<ComponentRenderer> {
+  bool _isHovering = false;
+  String? _resizeHandle;
   double? _startX;
   double? _startY;
   double? _initialX;
   double? _initialY;
   double? _initialWidth;
   double? _initialHeight;
-  bool _isHovering = false;
-  String? _resizeHandle;
+  bool _isDragging = false;
+  double _dragOffsetX = 0; // Real-time drag offset for visual feedback
+  double _dragOffsetY = 0;
+  double _resizeOffsetWidth = 0; // Real-time resize offset for visual feedback
+  double _resizeOffsetHeight = 0;
   List<SnapLine> _activeSnaps = [];
 
   @override
@@ -46,22 +52,29 @@ class _ComponentRendererState extends State<ComponentRenderer> {
     return Consumer<AppStateProvider>(
       builder: (context, provider, child) {
         return Positioned(
-          left: layout?.x ?? 0,
-          top: layout?.y ?? 0,
-          child: MouseRegion(
-            onEnter: (_) => setState(() => _isHovering = true),
-            onExit: (_) => setState(() => _isHovering = false),
-            child: GestureDetector(
-              onTap: widget.onTap,
-              onDoubleTap: widget.onDoubleTap,
-              onPanStart: (details) {
-                if (_resizeHandle != null) return;
-                _startX = details.localPosition.dx;
-                _startY = details.localPosition.dy;
-                
-                _initialX = layout?.x;
-                _initialY = layout?.y;
-              },
+          left: (layout?.x ?? 0) + _dragOffsetX,
+          top: (layout?.y ?? 0) + _dragOffsetY,
+          child: Opacity(
+            opacity: _isDragging ? 0.7 : 1.0,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _isHovering = true),
+              onExit: (_) => setState(() => _isHovering = false),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: widget.onTap,
+                onDoubleTap: widget.onDoubleTap,
+                onPanStart: (details) {
+                  if (_resizeHandle != null) return;
+                  _startX = details.localPosition.dx;
+                  _startY = details.localPosition.dy;
+                  _initialX = layout?.x;
+                  _initialY = layout?.y;
+                  _dragOffsetX = 0;
+                  _dragOffsetY = 0;
+                  setState(() {
+                    _isDragging = true;
+                  });
+                },
               onPanUpdate: (details) {
                 if (_resizeHandle != null) return;
                 if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
@@ -69,21 +82,31 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 final dx = details.localPosition.dx - _startX!;
                 final dy = details.localPosition.dy - _startY!;
                 
+                // Check drag threshold
+                final distance = math.sqrt(dx * dx + dy * dy);
+                if (distance < AppConfig.dragThreshold) {
+                  return; // Haven't moved far enough yet
+                }
+                
+                _isDragging = true;
+                
+                if (layout == null) return;
+                
                 double newX = _initialX! + dx;
                 double newY = _initialY! + dy;
                 
-                // Apply snap to grid if enabled
-                if (provider.snapToGrid) {
+                // Apply snap to grid if enabled AND snap is enabled
+                if (provider.snapToGrid && provider.snapEnabled) {
                   newX = (newX / AppConfig.gridSize).round() * AppConfig.gridSize;
                   newY = (newY / AppConfig.gridSize).round() * AppConfig.gridSize;
                 }
                 
-                newX = newX.clamp(0.0, AppConfig.canvasMaxWidth);
-                newY = newY.clamp(0.0, AppConfig.canvasMaxHeight);
+                newX = newX.clamp(0.0, AppConfig.canvasMaxWidth - layout!.width);
+                newY = newY.clamp(0.0, AppConfig.canvasMaxHeight - layout!.height);
                 
-                // Calculate snap guides (for visual feedback only, not auto-snap)
+                // Calculate snap guides (for visual feedback only)
                 final page = provider.getCurrentPage();
-                if (page != null && layout != null) {
+                if (page != null && provider.snapEnabled) {
                   final tempLayout = layout!.copyWith(x: newX, y: newY);
                   final centerSnaps = SnapGuide.calculateCenterSnaps(
                     tempLayout,
@@ -98,71 +121,104 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                   
                   _activeSnaps = [...centerSnaps, ...elementSnaps];
                   
-                  // Check if snap is close enough to apply (within 2px)
+                  // Pass snaps to provider for overlay rendering
+                  provider.updateSnapGuides(_activeSnaps);
+                  
+                  // Only apply snap if within 2px threshold
                   if (_activeSnaps.isNotEmpty) {
                     final snappedPos = SnapGuide.applySnaps(tempLayout, _activeSnaps);
-                    // Only apply snap if very close (2px threshold for auto-snap)
                     if ((snappedPos.dx - newX).abs() <= 2 && (snappedPos.dy - newY).abs() <= 2) {
                       newX = snappedPos.dx;
                       newY = snappedPos.dy;
                     }
                   }
+                } else {
+                  // Clear snaps if snap is disabled
+                  provider.clearSnapGuides();
+                  // Don't apply snapping when disabled
                 }
                 
-                widget.onPositionChanged?.call(newX, newY);
+                // Update component position without notifying
+                provider.updateComponentLayout(
+                  widget.component.id,
+                  layout!.copyWith(x: newX, y: newY),
+                  notify: false,
+                );
+                
+                // Update visual position for real-time drag feedback
+                setState(() {
+                  _dragOffsetX = newX - (layout?.x ?? 0);
+                  _dragOffsetY = newY - (layout?.y ?? 0);
+                });
               },
               onPanEnd: (details) {
                 if (_resizeHandle != null) return;
+                
+                if (_isDragging) {
+                  provider.finishDragSession(commitHistory: true);
+                }
+                
+                // Clear snap guides
+                provider.clearSnapGuides();
+                
+                setState(() {
+                  _isDragging = false;
+                  _dragOffsetX = 0;
+                  _dragOffsetY = 0;
+                });
+                
                 _startX = null;
                 _startY = null;
                 _initialX = null;
                 _initialY = null;
                 _activeSnaps = [];
-                widget.onDragEnd?.call();
               },
-              child: Stack(
-                children: [
-                  Container(
-                    width: layout?.width ?? 100,
-                    height: layout?.height ?? 40,
-                    decoration: BoxDecoration(
-                      color: _parseColor(styles?.backgroundColor),
-                      borderRadius: _parseBorderRadius(styles?.borderRadius),
-                      border: Border.all(
-                        color: widget.isSelected
-                            ? const Color(0xFF8B5CF6)
-                            : _isHovering
-                                ? const Color(0xFF8B5CF6).withOpacity(0.5)
-                                : (styles?.borderColor != null
-                                    ? _parseColor(styles?.borderColor) ?? Colors.transparent
-                                    : Colors.transparent),
-                        width: widget.isSelected ? 2 : (_parseDouble(styles?.borderWidth) ?? 1),
+              child: SizedBox(
+                width: (layout?.width ?? 100) + _resizeOffsetWidth,
+                height: (layout?.height ?? 40) + _resizeOffsetHeight,
+                child: Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: _parseColor(styles?.backgroundColor),
+                        borderRadius: _parseBorderRadius(styles?.borderRadius),
+                        border: Border.all(
+                          color: widget.isSelected
+                              ? const Color(0xFF8B5CF6)
+                              : _isHovering
+                                  ? const Color(0xFF8B5CF6).withOpacity(0.5)
+                                  : (styles?.borderColor != null
+                                      ? _parseColor(styles?.borderColor) ?? Colors.transparent
+                                      : Colors.transparent),
+                          width: widget.isSelected ? 2 : (_parseDouble(styles?.borderWidth) ?? 1),
+                        ),
+                        boxShadow: [
+                          if (widget.isSelected)
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.9),
+                              blurRadius: 0,
+                              spreadRadius: 2,
+                            ),
+                          if (widget.isSelected)
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.14),
+                              blurRadius: 8,
+                              spreadRadius: 4,
+                            ),
+                          if (_isHovering && !widget.isSelected)
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                        ],
                       ),
-                      boxShadow: [
-                        if (widget.isSelected)
-                          BoxShadow(
-                            color: const Color(0xFF8B5CF6).withOpacity(0.9),
-                            blurRadius: 0,
-                            spreadRadius: 2,
-                          ),
-                        if (widget.isSelected)
-                          BoxShadow(
-                            color: const Color(0xFF8B5CF6).withOpacity(0.14),
-                            blurRadius: 8,
-                            spreadRadius: 4,
-                          ),
-                        if (_isHovering && !widget.isSelected)
-                          BoxShadow(
-                            color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                            blurRadius: 4,
-                            spreadRadius: 1,
-                          ),
-                      ],
+                      child: _buildContent(styles),
                     ),
-                    child: _buildContent(styles),
-                  ),
-                  if (widget.isSelected) _buildResizeHandles(layout),
-                ],
+                    if (widget.isSelected) _buildResizeHandles(layout),
+                  ],
+                ),
+              ),
               ),
             ),
           ),
@@ -515,6 +571,34 @@ class _ComponentRendererState extends State<ComponentRenderer> {
             layout.copyWith(width: newWidth, height: newHeight),
             notify: false,
           );
+          
+          // Calculate snap guides for resize (only if snap is enabled)
+          final page = provider.getCurrentPage();
+          if (page != null && provider.snapEnabled) {
+            final tempLayout = layout.copyWith(width: newWidth, height: newHeight);
+            final centerSnaps = SnapGuide.calculateCenterSnaps(
+              tempLayout,
+              Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
+            );
+            final elementSnaps = SnapGuide.calculateElementSnaps(
+              tempLayout,
+              page.components,
+              widget.component.id,
+              Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
+            );
+            
+            _activeSnaps = [...centerSnaps, ...elementSnaps];
+            provider.updateSnapGuides(_activeSnaps);
+          } else {
+            // Clear snaps if snap is disabled
+            provider.clearSnapGuides();
+          }
+          
+          // Update visual size for real-time resize feedback
+          setState(() {
+            _resizeOffsetWidth = newWidth - (layout?.width ?? 100);
+            _resizeOffsetHeight = newHeight - (layout?.height ?? 40);
+          });
         },
         onPointerUp: (event) {
           _resizeHandle = null;
@@ -522,8 +606,14 @@ class _ComponentRendererState extends State<ComponentRenderer> {
           _startY = null;
           _initialWidth = null;
           _initialHeight = null;
+          
+          setState(() {
+            _resizeOffsetWidth = 0;
+            _resizeOffsetHeight = 0;
+          });
+          
           final provider = context.read<AppStateProvider>();
-          provider.notifyListeners();
+          provider.clearSnapGuides();
         },
         child: Container(
           width: 8,

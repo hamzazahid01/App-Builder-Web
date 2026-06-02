@@ -1,11 +1,53 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
 import '../models/app_state.dart';
 import '../models/component.dart';
 import '../models/page.dart';
 import '../models/component_defaults.dart';
+import '../services/snap_guide_service.dart';
+
+class DragSession {
+  final String mode; // 'place', 'move', 'resize'
+  final int pointerId;
+  String? componentId;
+  String? componentType;
+  double offsetX;
+  double offsetY;
+  double startClientX;
+  double startClientY;
+  bool moved;
+  RenderBox? canvasBox;
+  double? pendingX;
+  double? pendingY;
+  double? pendingWidth;
+  double? pendingHeight;
+  ComponentLayout? startLayout;
+  String? resizeHandle;
+
+  DragSession({
+    required this.mode,
+    required this.pointerId,
+    this.componentId,
+    this.componentType,
+    this.offsetX = 0,
+    this.offsetY = 0,
+    this.startClientX = 0,
+    this.startClientY = 0,
+    this.moved = false,
+    this.canvasBox,
+    this.pendingX,
+    this.pendingY,
+    this.pendingWidth,
+    this.pendingHeight,
+    this.startLayout,
+    this.resizeHandle,
+  });
+}
 
 class AppStateProvider with ChangeNotifier {
   late AppState _state;
+  DragSession? _dragSession;
+  List<SnapLine> _activeSnapGuides = [];
 
   AppStateProvider() {
     _state = AppState();
@@ -13,6 +55,8 @@ class AppStateProvider with ChangeNotifier {
   }
 
   AppState get state => _state;
+  DragSession? get dragSession => _dragSession;
+  List<SnapLine> get activeSnapGuides => _activeSnapGuides;
 
   AppData get app => _state.app;
   String? get selectedId => _state.selectedId;
@@ -225,6 +269,14 @@ class AppStateProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void setSnapEnabled(bool value) {
+    _state.snapEnabled = value;
+    if (!value) {
+      clearSnapGuides();
+    }
+    notifyListeners();
+  }
+
   void setCurrentDevice(String deviceKey) {
     _state.currentDeviceKey = deviceKey;
     notifyListeners();
@@ -302,6 +354,39 @@ class AppStateProvider with ChangeNotifier {
       _state.selectedId = null;
     }
     _pushHistorySnapshot();
+    notifyListeners();
+  }
+
+  // Drag session management
+  void beginDragSession(DragSession session) {
+    _dragSession = session;
+  }
+
+  void updateDragSession(DragSession session) {
+    _dragSession = session;
+    // Do NOT notify listeners during drag
+  }
+
+  void finishDragSession({bool commitHistory = false}) {
+    _dragSession = null;
+    if (commitHistory) {
+      _pushHistorySnapshot();
+    }
+    notifyListeners();
+  }
+
+  void cancelDragSession() {
+    _dragSession = null;
+  }
+
+  // Snap guide management
+  void updateSnapGuides(List<SnapLine> snaps) {
+    _activeSnapGuides = snaps;
+    notifyListeners(); // Notify to update overlay
+  }
+
+  void clearSnapGuides() {
+    _activeSnapGuides = [];
     notifyListeners();
   }
 }

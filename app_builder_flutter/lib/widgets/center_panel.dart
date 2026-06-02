@@ -229,11 +229,11 @@ class _CenterPanelState extends State<CenterPanel> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: provider.snapToGrid
+              color: provider.snapEnabled
                   ? const Color(0xFF8B5CF6)
                   : Colors.white.withOpacity(0.12),
             ),
-            color: provider.snapToGrid
+            color: provider.snapEnabled
                 ? const Color(0xFF8B5CF6).withOpacity(0.2)
                 : Colors.white.withOpacity(0.08),
           ),
@@ -241,7 +241,7 @@ class _CenterPanelState extends State<CenterPanel> {
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                provider.setSnapToGrid(!provider.snapToGrid);
+                provider.setSnapEnabled(!provider.snapEnabled);
               },
               borderRadius: BorderRadius.circular(8),
               child: const Center(
@@ -452,12 +452,6 @@ class _CenterPanelState extends State<CenterPanel> {
                         ),
                         child: Stack(
                           children: [
-                            // Snap guide overlay (global)
-                            Consumer<AppStateProvider>(
-                              builder: (context, provider, child) {
-                                return _buildSnapGuideOverlay(provider, page);
-                              },
-                            ),
                             // Components
                             if (page != null && page.components.isNotEmpty)
                               ...page.components.map((component) {
@@ -494,6 +488,12 @@ class _CenterPanelState extends State<CenterPanel> {
                                   ),
                                 ),
                               ),
+                            // Snap guide overlay (on top)
+                            Consumer<AppStateProvider>(
+                              builder: (context, provider, child) {
+                                return _buildSnapGuideOverlay(provider, page);
+                              },
+                            ),
                           ],
                         ),
                       );
@@ -552,175 +552,72 @@ class _CenterPanelState extends State<CenterPanel> {
   }
 
   Widget _buildSnapGuideOverlay(AppStateProvider provider, app_models.Page? page) {
-    final selectedComponent = provider.findSelectedComponent();
-    if (selectedComponent == null || selectedComponent.layout == null) {
-      return const SizedBox.shrink();
-    }
-
-    final layout = selectedComponent.layout!;
-    final otherComponents = page?.components.where((c) => c.id != selectedComponent.id).toList() ?? [];
+    final snaps = provider.activeSnapGuides;
     final deviceInfo = provider.deviceMap[provider.currentDeviceKey] ?? provider.deviceMap['iphone-14']!;
     
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: CustomPaint(
-          painter: _SnapGuidePainter(
-            layout: layout,
-            otherComponents: otherComponents,
-            canvasWidth: deviceInfo.width,
-            canvasHeight: deviceInfo.height,
-          ),
+    // If no snaps, return empty
+    if (snaps.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    return IgnorePointer(
+      child: CustomPaint(
+        painter: _SnapGuidePainter(
+          snaps: snaps,
+          canvasWidth: deviceInfo.width,
+          canvasHeight: deviceInfo.height,
         ),
+        size: Size.infinite,
       ),
     );
   }
 }
 
 class _SnapGuidePainter extends CustomPainter {
-  final ComponentLayout layout;
-  final List<Component> otherComponents;
+  final List<SnapLine> snaps;
   final double canvasWidth;
   final double canvasHeight;
-  static const double snapThreshold = 10.0;
 
   _SnapGuidePainter({
-    required this.layout,
-    required this.otherComponents,
+    required this.snaps,
     required this.canvasWidth,
     required this.canvasHeight,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final guides = _calculateGuides();
-    
-    for (final guide in guides) {
+    for (final snap in snaps) {
+      final isCenter = snap.type.contains('center');
       final paint = Paint()
-        ..color = guide.isCenter 
-            ? const Color(0xFF06B6D4).withOpacity(0.7)
-            : const Color(0xFF0891B2).withOpacity(0.5)
-        ..strokeWidth = 1
+        ..color = isCenter
+            ? const Color(0xFF06B6D4).withOpacity(0.8)
+            : const Color(0xFF0891B2).withOpacity(0.6)
+        ..strokeWidth = 2
         ..style = PaintingStyle.stroke;
 
-      if (guide.isHorizontal) {
-        canvas.drawLine(
-          Offset(guide.x1, guide.y1),
-          Offset(guide.x2, guide.y2),
-          paint,
-        );
-      } else {
-        canvas.drawLine(
-          Offset(guide.x1, guide.y1),
-          Offset(guide.x2, guide.y2),
-          paint,
-        );
-      }
+      final line = snap.line;
+      canvas.drawLine(
+        Offset(line.x1, line.y1),
+        Offset(line.x2, line.y2),
+        paint,
+      );
+      
+      // Add glow effect for better visibility
+      final glowPaint = Paint()
+        ..color = paint.color.withOpacity(0.2)
+        ..strokeWidth = 4
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+      
+      canvas.drawLine(
+        Offset(line.x1, line.y1),
+        Offset(line.x2, line.y2),
+        glowPaint,
+      );
     }
-  }
-
-  List<_GuideLine> _calculateGuides() {
-    final guides = <_GuideLine>[];
-    final elementLeft = layout.x;
-    final elementRight = layout.x + layout.width;
-    final elementTop = layout.y;
-    final elementBottom = layout.y + layout.height;
-    final elementCenterX = layout.x + layout.width / 2;
-    final elementCenterY = layout.y + layout.height / 2;
-
-    // Center alignment with canvas
-    final centerX = canvasWidth / 2;
-    final centerY = canvasHeight / 2;
-
-    if ((elementCenterX - centerX).abs() <= snapThreshold) {
-      guides.add(_GuideLine(
-        x1: centerX, y1: 0, x2: centerX, y2: canvasHeight,
-        isHorizontal: false, isCenter: true,
-      ));
-    }
-
-    if ((elementCenterY - centerY).abs() <= snapThreshold) {
-      guides.add(_GuideLine(
-        x1: 0, y1: centerY, x2: canvasWidth, y2: centerY,
-        isHorizontal: true, isCenter: true,
-      ));
-    }
-
-    // Alignment with other components
-    for (final comp in otherComponents) {
-      final compLayout = comp.layout;
-      if (compLayout == null) continue;
-
-      final compLeft = compLayout.x;
-      final compRight = compLayout.x + compLayout.width;
-      final compTop = compLayout.y;
-      final compBottom = compLayout.y + compLayout.height;
-      final compCenterX = compLayout.x + compLayout.width / 2;
-      final compCenterY = compLayout.y + compLayout.height / 2;
-
-      // Left edge alignment
-      if ((elementLeft - compLeft).abs() <= snapThreshold) {
-        guides.add(_GuideLine(
-          x1: compLeft, y1: 0, x2: compLeft, y2: canvasHeight,
-          isHorizontal: false, isCenter: false,
-        ));
-      }
-
-      // Right edge alignment
-      if ((elementRight - compRight).abs() <= snapThreshold) {
-        guides.add(_GuideLine(
-          x1: compRight, y1: 0, x2: compRight, y2: canvasHeight,
-          isHorizontal: false, isCenter: false,
-        ));
-      }
-
-      // Top edge alignment
-      if ((elementTop - compTop).abs() <= snapThreshold) {
-        guides.add(_GuideLine(
-          x1: 0, y1: compTop, x2: canvasWidth, y2: compTop,
-          isHorizontal: true, isCenter: false,
-        ));
-      }
-
-      // Bottom edge alignment
-      if ((elementBottom - compBottom).abs() <= snapThreshold) {
-        guides.add(_GuideLine(
-          x1: 0, y1: compBottom, x2: canvasWidth, y2: compBottom,
-          isHorizontal: true, isCenter: false,
-        ));
-      }
-
-      // Center alignment with other component
-      if ((elementCenterX - compCenterX).abs() <= snapThreshold) {
-        guides.add(_GuideLine(
-          x1: compCenterX, y1: 0, x2: compCenterX, y2: canvasHeight,
-          isHorizontal: false, isCenter: false,
-        ));
-      }
-
-      if ((elementCenterY - compCenterY).abs() <= snapThreshold) {
-        guides.add(_GuideLine(
-          x1: 0, y1: compCenterY, x2: canvasWidth, y2: compCenterY,
-          isHorizontal: true, isCenter: false,
-        ));
-      }
-    }
-
-    return guides;
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-class _GuideLine {
-  final double x1, y1, x2, y2;
-  final bool isHorizontal;
-  final bool isCenter;
-
-  _GuideLine({
-    required this.x1, required this.y1,
-    required this.x2, required this.y2,
-    required this.isHorizontal,
-    required this.isCenter,
-  });
+  bool shouldRepaint(_SnapGuidePainter oldDelegate) {
+    return oldDelegate.snaps.length != snaps.length;
+  }
 }
