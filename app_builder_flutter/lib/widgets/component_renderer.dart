@@ -33,6 +33,8 @@ class _ComponentRendererState extends State<ComponentRenderer> {
   String? _resizeHandle;
   double? _startX;
   double? _startY;
+  double? _initialX;
+  double? _initialY;
   double? _initialWidth;
   double? _initialHeight;
   List<SnapLine> _activeSnaps = [];
@@ -51,120 +53,87 @@ class _ComponentRendererState extends State<ComponentRenderer> {
             onEnter: (_) => setState(() => _isHovering = true),
             onExit: (_) => setState(() => _isHovering = false),
             child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: widget.onTap,
               onDoubleTap: widget.onDoubleTap,
-              child: Listener(
-                onPointerDown: (event) {
-                  if (_resizeHandle != null) return;
-                  if (event.buttons != 1) return; // Left mouse button only
-                  
-                  final session = DragSession(
-                    mode: 'move',
-                    pointerId: event.pointer,
-                    componentId: widget.component.id,
-                    offsetX: event.localPosition.dx,
-                    offsetY: event.localPosition.dy,
-                    startClientX: event.position.dx,
-                    startClientY: event.position.dy,
+              onPanStart: (details) {
+                if (_resizeHandle != null) return;
+                _startX = details.localPosition.dx;
+                _startY = details.localPosition.dy;
+                _initialX = layout?.x;
+                _initialY = layout?.y;
+              },
+              onPanUpdate: (details) {
+                if (_resizeHandle != null) return;
+                if (_startX == null || _startY == null || _initialX == null || _initialY == null) return;
+                
+                final dx = details.localPosition.dx - _startX!;
+                final dy = details.localPosition.dy - _startY!;
+                
+                // Check drag threshold
+                final distance = math.sqrt(dx * dx + dy * dy);
+                if (distance < AppConfig.dragThreshold) {
+                  return; // Haven't moved far enough yet
+                }
+                
+                if (layout == null) return;
+                
+                double newX = _initialX! + dx;
+                double newY = _initialY! + dy;
+                
+                // Apply snap to grid if enabled
+                if (provider.snapToGrid) {
+                  newX = (newX / AppConfig.gridSize).round() * AppConfig.gridSize;
+                  newY = (newY / AppConfig.gridSize).round() * AppConfig.gridSize;
+                }
+                
+                newX = newX.clamp(0.0, AppConfig.canvasMaxWidth - layout!.width);
+                newY = newY.clamp(0.0, AppConfig.canvasMaxHeight - layout!.height);
+                
+                // Calculate snap guides (for visual feedback only)
+                final page = provider.getCurrentPage();
+                if (page != null) {
+                  final tempLayout = layout!.copyWith(x: newX, y: newY);
+                  final centerSnaps = SnapGuide.calculateCenterSnaps(
+                    tempLayout,
+                    Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
                   );
-                  provider.beginDragSession(session);
-                },
-                onPointerMove: (event) {
-                  final session = provider.dragSession;
-                  if (session == null || session.pointerId != event.pointer || session.mode != 'move') return;
-                  if (session.componentId != widget.component.id) return;
+                  final elementSnaps = SnapGuide.calculateElementSnaps(
+                    tempLayout,
+                    page.components,
+                    widget.component.id,
+                    Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
+                  );
                   
-                  // Check drag threshold
-                  final dx = event.position.dx - session.startClientX;
-                  final dy = event.position.dy - session.startClientY;
-                  final distance = math.sqrt(dx * dx + dy * dy);
+                  _activeSnaps = [...centerSnaps, ...elementSnaps];
                   
-                  if (!session.moved && distance < AppConfig.dragThreshold) {
-                    return; // Haven't moved far enough yet
-                  }
-                  
-                  if (!session.moved) {
-                    session.moved = true;
-                    provider.updateDragSession(session);
-                  }
-                  
-                  if (layout == null) return;
-                  
-                  // Calculate new position
-                  final offsetDx = event.localPosition.dx - session.offsetX;
-                  final offsetDy = event.localPosition.dy - session.offsetY;
-                  
-                  double newX = layout!.x + offsetDx;
-                  double newY = layout!.y + offsetDy;
-                  
-                  // Apply snap to grid if enabled
-                  if (provider.snapToGrid) {
-                    newX = (newX / AppConfig.gridSize).round() * AppConfig.gridSize;
-                    newY = (newY / AppConfig.gridSize).round() * AppConfig.gridSize;
-                  }
-                  
-                  newX = newX.clamp(0.0, AppConfig.canvasMaxWidth - layout!.width);
-                  newY = newY.clamp(0.0, AppConfig.canvasMaxHeight - layout!.height);
-                  
-                  // Calculate snap guides (for visual feedback only)
-                  final page = provider.getCurrentPage();
-                  if (page != null) {
-                    final tempLayout = layout!.copyWith(x: newX, y: newY);
-                    final centerSnaps = SnapGuide.calculateCenterSnaps(
-                      tempLayout,
-                      Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
-                    );
-                    final elementSnaps = SnapGuide.calculateElementSnaps(
-                      tempLayout,
-                      page.components,
-                      widget.component.id,
-                      Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
-                    );
-                    
-                    _activeSnaps = [...centerSnaps, ...elementSnaps];
-                    
-                    // Only apply snap if within 2px threshold
-                    if (_activeSnaps.isNotEmpty) {
-                      final snappedPos = SnapGuide.applySnaps(tempLayout, _activeSnaps);
-                      if ((snappedPos.dx - newX).abs() <= 2 && (snappedPos.dy - newY).abs() <= 2) {
-                        newX = snappedPos.dx;
-                        newY = snappedPos.dy;
-                      }
+                  // Only apply snap if within 2px threshold
+                  if (_activeSnaps.isNotEmpty) {
+                    final snappedPos = SnapGuide.applySnaps(tempLayout, _activeSnaps);
+                    if ((snappedPos.dx - newX).abs() <= 2 && (snappedPos.dy - newY).abs() <= 2) {
+                      newX = snappedPos.dx;
+                      newY = snappedPos.dy;
                     }
                   }
-                  
-                  // Update component position without notifying
-                  provider.updateComponentLayout(
-                    widget.component.id,
-                    layout!.copyWith(x: newX, y: newY),
-                    notify: false,
-                  );
-                  
-                  // Trigger rebuild for snap guides
-                  setState(() {});
-                },
-                onPointerUp: (event) {
-                  final session = provider.dragSession;
-                  if (session == null || session.pointerId != event.pointer) return;
-                  if (session.mode != 'move' || session.componentId != widget.component.id) return;
-                  
-                  _activeSnaps = [];
-                  
-                  if (session.moved) {
-                    provider.finishDragSession(commitHistory: true);
-                  } else {
-                    provider.cancelDragSession();
-                    // Single tap - select component
-                    widget.onTap?.call();
-                  }
-                },
-                onPointerCancel: (event) {
-                  final session = provider.dragSession;
-                  if (session?.pointerId == event.pointer) {
-                    provider.cancelDragSession();
-                    _activeSnaps = [];
-                  }
-                },
+                }
+                
+                // Update component position without notifying
+                provider.updateComponentLayout(
+                  widget.component.id,
+                  layout!.copyWith(x: newX, y: newY),
+                  notify: false,
+                );
+              },
+              onPanEnd: (details) {
+                if (_resizeHandle != null) return;
+                _startX = null;
+                _startY = null;
+                _initialX = null;
+                _initialY = null;
+                _activeSnaps = [];
+                // Finalize drag with history commit
+                provider.finishDragSession(commitHistory: true);
+              },
               child: Stack(
                 children: [
                   Container(
@@ -208,7 +177,6 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                   ),
                   if (widget.isSelected) _buildResizeHandles(layout),
                 ],
-              ),
               ),
             ),
           ),
