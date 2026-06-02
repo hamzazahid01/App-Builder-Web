@@ -141,49 +141,51 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 _initialY = null;
                 _activeSnaps = [];
               },
-              child: Stack(
-                children: [
-                  Container(
-                    width: layout?.width ?? 100,
-                    height: layout?.height ?? 40,
-                    decoration: BoxDecoration(
-                      color: _parseColor(styles?.backgroundColor),
-                      borderRadius: _parseBorderRadius(styles?.borderRadius),
-                      border: Border.all(
-                        color: widget.isSelected
-                            ? const Color(0xFF8B5CF6)
-                            : _isHovering
-                                ? const Color(0xFF8B5CF6).withOpacity(0.5)
-                                : (styles?.borderColor != null
-                                    ? _parseColor(styles?.borderColor) ?? Colors.transparent
-                                    : Colors.transparent),
-                        width: widget.isSelected ? 2 : (_parseDouble(styles?.borderWidth) ?? 1),
+              child: SizedBox(
+                width: layout?.width ?? 100,
+                height: layout?.height ?? 40,
+                child: Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: _parseColor(styles?.backgroundColor),
+                        borderRadius: _parseBorderRadius(styles?.borderRadius),
+                        border: Border.all(
+                          color: widget.isSelected
+                              ? const Color(0xFF8B5CF6)
+                              : _isHovering
+                                  ? const Color(0xFF8B5CF6).withOpacity(0.5)
+                                  : (styles?.borderColor != null
+                                      ? _parseColor(styles?.borderColor) ?? Colors.transparent
+                                      : Colors.transparent),
+                          width: widget.isSelected ? 2 : (_parseDouble(styles?.borderWidth) ?? 1),
+                        ),
+                        boxShadow: [
+                          if (widget.isSelected)
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.9),
+                              blurRadius: 0,
+                              spreadRadius: 2,
+                            ),
+                          if (widget.isSelected)
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.14),
+                              blurRadius: 8,
+                              spreadRadius: 4,
+                            ),
+                          if (_isHovering && !widget.isSelected)
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                        ],
                       ),
-                      boxShadow: [
-                        if (widget.isSelected)
-                          BoxShadow(
-                            color: const Color(0xFF8B5CF6).withOpacity(0.9),
-                            blurRadius: 0,
-                            spreadRadius: 2,
-                          ),
-                        if (widget.isSelected)
-                          BoxShadow(
-                            color: const Color(0xFF8B5CF6).withOpacity(0.14),
-                            blurRadius: 8,
-                            spreadRadius: 4,
-                          ),
-                        if (_isHovering && !widget.isSelected)
-                          BoxShadow(
-                            color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                            blurRadius: 4,
-                            spreadRadius: 1,
-                          ),
-                      ],
+                      child: _buildContent(styles),
                     ),
-                    child: _buildContent(styles),
-                  ),
-                  if (widget.isSelected) _buildResizeHandles(layout),
-                ],
+                    if (widget.isSelected) _buildResizeHandles(layout),
+                  ],
+                ),
               ),
             ),
           ),
