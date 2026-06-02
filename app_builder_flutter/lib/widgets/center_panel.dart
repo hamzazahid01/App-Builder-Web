@@ -452,12 +452,6 @@ class _CenterPanelState extends State<CenterPanel> {
                         ),
                         child: Stack(
                           children: [
-                            // Snap guide overlay (global)
-                            Consumer<AppStateProvider>(
-                              builder: (context, provider, child) {
-                                return _buildSnapGuideOverlay(provider, page);
-                              },
-                            ),
                             // Components
                             if (page != null && page.components.isNotEmpty)
                               ...page.components.map((component) {
@@ -494,6 +488,12 @@ class _CenterPanelState extends State<CenterPanel> {
                                   ),
                                 ),
                               ),
+                            // Snap guide overlay (on top)
+                            Consumer<AppStateProvider>(
+                              builder: (context, provider, child) {
+                                return _buildSnapGuideOverlay(provider, page);
+                              },
+                            ),
                           ],
                         ),
                       );
@@ -560,15 +560,14 @@ class _CenterPanelState extends State<CenterPanel> {
       return const SizedBox.shrink();
     }
     
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: CustomPaint(
-          painter: _SnapGuidePainter(
-            snaps: snaps,
-            canvasWidth: deviceInfo.width,
-            canvasHeight: deviceInfo.height,
-          ),
+    return IgnorePointer(
+      child: CustomPaint(
+        painter: _SnapGuidePainter(
+          snaps: snaps,
+          canvasWidth: deviceInfo.width,
+          canvasHeight: deviceInfo.height,
         ),
+        size: Size.infinite,
       ),
     );
   }
