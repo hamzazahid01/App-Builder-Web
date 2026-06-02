@@ -121,6 +121,9 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                   
                   _activeSnaps = [...centerSnaps, ...elementSnaps];
                   
+                  // Pass snaps to provider for overlay rendering
+                  provider.updateSnapGuides(_activeSnaps);
+                  
                   // Only apply snap if within 2px threshold
                   if (_activeSnaps.isNotEmpty) {
                     final snappedPos = SnapGuide.applySnaps(tempLayout, _activeSnaps);
@@ -150,6 +153,9 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 if (_isDragging) {
                   provider.finishDragSession(commitHistory: true);
                 }
+                
+                // Clear snap guides
+                provider.clearSnapGuides();
                 
                 setState(() {
                   _isDragging = false;

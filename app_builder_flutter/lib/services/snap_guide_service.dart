@@ -74,14 +74,14 @@ class SnapGuide {
         snaps.add(SnapLine(
           type: 'left',
           value: compLeft,
-          line: SnapLineData(x1: compLeft, y1: 0, x2: compLeft, y2: 0),
+          line: SnapLineData(x1: compLeft, y1: 0, x2: compLeft, y2: canvasSize.height),
         ));
       }
       if ((elementLeft - compRight).abs() <= SNAP_THRESHOLD) {
         snaps.add(SnapLine(
           type: 'left-right',
           value: compRight,
-          line: SnapLineData(x1: compRight, y1: 0, x2: compRight, y2: 0),
+          line: SnapLineData(x1: compRight, y1: 0, x2: compRight, y2: canvasSize.height),
         ));
       }
 
@@ -90,14 +90,14 @@ class SnapGuide {
         snaps.add(SnapLine(
           type: 'right',
           value: compRight - layout.width,
-          line: SnapLineData(x1: compRight, y1: 0, x2: compRight, y2: 0),
+          line: SnapLineData(x1: compRight, y1: 0, x2: compRight, y2: canvasSize.height),
         ));
       }
       if ((elementRight - compLeft).abs() <= SNAP_THRESHOLD) {
         snaps.add(SnapLine(
           type: 'right-left',
           value: compLeft - layout.width,
-          line: SnapLineData(x1: compLeft, y1: 0, x2: compLeft, y2: 0),
+          line: SnapLineData(x1: compLeft, y1: 0, x2: compLeft, y2: canvasSize.height),
         ));
       }
 
@@ -106,14 +106,14 @@ class SnapGuide {
         snaps.add(SnapLine(
           type: 'top',
           value: compTop,
-          line: SnapLineData(x1: 0, y1: compTop, x2: 0, y2: compTop),
+          line: SnapLineData(x1: 0, y1: compTop, x2: canvasSize.width, y2: compTop),
         ));
       }
       if ((elementTop - compBottom).abs() <= SNAP_THRESHOLD) {
         snaps.add(SnapLine(
           type: 'top-bottom',
           value: compBottom,
-          line: SnapLineData(x1: 0, y1: compBottom, x2: 0, y2: compBottom),
+          line: SnapLineData(x1: 0, y1: compBottom, x2: canvasSize.width, y2: compBottom),
         ));
       }
 
@@ -122,14 +122,14 @@ class SnapGuide {
         snaps.add(SnapLine(
           type: 'bottom',
           value: compBottom - layout.height,
-          line: SnapLineData(x1: 0, y1: compBottom, x2: 0, y2: compBottom),
+          line: SnapLineData(x1: 0, y1: compBottom, x2: canvasSize.width, y2: compBottom),
         ));
       }
       if ((elementBottom - compTop).abs() <= SNAP_THRESHOLD) {
         snaps.add(SnapLine(
           type: 'bottom-top',
           value: compTop - layout.height,
-          line: SnapLineData(x1: 0, y1: compTop, x2: 0, y2: compTop),
+          line: SnapLineData(x1: 0, y1: compTop, x2: canvasSize.width, y2: compTop),
         ));
       }
 
@@ -138,14 +138,14 @@ class SnapGuide {
         snaps.add(SnapLine(
           type: 'center-x',
           value: compCenterX - layout.width / 2,
-          line: SnapLineData(x1: compCenterX, y1: 0, x2: compCenterX, y2: 0),
+          line: SnapLineData(x1: compCenterX, y1: 0, x2: compCenterX, y2: canvasSize.height),
         ));
       }
       if ((elementCenterY - compCenterY).abs() <= SNAP_THRESHOLD) {
         snaps.add(SnapLine(
           type: 'center-y',
           value: compCenterY - layout.height / 2,
-          line: SnapLineData(x1: 0, y1: compCenterY, x2: 0, y2: compCenterY),
+          line: SnapLineData(x1: 0, y1: compCenterY, x2: canvasSize.width, y2: compCenterY),
         ));
       }
 

@@ -4,6 +4,7 @@ import '../models/app_state.dart';
 import '../models/component.dart';
 import '../models/page.dart';
 import '../models/component_defaults.dart';
+import '../services/snap_guide_service.dart';
 
 class DragSession {
   final String mode; // 'place', 'move', 'resize'
@@ -46,6 +47,7 @@ class DragSession {
 class AppStateProvider with ChangeNotifier {
   late AppState _state;
   DragSession? _dragSession;
+  List<SnapLine> _activeSnapGuides = [];
 
   AppStateProvider() {
     _state = AppState();
@@ -54,6 +56,7 @@ class AppStateProvider with ChangeNotifier {
 
   AppState get state => _state;
   DragSession? get dragSession => _dragSession;
+  List<SnapLine> get activeSnapGuides => _activeSnapGuides;
 
   AppData get app => _state.app;
   String? get selectedId => _state.selectedId;
@@ -366,5 +369,16 @@ class AppStateProvider with ChangeNotifier {
 
   void cancelDragSession() {
     _dragSession = null;
+  }
+
+  // Snap guide management
+  void updateSnapGuides(List<SnapLine> snaps) {
+    _activeSnapGuides = snaps;
+    // Don't notify during drag - just update the list
+  }
+
+  void clearSnapGuides() {
+    _activeSnapGuides = [];
+    notifyListeners();
   }
 }
