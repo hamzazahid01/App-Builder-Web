@@ -31,6 +31,8 @@ class ComponentRenderer extends StatefulWidget {
 class _ComponentRendererState extends State<ComponentRenderer> {
   bool _isHovering = false;
   String? _resizeHandle;
+  double? _startX;
+  double? _startY;
   double? _initialWidth;
   double? _initialHeight;
   List<SnapLine> _activeSnaps = [];
