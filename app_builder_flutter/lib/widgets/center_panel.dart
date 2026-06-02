@@ -242,6 +242,8 @@ class _CenterPanelState extends State<CenterPanel> {
             child: InkWell(
               onTap: () {
                 provider.setSnapToGrid(!provider.snapToGrid);
+                // Clear snap guides when toggling snap
+                provider.clearSnapGuides();
               },
               borderRadius: BorderRadius.circular(8),
               child: const Center(

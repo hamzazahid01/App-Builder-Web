@@ -568,6 +568,25 @@ class _ComponentRendererState extends State<ComponentRenderer> {
             notify: false,
           );
           
+          // Calculate snap guides for resize
+          final page = provider.getCurrentPage();
+          if (page != null && provider.snapEnabled) {
+            final tempLayout = layout.copyWith(width: newWidth, height: newHeight);
+            final centerSnaps = SnapGuide.calculateCenterSnaps(
+              tempLayout,
+              Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
+            );
+            final elementSnaps = SnapGuide.calculateElementSnaps(
+              tempLayout,
+              page.components,
+              widget.component.id,
+              Size(AppConfig.canvasMaxWidth, AppConfig.canvasMaxHeight),
+            );
+            
+            _activeSnaps = [...centerSnaps, ...elementSnaps];
+            provider.updateSnapGuides(_activeSnaps);
+          }
+          
           // Update visual size for real-time resize feedback
           setState(() {
             _resizeOffsetWidth = newWidth - (layout?.width ?? 100);
@@ -587,7 +606,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
           });
           
           final provider = context.read<AppStateProvider>();
-          provider.notifyListeners();
+          provider.clearSnapGuides();
         },
         child: Container(
           width: 8,
