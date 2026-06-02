@@ -374,7 +374,7 @@ class AppStateProvider with ChangeNotifier {
   // Snap guide management
   void updateSnapGuides(List<SnapLine> snaps) {
     _activeSnapGuides = snaps;
-    // Don't notify during drag - just update the list
+    notifyListeners(); // Notify to update overlay
   }
 
   void clearSnapGuides() {
