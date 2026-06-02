@@ -269,6 +269,14 @@ class AppStateProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void setSnapEnabled(bool value) {
+    _state.snapEnabled = value;
+    if (!value) {
+      clearSnapGuides();
+    }
+    notifyListeners();
+  }
+
   void setCurrentDevice(String deviceKey) {
     _state.currentDeviceKey = deviceKey;
     notifyListeners();

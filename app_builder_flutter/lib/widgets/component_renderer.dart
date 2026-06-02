@@ -106,7 +106,7 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                 
                 // Calculate snap guides (for visual feedback only)
                 final page = provider.getCurrentPage();
-                if (page != null) {
+                if (page != null && provider.snapEnabled) {
                   final tempLayout = layout!.copyWith(x: newX, y: newY);
                   final centerSnaps = SnapGuide.calculateCenterSnaps(
                     tempLayout,
@@ -132,6 +132,9 @@ class _ComponentRendererState extends State<ComponentRenderer> {
                       newY = snappedPos.dy;
                     }
                   }
+                } else {
+                  // Clear snaps if snap is disabled
+                  provider.clearSnapGuides();
                 }
                 
                 // Update component position without notifying

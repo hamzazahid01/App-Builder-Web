@@ -229,11 +229,11 @@ class _CenterPanelState extends State<CenterPanel> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: provider.snapToGrid
+              color: provider.snapEnabled
                   ? const Color(0xFF8B5CF6)
                   : Colors.white.withOpacity(0.12),
             ),
-            color: provider.snapToGrid
+            color: provider.snapEnabled
                 ? const Color(0xFF8B5CF6).withOpacity(0.2)
                 : Colors.white.withOpacity(0.08),
           ),
@@ -241,9 +241,7 @@ class _CenterPanelState extends State<CenterPanel> {
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                provider.setSnapToGrid(!provider.snapToGrid);
-                // Clear snap guides when toggling snap
-                provider.clearSnapGuides();
+                provider.setSnapEnabled(!provider.snapEnabled);
               },
               borderRadius: BorderRadius.circular(8),
               child: const Center(
