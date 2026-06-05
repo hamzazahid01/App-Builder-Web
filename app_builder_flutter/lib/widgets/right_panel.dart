@@ -87,16 +87,117 @@ class RightPanel extends StatelessWidget {
           _buildSelectedHeader('Page Settings'),
           const SizedBox(height: 16),
           InspectorAccordion(
-            title: 'Page Info',
-            icon: Icons.info,
-            iconColor: const Color(0xFF818CF8),
+            title: 'Background',
+            icon: Icons.palette,
+            iconColor: const Color(0xFF4ADE80),
             children: [
-              InspectorField(
-                label: 'Page Name',
-                value: page.name,
-                placeholder: 'Page Name',
+              InspectorSelectField(
+                label: 'Background Type',
+                value: page.backgroundType,
+                options: const [
+                  {'value': 'solid', 'label': 'Solid Color'},
+                  {'value': 'gradient', 'label': 'Gradient'},
+                  {'value': 'image', 'label': 'Image'},
+                ],
                 onChanged: (value) {
-                  page.name = value;
+                  page.backgroundType = value;
+                  provider.notifyListeners();
+                },
+              ),
+              if (page.backgroundType != 'image')
+                InspectorColorField(
+                  label: 'Background Color',
+                  value: page.backgroundColor,
+                  onChanged: (value) {
+                    page.backgroundColor = value;
+                    provider.notifyListeners();
+                  },
+                ),
+              if (page.backgroundType == 'gradient') ...[
+                InspectorColorField(
+                  label: 'Gradient Start',
+                  value: page.gradientStart,
+                  onChanged: (value) {
+                    page.gradientStart = value;
+                    provider.notifyListeners();
+                  },
+                ),
+                InspectorColorField(
+                  label: 'Gradient End',
+                  value: page.gradientEnd,
+                  onChanged: (value) {
+                    page.gradientEnd = value;
+                    provider.notifyListeners();
+                  },
+                ),
+                InspectorSelectField(
+                  label: 'Gradient Direction',
+                  value: page.gradientDirection,
+                  options: const [
+                    {'value': 'horizontal', 'label': 'Horizontal'},
+                    {'value': 'vertical', 'label': 'Vertical'},
+                    {'value': 'diagonal', 'label': 'Diagonal'},
+                  ],
+                  onChanged: (value) {
+                    page.gradientDirection = value;
+                    provider.notifyListeners();
+                  },
+                ),
+              ],
+              if (page.backgroundType == 'image') ...[
+                InspectorField(
+                  label: 'Background Image URL',
+                  value: page.backgroundImage,
+                  placeholder: 'https://...',
+                  onChanged: (value) {
+                    page.backgroundImage = value;
+                    provider.notifyListeners();
+                  },
+                ),
+                InspectorSelectField(
+                  label: 'Background Fit',
+                  value: page.backgroundFit,
+                  options: const [
+                    {'value': 'contain', 'label': 'Scale to Fit'},
+                    {'value': 'cover', 'label': 'Scale to Fill'},
+                    {'value': 'fill', 'label': 'Stretch to Fill'},
+                    {'value': 'auto', 'label': 'Original Size'},
+                  ],
+                  onChanged: (value) {
+                    page.backgroundFit = value;
+                    provider.notifyListeners();
+                  },
+                ),
+                InspectorRangeField(
+                  label: 'Background Blur',
+                  value: page.backgroundBlur.toDouble(),
+                  min: 0,
+                  max: 20,
+                  onChanged: (value) {
+                    page.backgroundBlur = value.toInt();
+                    provider.notifyListeners();
+                  },
+                ),
+              ],
+              InspectorRangeField(
+                label: 'Background Opacity',
+                value: page.backgroundOpacity,
+                min: 0,
+                max: 1,
+                onChanged: (value) {
+                  page.backgroundOpacity = value;
+                  provider.notifyListeners();
+                },
+              ),
+              InspectorSelectField(
+                label: 'Fade to Color',
+                value: page.backgroundFadeColor,
+                options: const [
+                  {'value': '#ffffff', 'label': 'White'},
+                  {'value': '#000000', 'label': 'Black'},
+                ],
+                onChanged: (value) {
+                  page.backgroundFadeColor = value;
                   provider.notifyListeners();
                 },
               ),
@@ -104,18 +205,57 @@ class RightPanel extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           InspectorAccordion(
-            title: 'Background',
-            icon: Icons.palette,
-            iconColor: const Color(0xFF4ADE80),
+            title: 'Screen Settings',
+            icon: Icons.phone_android,
+            iconColor: const Color(0xFF818CF8),
             children: [
-              InspectorColorField(
-                label: 'Background Color',
-                value: page.backgroundColor,
+              InspectorField(
+                label: 'Screen Name',
+                value: page.name,
+                placeholder: 'Page Name',
                 onChanged: (value) {
-                  page.backgroundColor = value;
+                  page.name = value;
                   provider.notifyListeners();
                 },
               ),
+              InspectorSelectField(
+                label: 'Orientation',
+                value: page.orientation,
+                options: const [
+                  {'value': 'portrait', 'label': 'Portrait'},
+                  {'value': 'landscape', 'label': 'Landscape'},
+                  {'value': 'auto', 'label': 'Auto'},
+                ],
+                onChanged: (value) {
+                  page.orientation = value;
+                  provider.notifyListeners();
+                },
+              ),
+              InspectorCheckboxField(
+                label: 'Safe Area Padding',
+                value: page.safeAreaPadding,
+                onChanged: (value) {
+                  page.safeAreaPadding = value;
+                  provider.notifyListeners();
+                },
+              ),
+              InspectorCheckboxField(
+                label: 'Scroll',
+                value: page.scroll,
+                onChanged: (value) {
+                  page.scroll = value;
+                  provider.notifyListeners();
+                },
+              ),
+              if (page.scroll)
+                InspectorCheckboxField(
+                  label: 'Show Scrollbar',
+                  value: page.scrollbarVisible,
+                  onChanged: (value) {
+                    page.scrollbarVisible = value;
+                    provider.notifyListeners();
+                  },
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -842,5 +982,195 @@ class InspectorColorField extends StatelessWidget {
     } catch (e) {
       return const Color(0xFF6366F1);
     }
+  }
+}
+
+class InspectorSelectField extends StatelessWidget {
+  final String label;
+  final String value;
+  final List<Map<String, String>> options;
+  final Function(String)? onChanged;
+
+  const InspectorSelectField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.options,
+    this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFFCBD5E1),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            height: 36,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF334155)),
+              color: const Color(0xFF0F172A),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: value,
+                dropdownColor: const Color(0xFF1E293B),
+                style: const TextStyle(
+                  color: Color(0xFFF8FAFC),
+                  fontSize: 13,
+                ),
+                icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade400, size: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                items: options.map((option) {
+                  return DropdownMenuItem<String>(
+                    value: option['value'],
+                    child: Text(option['label'] ?? option['value']!),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  if (newValue != null && onChanged != null) {
+                    onChanged!(newValue);
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class InspectorCheckboxField extends StatelessWidget {
+  final String label;
+  final bool value;
+  final Function(bool)? onChanged;
+
+  const InspectorCheckboxField({
+    super.key,
+    required this.label,
+    required this.value,
+    this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: value ? const Color(0xFF6366F1) : const Color(0xFF334155),
+                width: 2,
+              ),
+              color: value ? const Color(0xFF6366F1) : Colors.transparent,
+            ),
+            child: value
+                ? const Icon(
+                    Icons.check,
+                    size: 14,
+                    color: Colors.white,
+                  )
+                : null,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged?.call(!value),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFFF8FAFC),
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class InspectorRangeField extends StatelessWidget {
+  final String label;
+  final double value;
+  final double min;
+  final double max;
+  final Function(double)? onChanged;
+
+  const InspectorRangeField({
+    super.key,
+    required this.label,
+    required this.value,
+    this.min = 0,
+    this.max = 1,
+    this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFFCBD5E1),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                value.toStringAsFixed(1),
+                style: const TextStyle(
+                  color: Color(0xFFF8FAFC),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 4,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+              activeTrackColor: const Color(0xFF6366F1),
+              inactiveTrackColor: const Color(0xFF334155),
+              thumbColor: const Color(0xFF6366F1),
+              overlayColor: const Color(0xFF6366F1).withOpacity(0.2),
+            ),
+            child: Slider(
+              value: value,
+              min: min,
+              max: max,
+              onChanged: onChanged,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
